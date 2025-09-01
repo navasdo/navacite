@@ -1,96 +1,128 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <script defer src="/_vercel/insights/script.js"></script>
-    <link
-      rel="stylesheet"
-      href="https://cdn.jsdelivr.net/npm/@exampledev/new.css@1.1.2/new.min.css"
-    />
-    <title>Vercel HTML Starter</title>
-    <meta
-      name="description"
-      content="High-performance HTML based website template."
-    />
-  </head>
-  <body>
-    <h1>Vercel HTML Starter</h1>
-    <p>
-      This template is a simple, but powerful single
-      <code>index.html</code> file deployed to
-      <a href="https://vercel.com">Vercel</a>. When your site is deployed, all
-      static assets (like HTML, JavaScript, CSS, images, and more) are deployed
-      globally to every
-      <a href="https://vercel.com/docs/concepts/edge-network/overview"
-        >Vercel Edge Network</a
-      >
-      region.
-    </p>
-    <h2>Simple, privacy-friendly analytics</h2>
-    <p>
-      Want to understand your visitor traffic? Vercel Analytics gives you
-      first-party, privacy-friendly traffic analytics for your HTML site. This
-      template is already configured using the following script:
-    </p>
-    <pre><code>&lt;script defer src="/_vercel/insights/script.js"&gt;&lt;/script&gt;</code></pre>
-    <p>
-      Learn more about
-      <a href="https://vercel.com/analytics">Vercel Analytics</a>.
-    </p>
-    <h2>Integrated with git</h2>
-    <p>
-      Deploying updates to your site is as simple as
-      <code>git push</code> thanks to Vercel's advanced
-      <a href="https://vercel.com/docs/concepts/git">Git Integration</a>.
-      Support for GitHub, GitLab, Bitbucket is zero-configuration, and with the
-      flexible Vercel CLI and API, you can integrate with any tool possible.
-    </p>
-    <p>
-      Learn more about
-      <a href="https://vercel.com/docs/concepts/git">Git Integration</a>.
-    </p>
-    <h2>Fast <code>gzip</code> compression</h2>
-    <p>
-      To help ensure the smallest possible file sizes for your static assets,
-      the Vercel Edge Network compresses files by default using
-      <code>gzip</code>. You can also optionally use
-      <code>brotli</code> compressesion if you prefer.
-    </p>
-    <p>
-      Learn more about
-      <a href="https://vercel.com/docs/concepts/edge-network/compression"
-        >compression</a
-      >.
-    </p>
-    <h2>Advanced routing configuration</h2>
-    <p>
-      Vercel gives you a variety of ways to configure the routing of your
-      website. For example, adding redirects, rewrites, or headers to your page.
-      While you can use <code>vercel.json</code> to define these through JSON,
-      you can also express your routing configuration as code using
-      <a href="https://vercel.com/docs/concepts/functions/edge-middleware"
-        >Vercel Edge Middleware</a
-      >.
-    </p>
-    <p>
-      Middleware runs before the
-      <a href="https://vercel.com/docs/concepts/edge-network/caching"
-        >Vercel Edge Network Cache</a
-      >, so you can configure routing exactly as your application needs. For
-      example, this template uses <code>middleware.js</code> defined in the root
-      of the repository to add additional security headers to the site:
-    </p>
-    <pre><code>referrer-policy: origin-when-cross-origin
-strict-transport-security: max-age=31536000; includeSubDomains; preload
-x-content-type-options: nosniff
-x-dns-prefetch-control: on
-x-frame-options: DENY</code></pre>
-    <p>
-      Learn more about
-      <a href="https://vercel.com/docs/concepts/functions/edge-middleware"
-        >Vercel Edge Middleware</a
-      >.
-    </p>
-  </body>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Navacite Library</title>
+    <!-- Direct link to Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Including the arbitrary value for the filter directly in the class attribute 
+           is supported by Tailwind's JIT CDN, but this is a fallback just in case. */
+        .glow-effect {
+            filter: drop-shadow(0 0 15px rgba(255, 255, 255, 0.3));
+        }
+    </style>
+</head>
+<body class="bg-[#0c0a18] min-h-screen font-sans text-slate-300 flex flex-col items-center p-4 sm:p-6 lg:p-8 relative overflow-x-hidden">
+
+    <!-- Header Section -->
+    <header class="w-full max-w-5xl mx-auto my-8">
+        <!-- Centered content -->
+        <div class="text-center pt-8">
+            <!-- Main large visual with updated size and glow effect -->
+            <img
+              src="https://raw.githubusercontent.com/navasdo/oliver/82a61ba72b8b08766226f6449aa7213f2e509421/navacite/gems/Navacite-Main.png"
+              alt="Navacite Main Visual"
+              class="w-48 mx-auto mb-4 [filter:drop-shadow(0_0_15px_rgba(255,255,255,0.3))]"
+              onerror="this.onerror=null; this.src='https://placehold.co/192x108/0c0a18/a78bfa?text=Navacite-Main';"
+            />
+
+            <!-- Page Title with a gradient effect -->
+            <h1 class="text-5xl md:text-6xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-violet-400 to-fuchsia-500 mb-3">
+              Navacite Library
+            </h1>
+
+            <!-- Subtitle -->
+            <p class="text-md md:text-lg text-slate-400 italic max-w-3xl mx-auto">
+              A collection of AI tools created by Daniel Navas, M.A., CCC-SLP in tandem with Google Gemini.
+            </p>
+        </div>
+    </header>
+
+    <!-- Main Content - Tool Library Section -->
+    <main class="w-full max-w-5xl mx-auto flex-grow">
+        <div class="mt-16 grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-10 p-4">
+            
+            <!-- Tool: Language Lens -->
+            <!-- TODO: Add the correct link for the ELL Language Lens page here -->
+            <a href="#" class="group relative flex flex-col items-center justify-between p-6 bg-slate-900/40 rounded-2xl border border-violet-900/80 transition-all duration-300 ease-in-out hover:border-violet-600/80 hover:scale-105 hover:shadow-[0_0_25px_-5px_rgba(167,139,250,0.4)]">
+                <div class="w-full aspect-square flex items-center justify-center">
+                   <img
+                      src="https://raw.githubusercontent.com/navasdo/oliver/refs/heads/main/navacite/gems/Navacite-Ellv2.png"
+                      alt="Language Lens Icon"
+                      class="max-w-full max-h-full object-contain transition-transform duration-300 group-hover:scale-110 [filter:drop-shadow(0_0_15px_rgba(255,255,255,0.3))]"
+                      onerror="this.onerror=null; this.src='https://placehold.co/200x200/1e293b/a78bfa?text=Tool+Icon';"
+                   />
+                </div>
+                <div class="text-center">
+                   <h2 class="text-xl font-bold text-slate-200 group-hover:text-violet-400 transition-colors duration-300">
+                      Language Lens
+                   </h2>
+                </div>
+            </a>
+
+            <!-- Tool: Comprehension Crystal -->
+            <!-- TODO: Add the correct link for the Comprehension Crystal page here -->
+            <a href="#" class="group relative flex flex-col items-center justify-between p-6 bg-slate-900/40 rounded-2xl border border-violet-900/80 transition-all duration-300 ease-in-out hover:border-violet-600/80 hover:scale-105 hover:shadow-[0_0_25px_-5px_rgba(167,139,250,0.4)]">
+                <div class="w-full aspect-square flex items-center justify-center">
+                   <img
+                      src="https://raw.githubusercontent.com/navasdo/oliver/refs/heads/main/navacite/gems/navacite-rpgv2.png"
+                      alt="Comprehension Crystal Icon"
+                      class="max-w-full max-h-full object-contain transition-transform duration-300 group-hover:scale-110 [filter:drop-shadow(0_0_15px_rgba(255,255,255,0.3))]"
+                      onerror="this.onerror=null; this.src='https://placehold.co/200x200/1e293b/a78bfa?text=Tool+Icon';"
+                   />
+                </div>
+                <div class="text-center">
+                   <h2 class="text-xl font-bold text-slate-200 group-hover:text-violet-400 transition-colors duration-300">
+                      Comprehension Crystal
+                   </h2>
+                </div>
+            </a>
+
+            <!-- Tool: Session Scribe -->
+            <!-- TODO: Add the correct link for the Session Scribe page here -->
+            <a href="session-scribev1.vercel.app" class="group relative flex flex-col items-center justify-between p-6 bg-slate-900/40 rounded-2xl border border-violet-900/80 transition-all duration-300 ease-in-out hover:border-violet-600/80 hover:scale-105 hover:shadow-[0_0_25px_-5px_rgba(167,139,250,0.4)]">
+                <div class="w-full aspect-square flex items-center justify-center">
+                   <img
+                      src="https://raw.githubusercontent.com/navasdo/oliver/refs/heads/main/navacite-tng/images/Navacite-TNG.png"
+                      alt="Session Scribe Icon"
+                      class="max-w-full max-h-full object-contain transition-transform duration-300 group-hover:scale-110 [filter:drop-shadow(0_0_15px_rgba(255,255,255,0.3))]"
+                      onerror="this.onerror=null; this.src='https://placehold.co/200x200/1e293b/a78bfa?text=Tool+Icon';"
+                   />
+                </div>
+                <div class="text-center">
+                   <h2 class="text-xl font-bold text-slate-200 group-hover:text-violet-400 transition-colors duration-300">
+                      Session Scribe
+                   </h2>
+                </div>
+            </a>
+
+        </div>
+    </main>
+
+    <!-- Footer Section with Definition -->
+    <footer class="w-full max-w-3xl mx-auto mt-24 mb-8 text-left text-sm text-slate-500 p-6 border-t border-slate-800/50">
+        <dl>
+            <dt class="text-lg font-bold text-slate-300">
+                Navacite
+                <span class="ml-3 font-normal text-slate-400">
+                na·va·cite | /ˈnævəˌsaɪt/
+                </span>
+            </dt>
+            <dd class="italic text-slate-400 mt-2">noun</dd>
+            <dd class="mt-2 text-slate-400 leading-relaxed">
+                1. An enchanted artifact that, in the hands of a speech-pathologist, causes keyboards to type attendance notes on their own, places every language at their fingertips, and summons the very spirits of authors to weave stories for their students.
+            </dd>
+            <dd class="mt-2 text-slate-400 leading-relaxed">
+                2. A tool, framework, or conceptual instrument created by Daniel Navas that is used to reveal or bring clarity to complex information, particularly in educational or diagnostic contexts.
+            </dd>
+            <dd class="mt-4 text-slate-500 italic">
+                <span class="font-semibold text-slate-400 not-italic">USAGE</span><br/>
+                "With a Navacite in hand, the SLP watched in awe as the spirits of classic authors crafted a perfect narrative prompt for the student's therapy session."
+            </dd>
+        </dl>
+    </footer>
+
+</body>
 </html>
