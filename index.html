@@ -12,6 +12,10 @@
         .glow-effect {
             filter: drop-shadow(0 0 15px rgba(255, 255, 255, 0.3));
         }
+        /* Smooth scrolling behavior */
+        html {
+            scroll-behavior: smooth;
+        }
     </style>
 </head>
 <body class="bg-[#0c0a18] min-h-screen font-sans text-slate-300 flex flex-col items-center p-4 sm:p-6 lg:p-8 relative overflow-x-hidden">
@@ -28,10 +32,21 @@
               onerror="this.onerror=null; this.src='https://placehold.co/192x108/0c0a18/a78bfa?text=Navacite-Main';"
             />
 
-            <!-- Page Title with a gradient effect -->
-            <h1 class="text-5xl md:text-6xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-violet-400 to-fuchsia-500 mb-3">
-              Navacite Library
-            </h1>
+            <!-- Container for title and icon -->
+            <div class="flex justify-center items-center gap-x-2 mb-3">
+                <h1 class="text-5xl md:text-6xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-violet-400 to-fuchsia-500">
+                  Navacite Library
+                </h1>
+                <a href="#navacite-definition" 
+                   class="text-slate-500 hover:text-violet-400 transition-colors duration-300" 
+                   aria-label="Scroll to definition" 
+                   title="What is a Navacite?">
+                   <!-- Question mark in a circle SVG icon -->
+                   <svg xmlns="http://www.w3.org/2000/svg" class="h-7 w-7" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                     <path stroke-linecap="round" stroke-linejoin="round" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                   </svg>
+                </a>
+            </div>
 
             <!-- Subtitle -->
             <p class="text-md md:text-lg text-slate-400 italic max-w-3xl mx-auto">
@@ -45,7 +60,6 @@
         <div class="mt-16 grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-10 p-4">
             
             <!-- Tool: Language Lens -->
-            <!-- TODO: Add the correct link for the ELL Language Lens page here -->
             <a href="#" class="group relative flex flex-col items-center justify-between p-6 bg-slate-900/40 rounded-2xl border border-violet-900/80 transition-all duration-300 ease-in-out hover:border-violet-600/80 hover:scale-105 hover:shadow-[0_0_25px_-5px_rgba(167,139,250,0.4)]">
                 <div class="w-full aspect-square flex items-center justify-center">
                    <img
@@ -63,7 +77,6 @@
             </a>
 
             <!-- Tool: Comprehension Crystal -->
-            <!-- TODO: Add the correct link for the Comprehension Crystal page here -->
             <a href="https://comprehension-crystal.vercel.app" class="group relative flex flex-col items-center justify-between p-6 bg-slate-900/40 rounded-2xl border border-violet-900/80 transition-all duration-300 ease-in-out hover:border-violet-600/80 hover:scale-105 hover:shadow-[0_0_25px_-5px_rgba(167,139,250,0.4)]">
                 <div class="w-full aspect-square flex items-center justify-center">
                    <img
@@ -81,7 +94,6 @@
             </a>
 
             <!-- Tool: Session Scribe -->
-            <!-- TODO: Add the correct link for the Session Scribe page here -->
             <a href="https://session-scribev1.vercel.app" class="group relative flex flex-col items-center justify-between p-6 bg-slate-900/40 rounded-2xl border border-violet-900/80 transition-all duration-300 ease-in-out hover:border-violet-600/80 hover:scale-105 hover:shadow-[0_0_25px_-5px_rgba(167,139,250,0.4)]">
                 <div class="w-full aspect-square flex items-center justify-center">
                    <img
@@ -102,7 +114,7 @@
     </main>
 
     <!-- Footer Section with Definition -->
-    <footer class="w-full max-w-3xl mx-auto mt-24 mb-8 text-left text-sm text-slate-500 p-6 border-t border-slate-800/50">
+    <footer id="navacite-definition" class="w-full max-w-3xl mx-auto mt-24 mb-8 text-left text-sm text-slate-500 p-6 border-t border-slate-800/50 scroll-mt-20">
         <dl>
             <dt class="text-lg font-bold text-slate-300">
                 Navacite
@@ -126,3 +138,4 @@
 
 </body>
 </html>
+
