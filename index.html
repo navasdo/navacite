@@ -7,48 +7,81 @@
     <!-- Direct link to Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        /* Including the arbitrary value for the filter directly in the class attribute 
-           is supported by Tailwind's JIT CDN, but this is a fallback just in case. */
-        .glow-effect {
-            filter: drop-shadow(0 0 15px rgba(255, 255, 255, 0.3));
-        }
         /* Smooth scrolling behavior */
         html {
             scroll-behavior: smooth;
+        }
+        /* Style for the modal backdrop to animate in */
+        #updatesModal.modal-enter {
+            opacity: 0;
+        }
+        #updatesModal.modal-enter-active {
+            opacity: 1;
+            transition: opacity 300ms;
+        }
+        /* Style for the modal content to animate in */
+        #updatesModal .modal-content-enter {
+            opacity: 0;
+            transform: scale(0.95);
+        }
+        #updatesModal .modal-content-enter-active {
+            opacity: 1;
+            transform: scale(1);
+            transition: opacity 300ms, transform 300ms;
         }
     </style>
 </head>
 <body class="bg-[#0c0a18] min-h-screen font-sans text-slate-300 flex flex-col items-center p-4 sm:p-6 lg:p-8 relative overflow-x-hidden">
 
+    <!-- Audio element for the update sound -->
+    <audio id="updateSound" src="https://github.com/navasdo/navacite/raw/406b3c70feafc7e885aaa1dffe1d92c1007ecc2b/audio/updates.mp3" preload="auto"></audio>
+
+    <!-- Updates Modal -->
+    <div id="updatesModal" class="hidden fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4 modal-enter">
+        <div class="bg-slate-800 border border-violet-700/50 rounded-2xl shadow-2xl shadow-violet-500/10 p-6 sm:p-8 text-center max-w-md w-full modal-content-enter">
+            <img src="https://raw.githubusercontent.com/navasdo/navacite/refs/heads/main/gems/updates.png" alt="Updates" class="w-32 mx-auto mb-4" onerror="this.onerror=null; this.src='https://placehold.co/128x128/1e293b/a78bfa?text=Updates';" />
+            
+            <h2 class="text-3xl font-bold text-slate-100">Latest Updates</h2>
+            <p id="updateDate" class="text-sm text-slate-400 mb-6"></p>
+
+            <ul id="updateList" class="text-left list-disc list-inside space-y-2 mb-8 text-slate-300">
+                <!-- Update items will be injected here by JavaScript -->
+            </ul>
+            
+            <button id="closeModalButton" class="w-full bg-violet-600 hover:bg-violet-700 text-white font-bold py-3 px-4 rounded-lg transition-colors duration-300 mb-4">
+                Close
+            </button>
+            
+            <div class="text-center">
+                <label for="dontShowAgainCheckbox" class="text-xs text-slate-400 flex items-center justify-center cursor-pointer">
+                    <input type="checkbox" id="dontShowAgainCheckbox" class="mr-2 h-4 w-4 rounded bg-slate-700 border-slate-600 text-violet-600 focus:ring-violet-500">
+                    Yay! I look forward to more! (Don't show this again until next update)
+                </label>
+            </div>
+        </div>
+    </div>
+
+
     <!-- Header Section -->
     <header class="w-full max-w-5xl mx-auto my-8">
         <!-- Centered content -->
         <div class="text-center pt-8">
-            <!-- Main large visual with updated size and glow effect -->
             <img
-              src="https://raw.githubusercontent.com/navasdo/oliver/82a61ba72b8b08766226f6449aa7213f2e509421/navacite/gems/Navacite-Main.png"
+              src="https://raw.githubusercontent.com/navasdo/oliver/82a61ba72b8b087662c1007ecc2b/navacite/gems/Navacite-Main.png"
               alt="Navacite Main Visual"
               class="w-48 mx-auto mb-4 [filter:drop-shadow(0_0_15px_rgba(255,255,255,0.3))]"
               onerror="this.onerror=null; this.src='https://placehold.co/192x108/0c0a18/a78bfa?text=Navacite-Main';"
             />
-
-            <!-- Container for title and icon -->
             <div class="flex justify-center items-center gap-x-2 mb-3">
                 <h1 class="text-5xl md:text-6xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-violet-400 to-fuchsia-500">
                   Navacite Library
                 </h1>
-                <a href="#navacite-definition" 
-                   class="text-slate-500 hover:text-violet-400 transition-colors duration-300" 
-                   aria-label="Scroll to definition" 
-                   title="What is a Navacite?">
-                   <!-- Question mark in a circle SVG icon -->
+                <a href="#navacite-definition" class="text-slate-500 hover:text-violet-400 transition-colors duration-300" aria-label="Scroll to definition" title="What is a Navacite?">
                    <svg xmlns="http://www.w3.org/2000/svg" class="h-7 w-7" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                      <path stroke-linecap="round" stroke-linejoin="round" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                    </svg>
                 </a>
             </div>
-
-            <!-- Subtitle -->
             <p class="text-md md:text-lg text-slate-400 italic max-w-3xl mx-auto">
               A collection of AI tools created by Daniel Navas, M.A., CCC-SLP in tandem with Google Gemini.
             </p>
@@ -59,97 +92,112 @@
     <main class="w-full max-w-5xl mx-auto flex-grow">
         <div class="mt-16 grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-10 p-4">
             
-            <!-- Tool: Language Lens -->
             <a href="#" class="group relative flex flex-col items-center justify-between p-6 bg-slate-900/40 rounded-2xl border border-violet-900/80 transition-all duration-300 ease-in-out hover:border-violet-600/80 hover:scale-105 hover:shadow-[0_0_25px_-5px_rgba(167,139,250,0.4)]">
                 <div class="w-full aspect-square flex items-center justify-center">
-                   <img
-                      src="https://raw.githubusercontent.com/navasdo/oliver/refs/heads/main/navacite/gems/Navacite-Ellv2.png"
-                      alt="Language Lens Icon"
-                      class="max-w-full max-h-full object-contain transition-transform duration-300 group-hover:scale-110 [filter:drop-shadow(0_0_15px_rgba(255,255,255,0.3))]"
-                      onerror="this.onerror=null; this.src='https://placehold.co/200x200/1e293b/a78bfa?text=Tool+Icon';"
-                   />
+                   <img src="https://raw.githubusercontent.com/navasdo/oliver/refs/heads/main/navacite/gems/Navacite-Ellv2.png" alt="Language Lens Icon" class="max-w-full max-h-full object-contain transition-transform duration-300 group-hover:scale-110 [filter:drop-shadow(0_0_15px_rgba(255,255,255,0.3))]" onerror="this.onerror=null; this.src='https://placehold.co/200x200/1e293b/a78bfa?text=Tool+Icon';"/>
                 </div>
-                <div class="text-center">
-                   <h2 class="text-xl font-bold text-slate-200 group-hover:text-violet-400 transition-colors duration-300">
-                      Language Lens (Coming Soon)
-                   </h2>
-                </div>
+                <div class="text-center"><h2 class="text-xl font-bold text-slate-200 group-hover:text-violet-400 transition-colors duration-300">Language Lens (coming soon)</h2></div>
             </a>
 
-            <!-- Tool: Comprehension Crystal -->
             <a href="https://comprehension-crystal.vercel.app" class="group relative flex flex-col items-center justify-between p-6 bg-slate-900/40 rounded-2xl border border-violet-900/80 transition-all duration-300 ease-in-out hover:border-violet-600/80 hover:scale-105 hover:shadow-[0_0_25px_-5px_rgba(167,139,250,0.4)]">
                 <div class="w-full aspect-square flex items-center justify-center">
-                   <img
-                      src="https://raw.githubusercontent.com/navasdo/oliver/refs/heads/main/navacite/gems/navacite-rpgv2.png"
-                      alt="Comprehension Crystal Icon"
-                      class="max-w-full max-h-full object-contain transition-transform duration-300 group-hover:scale-110 [filter:drop-shadow(0_0_15px_rgba(255,255,255,0.3))]"
-                      onerror="this.onerror=null; this.src='https://placehold.co/200x200/1e293b/a78bfa?text=Tool+Icon';"
-                   />
+                   <img src="https://raw.githubusercontent.com/navasdo/oliver/refs/heads/main/navacite/gems/navacite-rpgv2.png" alt="Comprehension Crystal Icon" class="max-w-full max-h-full object-contain transition-transform duration-300 group-hover:scale-110 [filter:drop-shadow(0_0_15px_rgba(255,255,255,0.3))]" onerror="this.onerror=null; this.src='https://placehold.co/200x200/1e293b/a78bfa?text=Tool+Icon';"/>
                 </div>
-                <div class="text-center">
-                   <h2 class="text-xl font-bold text-slate-200 group-hover:text-violet-400 transition-colors duration-300">
-                      Comprehension Crystal
-                   </h2>
-                </div>
+                <div class="text-center"><h2 class="text-xl font-bold text-slate-200 group-hover:text-violet-400 transition-colors duration-300">Comprehension Crystal</h2></div>
             </a>
 
-            <!-- Tool: Session Scribe -->
             <a href="https://session-scribev1.vercel.app" class="group relative flex flex-col items-center justify-between p-6 bg-slate-900/40 rounded-2xl border border-violet-900/80 transition-all duration-300 ease-in-out hover:border-violet-600/80 hover:scale-105 hover:shadow-[0_0_25px_-5px_rgba(167,139,250,0.4)]">
                 <div class="w-full aspect-square flex items-center justify-center">
-                   <img
-                      src="https://raw.githubusercontent.com/navasdo/oliver/refs/heads/main/navacite-tng/images/Navacite-TNG.png"
-                      alt="Session Scribe Icon"
-                      class="max-w-full max-h-full object-contain transition-transform duration-300 group-hover:scale-110 [filter:drop-shadow(0_0_15px_rgba(255,255,255,0.3))]"
-                      onerror="this.onerror=null; this.src='https://placehold.co/200x200/1e293b/a78bfa?text=Tool+Icon';"
-                   />
+                   <img src="https://raw.githubusercontent.com/navasdo/oliver/refs/heads/main/navacite-tng/images/Navacite-TNG.png" alt="Session Scribe Icon" class="max-w-full max-h-full object-contain transition-transform duration-300 group-hover:scale-110 [filter:drop-shadow(0_0_15px_rgba(255,255,255,0.3))]" onerror="this.onerror=null; this.src='https://placehold.co/200x200/1e293b/a78bfa?text=Tool+Icon';"/>
                 </div>
-                <div class="text-center">
-                   <h2 class="text-xl font-bold text-slate-200 group-hover:text-violet-400 transition-colors duration-300">
-                      Session Scribe
-                   </h2>
-                </div>
+                <div class="text-center"><h2 class="text-xl font-bold text-slate-200 group-hover:text-violet-400 transition-colors duration-300">Session Scribe</h2></div>
             </a>
-          <!-- Tool:  Grammar Grid -->
-            <a href="https://grammar-grid.vercel.app" class="group relative flex flex-col items-center justify-between p-6 bg-slate-900/40 rounded-2xl border border-violet-900/80 transition-all duration-300 ease-in-out hover:border-violet-600/80 hover:scale-105 hover:shadow-[0_0_25px_-5px_rgba(167,139,250,0.4)]">
-                <div class="w-full aspect-square flex items-center justify-center">
-                   <img
-                      src="https://raw.githubusercontent.com/navasdo/navacite/refs/heads/main/gems/navacite-gg.png"
-                      alt="Grammar Grid Icon"
-                      class="max-w-full max-h-full object-contain transition-transform duration-300 group-hover:scale-110 [filter:drop-shadow(0_0_15px_rgba(255,255,255,0.3))]"
-                      onerror="this.onerror=null; this.src='https://placehold.co/200x200/1e293b/a78bfa?text=Tool+Icon';"
-                   />
-                </div>
-                <div class="text-center">
-                   <h2 class="text-xl font-bold text-slate-200 group-hover:text-violet-400 transition-colors duration-300">
-                        Grammar Grid
-                   </h2>
-                </div>
-            </a>
+
         </div>
     </main>
 
-    <!-- Footer Section with Definition -->
+    <!-- Footer Section -->
     <footer id="navacite-definition" class="w-full max-w-3xl mx-auto mt-24 mb-8 text-left text-sm text-slate-500 p-6 border-t border-slate-800/50 scroll-mt-20">
         <dl>
-            <dt class="text-lg font-bold text-slate-300">
-                Navacite
-                <span class="ml-3 font-normal text-slate-400">
-                na·va·cite | /ˈnævəˌsaɪt/
-                </span>
-            </dt>
+            <dt class="text-lg font-bold text-slate-300">Navacite<span class="ml-3 font-normal text-slate-400">na·va·cite | /ˈnævəˌsaɪt/</span></dt>
             <dd class="italic text-slate-400 mt-2">noun</dd>
-            <dd class="mt-2 text-slate-400 leading-relaxed">
-                1. An enchanted artifact that, in the hands of a speech-pathologist, causes keyboards to type attendance notes on their own, places every language at their fingertips, and summons the very spirits of authors to weave stories for their students.
-            </dd>
-            <dd class="mt-2 text-slate-400 leading-relaxed">
-                2. A tool, framework, or conceptual instrument created by Daniel Navas that is used to reveal or bring clarity to complex information, particularly in educational or diagnostic contexts.
-            </dd>
-            <dd class="mt-4 text-slate-500 italic">
-                <span class="font-semibold text-slate-400 not-italic">USAGE</span><br/>
-                "With a Navacite in hand, the SLP watched in awe as the spirits of classic authors crafted a perfect narrative prompt for the student's therapy session."
-            </dd>
+            <dd class="mt-2 text-slate-400 leading-relaxed">1. An enchanted artifact that, in the hands of a speech-pathologist, causes keyboards to type attendance notes on their own, places every language at their fingertips, and summons the very spirits of authors to weave stories for their students.</dd>
+            <dd class="mt-2 text-slate-400 leading-relaxed">2. A tool, framework, or conceptual instrument created by Daniel Navas that is used to reveal or bring clarity to complex information, particularly in educational or diagnostic contexts.</dd>
+            <dd class="mt-4 text-slate-500 italic"><span class="font-semibold text-slate-400 not-italic">USAGE</span><br/>"With a Navacite in hand, the SLP watched in awe as the spirits of classic authors crafted a perfect narrative prompt for the student's therapy session."</dd>
         </dl>
     </footer>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            
+            // --- Configuration for Updates ---
+            // To show a new update, change the 'id' to something unique (e.g., today's date).
+            // Then, update the date and the list of items.
+            const updatesConfig = {
+                id: '2025-09-02-v1', // *** CHANGE THIS ID FOR NEW UPDATES ***
+                date: '09/02/2025',
+                items: [
+                    'The Navacite Library homepage is now live!',
+                    'Added the "Updates" pop-up you are currently reading.',
+                    'Implemented magic to only show new updates to returning users.'
+                    '[Grammar Grid]: grades K-5 now available.'
+                    '[Session Scribe]: the "Tome" has been added so users can see all available shorthand. Note: the Scribe will still attempt to extend other shorthands based on context.'
+                
+                ]
+            };
+
+            // --- Modal Logic ---
+            const modal = document.getElementById('updatesModal');
+            const closeModalButton = document.getElementById('closeModalButton');
+            const checkbox = document.getElementById('dontShowAgainCheckbox');
+            const updateSound = document.getElementById('updateSound');
+
+            const updateDateEl = document.getElementById('updateDate');
+            const updateListEl = document.getElementById('updateList');
+
+            const lastSeenUpdateId = localStorage.getItem('lastSeenUpdateId');
+
+            function showModal() {
+                // Populate modal with content from config
+                updateDateEl.textContent = updatesConfig.date;
+                updateListEl.innerHTML = updatesConfig.items.map(item => `<li>${item}</li>`).join('');
+
+                modal.classList.remove('hidden');
+                // Use a tiny timeout to allow the CSS transitions to trigger correctly
+                setTimeout(() => {
+                    modal.classList.add('modal-enter-active');
+                    modal.querySelector('.modal-content-enter').classList.add('modal-content-enter-active');
+                }, 10);
+                
+                // Play sound
+                updateSound.play().catch(error => {
+                    console.log("Audio autoplay was prevented by the browser. A user interaction is required first.");
+                });
+            }
+
+            function hideModal() {
+                if (checkbox.checked) {
+                    localStorage.setItem('lastSeenUpdateId', updatesConfig.id);
+                }
+                modal.classList.add('hidden');
+                modal.classList.remove('modal-enter-active');
+                modal.querySelector('.modal-content-enter').classList.remove('modal-content-enter-active');
+            }
+
+            // Check if the user has already seen this specific update
+            if (updatesConfig.id !== lastSeenUpdateId) {
+                showModal();
+            }
+            
+            closeModalButton.addEventListener('click', hideModal);
+            // Also close modal if user clicks on the backdrop
+            modal.addEventListener('click', (event) => {
+                if (event.target === modal) {
+                    hideModal();
+                }
+            });
+        });
+    </script>
 
 </body>
 </html>
