@@ -47,7 +47,7 @@
     <!-- Updates Modal -->
     <div id="updatesModal" class="hidden fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4 modal-enter">
         <div class="bg-slate-800 border border-violet-700/50 rounded-2xl shadow-2xl shadow-violet-500/10 p-6 sm:p-8 text-center max-w-md w-full modal-content-enter">
-            <img src="https://raw.githubusercontent.com/navasdo/navacite/refs/heads/main/gems/updates.png" alt="Updates" class="w-32 mx-auto mb-4" onerror="this.onerror=null; this.src='https://placehold.co/128x128/1e293b/a78bfa?text=Updates';" />
+            <img src="https://raw.githubusercontent.com/navasdo/navacite/refs/heads/main/images/updates_daniel.png" alt="Daniel Navas" class="w-48 mx-auto mb-4 rounded-full [filter:drop-shadow(0_0_15px_rgba(255,255,255,0.6))]" onerror="this.onerror=null; this.src='https://placehold.co/192x192/1e293b/a78bfa?text=DN';" />
             
             <h2 class="text-3xl font-bold text-slate-100">Latest Updates</h2>
             <p id="updateDate" class="text-sm text-slate-400 mb-6"></p>
@@ -63,13 +63,10 @@
 
             <!-- Revealed View -->
             <div id="revealedUpdateView" class="hidden">
-                <ul id="updateList" class="text-left list-disc list-inside space-y-2 text-slate-300">
+                <ul id="updateList" class="text-left list-disc list-inside space-y-2 text-slate-300 mb-8">
                     <!-- Update items will be injected here by JavaScript -->
                 </ul>
-                <div id="updateImageContainer" class="text-center">
-                    <!-- Image will be injected here -->
-                </div>
-                <button id="finalCloseButton" class="w-full bg-violet-600 hover:bg-violet-700 text-white font-bold py-3 px-4 rounded-lg transition-colors duration-300 mt-8">Close</button>
+                <button id="finalCloseButton" class="w-full bg-violet-600 hover:bg-violet-700 text-white font-bold py-3 px-4 rounded-lg transition-colors duration-300">Close</button>
             </div>
             
             <div class="text-center mt-6">
@@ -167,9 +164,7 @@
                     'Implemented magic to only show new updates to returning users.',
                     '[Grammar Grid]: grades K-5 now available.',
                     '[Session Scribe]: "Tome" has been added. Users can reference shorthand. Note: Scribe will still attempt to extend other shorthands based on context.'
-                ],
-                // *** ADD YOUR IMAGE URL HERE ***
-                closingImage: 'https://raw.githubusercontent.com/navasdo/navacite/refs/heads/main/images/updates_daniel.png'
+                ]
             };
 
             // --- Modal Logic ---
@@ -186,7 +181,6 @@
 
             const updateDateEl = document.getElementById('updateDate');
             const updateListEl = document.getElementById('updateList');
-            const updateImageContainer = document.getElementById('updateImageContainer');
 
             const lastSeenUpdateId = localStorage.getItem('lastSeenUpdateId');
 
@@ -205,12 +199,6 @@
                 // Populate modal with content from config
                 updateDateEl.textContent = updatesConfig.date;
                 updateListEl.innerHTML = updatesConfig.items.map(item => `<li>${item}</li>`).join('');
-
-                // Add the closing image if it exists
-                updateImageContainer.innerHTML = ''; // Clear it first
-                if (updatesConfig.closingImage) {
-                    updateImageContainer.innerHTML = `<img src="${updatesConfig.closingImage}" alt="Update signature" class="mx-auto w-32 mt-6">`;
-                }
 
                 modal.classList.remove('hidden');
                 // Use a tiny timeout to allow the CSS transitions to trigger correctly
