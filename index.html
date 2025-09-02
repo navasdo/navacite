@@ -63,10 +63,13 @@
 
             <!-- Revealed View -->
             <div id="revealedUpdateView" class="hidden">
-                <ul id="updateList" class="text-left list-disc list-inside space-y-2 mb-8 text-slate-300">
+                <ul id="updateList" class="text-left list-disc list-inside space-y-2 text-slate-300">
                     <!-- Update items will be injected here by JavaScript -->
                 </ul>
-                <button id="finalCloseButton" class="w-full bg-violet-600 hover:bg-violet-700 text-white font-bold py-3 px-4 rounded-lg transition-colors duration-300">Close</button>
+                <div id="updateImageContainer" class="text-center">
+                    <!-- Image will be injected here -->
+                </div>
+                <button id="finalCloseButton" class="w-full bg-violet-600 hover:bg-violet-700 text-white font-bold py-3 px-4 rounded-lg transition-colors duration-300 mt-8">Close</button>
             </div>
             
             <div class="text-center mt-6">
@@ -183,6 +186,7 @@
 
             const updateDateEl = document.getElementById('updateDate');
             const updateListEl = document.getElementById('updateList');
+            const updateImageContainer = document.getElementById('updateImageContainer');
 
             const lastSeenUpdateId = localStorage.getItem('lastSeenUpdateId');
 
@@ -201,6 +205,12 @@
                 // Populate modal with content from config
                 updateDateEl.textContent = updatesConfig.date;
                 updateListEl.innerHTML = updatesConfig.items.map(item => `<li>${item}</li>`).join('');
+
+                // Add the closing image if it exists
+                updateImageContainer.innerHTML = ''; // Clear it first
+                if (updatesConfig.closingImage) {
+                    updateImageContainer.innerHTML = `<img src="${updatesConfig.closingImage}" alt="Update signature" class="mx-auto w-32 mt-6">`;
+                }
 
                 modal.classList.remove('hidden');
                 // Use a tiny timeout to allow the CSS transitions to trigger correctly
