@@ -52,7 +52,7 @@
             <img src="https://raw.githubusercontent.com/navasdo/navacite/refs/heads/main/images/updates_daniel.png" alt="Daniel Navas" class="w-48 mx-auto mb-4 rounded-full [filter:drop-shadow(0_0_15px_rgba(255,255,255,0.6))]" onerror="this.onerror=null; this.src='https://placehold.co/192x192/1e293b/a78bfa?text=DN';" />
             
             <h2 class="text-3xl font-bold text-slate-100">Latest Updates</h2>
-            <p id="updateDate" class="text-sm text-slate-400 mb-6"></p>
+            <p id="updateDate" class="text-sm text-violet-400 mb-6"></p>
 
             <!-- Initial View -->
             <div id="initialUpdateView">
@@ -222,12 +222,12 @@
             
            // --- Configuration for Updates ---
             const updatesConfig = {
-                id: '2025-09-03-v3', // *** CHANGE THIS ID FOR NEW UPDATES ***
-                date: '<span class="text-violet-400">09/03/2025</span>',
+                id: '2025-09-03-v3',
+                date: '09/03/2025', // Just the date string
                 items: [
                     '<span class="text-green-600">[Session Scribe: Smarter Compliance Check]</span><br>To fix the issue where the app seemed to "auto-correct" notes without asking, it now uses a smarter, two-step process. Before writing the full note, a specialized AI quickly scans your text for potential names (even uncapitalized ones). If it spots anything questionable, it will now correctly show you the compliance pop-up, putting you in control before the final note is scribed.'
                 ]
-            };
+};
 
             // --- Modal Logic ---
             const modal = document.getElementById('updatesModal');
@@ -296,7 +296,7 @@
             });
         });
     </script>
-
 </body>
 </html>
+
 
