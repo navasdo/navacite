@@ -142,7 +142,10 @@
                 const result = await response.json();
                 const note = result.candidates?.[0]?.content?.parts?.[0]?.text;
                 if (note) {
-                    setState({ generatedNote: note, screen: 'results', isLoading: false });
+                    const today = new Date();
+                    const datePlaceholder = `${String(today.getMonth() + 1).padStart(2, '0')}/${String(today.getDate()).padStart(2, '0')}`;
+                    const datedNote = `${datePlaceholder}: ${note}`;
+                    setState({ generatedNote: datedNote, screen: 'results', isLoading: false });
                 } else {
                     throw new Error("Failed to generate a valid note.");
                 }
@@ -168,7 +171,7 @@
         function SetupScreenHTML() {
             const currentDate = new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
             const today = new Date();
-            const datePlaceholder = `[${String(today.getMonth() + 1).padStart(2, '0')}/${String(today.getDate()).padStart(2, '0')}]`;
+            const datePlaceholder = `${String(today.getMonth() + 1).padStart(2, '0')}/${String(today.getDate()).padStart(2, '0')}`;
             const placeholderText = `e.g., grp tx, artic, /r/, initial pos, min cues, 75% acc.\n\n...becomes, with the aid of the spectral scribes...\n\n${datePlaceholder}: Student participated in a group therapy session targeting articulation of the /r/ sound in the initial position of words, achieving 75% accuracy with minimal cues.`;
             
             if(state.isLoading) {
@@ -206,6 +209,7 @@
                     <div class="pt-4 text-center">
                          <button id="restart-button" class="transition-transform transform hover:scale-110">
                             <img src="https://raw.githubusercontent.com/navasdo/oliver/refs/heads/main/navacite-tng/images/moon_eraser.png" alt="Start New" class="h-24 mx-auto [filter:drop-shadow(0_0_15px_rgba(255,255,255,0.3))]"/>
+                            <p class="mt-2 text-lg font-semibold text-[#D3F2B3]">Start a New Note</p>
                         </button>
                     </div>
                 </div>
@@ -328,4 +332,5 @@
     </script>
 </body>
 </html>
+
 
