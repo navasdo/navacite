@@ -64,48 +64,72 @@
             render();
         }
 
-        const handleScribeClick = () => {
-            const capitalizedWordRegex = /\b[A-Z][a-z'-]+\b/g;
-            let potentialNamesFromCaps = (state.userInput.match(capitalizedWordRegex) || []).filter(word => !knownAcronyms.has(word.toUpperCase()));
-            
-            let potentialNamesFromGrammar = [];
-            const prepPattern = /\b(with|for|to)\s+([A-Z][a-zA-Z'-]+)\b/g;
-            let prepMatch;
-            while ((prepMatch = prepPattern.exec(state.userInput)) !== null) {
-                potentialNamesFromGrammar.push(prepMatch[2]);
-            }
-            
-            const contextPattern = /\b([a-zA-Z]{3,})\s+(on|about|regarding)\s+(his|her|their)\b/gi;
-            let contextMatch;
-            while ((contextMatch = contextPattern.exec(state.userInput)) !== null) {
-                const potentialName = contextMatch[1];
-                if (!/^(student|client|patient)$/i.test(potentialName)) {
-                    potentialNamesFromGrammar.push(potentialName);
-                }
-            }
-            
-            const allPotentialNames = [...new Set([...potentialNamesFromCaps, ...potentialNamesFromGrammar])];
-            const finalPotentialNames = allPotentialNames.filter(name => !knownAcronyms.has(name.toUpperCase()));
-            
-            if (finalPotentialNames.length > 0) {
-                setState({ showComplianceModal: true, potentialViolations: finalPotentialNames });
-            } else {
-                handleGenerate();
-            }
-        };
-
-        const handleGenerate = async () => {
+        const handleScribeClick = async () => {
             if (!state.userInput.trim()) {
                 const timer = setTimeout(() => setState({ error: null }), 5000);
                 setState({ error: "Please enter your notes before scribing.", errorTimer: timer });
                 return;
             }
+            setState({ isLoading: true, error: null });
+
+            const preflightSystemPrompt = `You are a compliance-checking AI. Your task is to identify potential personally identifiable information (PII) or FERPA violations in a given text. Return a JSON object with a single key "violations" which is an array of strings. Each string in the array should be a word or phrase you've identified as a potential violation. Focus on names of people, specific non-school locations, or titles of works that could be misinterpreted as names. If there are no potential violations, return an empty array. Do not explain your reasoning, just return the JSON object.`;
+            const preflightUserQuery = `Analyze the following text for potential PII and return the result as a JSON object: "${state.userInput}"`;
+            
+            const apiKey = "AIzaSyDbyFRosCckpHMGRRmA4hSpvSeJhPiSQuA"; // API key is handled by the environment.
+            const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${apiKey}`;
+
+            try {
+                const response = await fetch(apiUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        contents: [{ parts: [{ text: preflightUserQuery }] }],
+                        systemInstruction: { parts: [{ text: preflightSystemPrompt }] },
+                        generationConfig: {
+                            responseMimeType: "application/json",
+                            responseSchema: {
+                                type: "OBJECT",
+                                properties: { "violations": { "type": "ARRAY", "items": { "type": "STRING" } } }
+                            }
+                        }
+                    })
+                });
+
+                if (!response.ok) throw new Error(`Compliance Check Error: ${response.statusText}`);
+                const result = await response.json();
+                const jsonText = result.candidates?.[0]?.content?.parts?.[0]?.text;
+                
+                if (!jsonText) {
+                    // If AI returns no text, assume no violations and proceed.
+                    await generateFinalNote();
+                    return;
+                }
+
+                const data = JSON.parse(jsonText);
+                const violations = data.violations || [];
+                
+                const finalViolations = violations.filter(v => !knownAcronyms.has(v.toUpperCase()));
+
+                if (finalViolations.length > 0) {
+                    setState({ isLoading: false, showComplianceModal: true, potentialViolations: finalViolations });
+                } else {
+                    await generateFinalNote();
+                }
+
+            } catch (err) {
+                const timer = setTimeout(() => setState({ error: null }), 5000);
+                // Fallback: If compliance check fails, show the modal with a generic warning
+                setState({ isLoading: false, showComplianceModal: true, potentialViolations: ["Potential PII (auto-check failed)"], error: `Compliance check failed: ${err.message}. Please review carefully.`, errorTimer: timer });
+            }
+        };
+
+        const generateFinalNote = async () => {
             setState({ isLoading: true, error: null, showComplianceModal: false });
 
             const systemPrompt = `You are a Speech-Language Pathologist’s assistant. Your only task is to take shorthand prompts (fragments, abbreviations, or incomplete sentences) and expand them into full, professional attendance notes for school-based therapy. Write in a clear, concise, professional tone appropriate for clinical documentation. Crucially, all notes must be de-identified. Always refer to individuals as "the student" or "the students" and use neutral pronouns (they/them/their) to ensure anonymity and FERPA compliance. Use the provided glossary to expand shorthand. For terms not in the glossary, expand them logically.`;
             const userQuery = `Using the following glossary, please expand the shorthand note below into a professional therapy note.\n\nGlossary:\n${JSON.stringify(shorthandGlossary, null, 2)}\n\nShorthand Note:\n"${state.userInput}"`;
             
-            const apiKey = "AIzaSyDbyFRosCckpHMGRRmA4hSpvSeJhPiSQuA"; // API key is handled by the environment.
+            const apiKey = ""; // API key is handled by the environment.
             const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${apiKey}`;
 
             try {
@@ -288,7 +312,7 @@
 
             if (state.showComplianceModal) {
                 document.getElementById('comply-cancel')?.addEventListener('click', () => setState({ showComplianceModal: false, potentialViolations: [] }));
-                document.getElementById('comply-confirm')?.addEventListener('click', handleGenerate);
+                document.getElementById('comply-confirm')?.addEventListener('click', generateFinalNote);
             }
             if (state.showGlossaryModal) {
                  document.getElementById('glossary-close')?.addEventListener('click', () => setState({ showGlossaryModal: false }));
