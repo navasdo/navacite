@@ -99,7 +99,7 @@
 
             const systemPrompt = `You are a Speech-Language Pathologist’s assistant. Your only task is to take shorthand prompts (fragments, abbreviations, or incomplete sentences) and expand them into full, professional attendance notes for school-based therapy. Write in a clear, concise, professional tone appropriate for clinical documentation. Crucially, all notes must be de-identified. Always refer to individuals as "the student" or "the students" and use neutral pronouns (they/them/their) to ensure anonymity and FERPA compliance. Use the provided glossary to expand shorthand. For terms not in the glossary, expand them logically.`;
             const userQuery = `Using the following glossary, please expand the shorthand note below into a professional therapy note.\n\nGlossary:\n${JSON.stringify(shorthandGlossary, null, 2)}\n\nShorthand Note:\n"${state.userInput}"`;
-            const apiKey = "";
+            const apiKey = "AIzaSyDbyFRosCckpHMGRRmA4hSpvSeJhPiSQuA";
             const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${apiKey}`;
 
             try {
