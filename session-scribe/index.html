@@ -50,6 +50,7 @@
             generatedNote: '',
             showComplianceModal: false,
             showGlossaryModal: false,
+            potentialViolations: [], // To hold detected words
         };
 
         // --- Core App Logic ---
@@ -66,12 +67,14 @@
         const handleScribeClick = () => {
             const capitalizedWordRegex = /\b[A-Z][a-z'-]+\b/g;
             let potentialNamesFromCaps = (state.userInput.match(capitalizedWordRegex) || []).filter(word => !knownAcronyms.has(word.toUpperCase()));
+            
             let potentialNamesFromGrammar = [];
             const prepPattern = /\b(with|for|to)\s+([A-Z][a-zA-Z'-]+)\b/g;
             let prepMatch;
             while ((prepMatch = prepPattern.exec(state.userInput)) !== null) {
                 potentialNamesFromGrammar.push(prepMatch[2]);
             }
+            
             const contextPattern = /\b([a-zA-Z]{3,})\s+(on|about|regarding)\s+(his|her|their)\b/gi;
             let contextMatch;
             while ((contextMatch = contextPattern.exec(state.userInput)) !== null) {
@@ -80,10 +83,12 @@
                     potentialNamesFromGrammar.push(potentialName);
                 }
             }
+            
             const allPotentialNames = [...new Set([...potentialNamesFromCaps, ...potentialNamesFromGrammar])];
             const finalPotentialNames = allPotentialNames.filter(name => !knownAcronyms.has(name.toUpperCase()));
+            
             if (finalPotentialNames.length > 0) {
-                setState({ showComplianceModal: true });
+                setState({ showComplianceModal: true, potentialViolations: finalPotentialNames });
             } else {
                 handleGenerate();
             }
@@ -99,7 +104,8 @@
 
             const systemPrompt = `You are a Speech-Language Pathologist’s assistant. Your only task is to take shorthand prompts (fragments, abbreviations, or incomplete sentences) and expand them into full, professional attendance notes for school-based therapy. Write in a clear, concise, professional tone appropriate for clinical documentation. Crucially, all notes must be de-identified. Always refer to individuals as "the student" or "the students" and use neutral pronouns (they/them/their) to ensure anonymity and FERPA compliance. Use the provided glossary to expand shorthand. For terms not in the glossary, expand them logically.`;
             const userQuery = `Using the following glossary, please expand the shorthand note below into a professional therapy note.\n\nGlossary:\n${JSON.stringify(shorthandGlossary, null, 2)}\n\nShorthand Note:\n"${state.userInput}"`;
-            const apiKey = "AIzaSyDbyFRosCckpHMGRRmA4hSpvSeJhPiSQuA";
+            
+            const apiKey = "AIzaSyDbyFRosCckpHMGRRmA4hSpvSeJhPiSQuA"; // API key is handled by the environment.
             const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${apiKey}`;
 
             try {
@@ -184,14 +190,17 @@
         
         function ComplianceModalHTML() {
             if (!state.showComplianceModal) return '';
+            const violationText = state.potentialViolations.map(v => `<strong>${v}</strong>`).join(', ');
+
             return `
                 <div class="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
                     <div class="bg-[#062601] border border-[#154001] rounded-2xl shadow-2xl p-8 max-w-md w-full text-center">
-                        <img src="https://raw.githubusercontent.com/navasdo/oliver/refs/heads/main/navacite-tng/images/compliance.png" alt="Compliance Icon" class="w-32 mx-auto mb-4 [filter:drop-shadow(0_0_15px_rgba(255,255,255,0.3))]"/>
-                        <p class="text-[#D3F2B3]/90 italic mb-6">The spectral quills pause, hovering over the parchment. To protect the sacred trust between worlds and comply with FERPA, no personally identifiable information should be scribed. Do you confirm your entry is compliant?</p>
+                        <img src="images/compliance.png" alt="Compliance Icon" class="w-32 mx-auto mb-4 [filter:drop-shadow(0_0_15px_rgba(255,255,255,0.3))]"/>
+                        <p class="text-[#D3F2B3]/90 italic mb-2">The spectral quills pause, hovering over the parchment. To protect the sacred trust between worlds and comply with FERPA, no personally identifiable information should be scribed.</p>
+                        <p class="text-[#D3F2B3]/90 italic mb-6">The following terms may be a violation: ${violationText}. Do you confirm your entry is compliant?</p>
                         <div class="flex justify-center gap-4">
                             <button id="comply-cancel" class="px-6 py-2 bg-gray-600 text-white font-bold rounded-lg shadow-md hover:bg-gray-700 transition">No, I'll Edit</button>
-                            <button id="comply-confirm" class="px-6 py-2 bg-[#154001] text-white font-bold rounded-lg shadow-md hover:bg-[#6EA665] transition">Yes, I Comply</button>
+                            <button id="comply-confirm" class="px-6 py-2 bg-[#154001] text-white font-bold rounded-lg shadow-md hover:bg-[#6EA665] transition">Yes, Proceed</button>
                         </div>
                     </div>
                 </div>
@@ -278,11 +287,8 @@
             }
 
             if (state.showComplianceModal) {
-                document.getElementById('comply-cancel')?.addEventListener('click', () => setState({ showComplianceModal: false }));
-                document.getElementById('comply-confirm')?.addEventListener('click', () => {
-                    setState({ showComplianceModal: false });
-                    handleGenerate();
-                });
+                document.getElementById('comply-cancel')?.addEventListener('click', () => setState({ showComplianceModal: false, potentialViolations: [] }));
+                document.getElementById('comply-confirm')?.addEventListener('click', handleGenerate);
             }
             if (state.showGlossaryModal) {
                  document.getElementById('glossary-close')?.addEventListener('click', () => setState({ showGlossaryModal: false }));
@@ -298,3 +304,4 @@
     </script>
 </body>
 </html>
+
