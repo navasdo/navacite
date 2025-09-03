@@ -107,36 +107,8 @@
 
     <!-- Main Content - Tool Library Section -->
     <main class="w-full max-w-5xl mx-auto flex-grow">
-        <div class="mt-16 grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-10 p-4">
-            
-            <a href="#" class="group relative flex flex-col items-center justify-between p-6 bg-slate-900/40 rounded-2xl border border-violet-900/80 transition-all duration-300 ease-in-out hover:border-violet-600/80 hover:scale-105 hover:shadow-[0_0_25px_-5px_rgba(167,139,250,0.4)]">
-                <div class="w-full aspect-square flex items-center justify-center">
-                   <img src="https://raw.githubusercontent.com/navasdo/oliver/refs/heads/main/navacite/gems/Navacite-Ellv2.png" alt="Language Lens Icon" class="max-w-full max-h-full object-contain transition-transform duration-300 group-hover:scale-110 [filter:drop-shadow(0_0_15px_rgba(255,255,255,0.3))]" onerror="this.onerror=null; this.src='https://placehold.co/200x200/1e293b/a78bfa?text=Tool+Icon';"/>
-                </div>
-                <div class="text-center"><h2 class="text-xl font-bold text-slate-200 group-hover:text-violet-400 transition-colors duration-300">Language Lens (Coming Soon)</h2></div>
-            </a>
-
-            <a href="https://comprehension-crystal.vercel.app" class="group relative flex flex-col items-center justify-between p-6 bg-slate-900/40 rounded-2xl border border-violet-900/80 transition-all duration-300 ease-in-out hover:border-violet-600/80 hover:scale-105 hover:shadow-[0_0_25px_-5px_rgba(167,139,250,0.4)]">
-                <div class="w-full aspect-square flex items-center justify-center">
-                   <img src="https://raw.githubusercontent.com/navasdo/oliver/refs/heads/main/navacite/gems/navacite-rpgv2.png" alt="Comprehension Crystal Icon" class="max-w-full max-h-full object-contain transition-transform duration-300 group-hover:scale-110 [filter:drop-shadow(0_0_15px_rgba(255,255,255,0.3))]" onerror="this.onerror=null; this.src='https://placehold.co/200x200/1e293b/a78bfa?text=Tool+Icon';"/>
-                </div>
-                <div class="text-center"><h2 class="text-xl font-bold text-slate-200 group-hover:text-violet-400 transition-colors duration-300">Comprehension Crystal</h2></div>
-            </a>
-
-            <a href="https://session-scribev1.vercel.app" class="group relative flex flex-col items-center justify-between p-6 bg-slate-900/40 rounded-2xl border border-violet-900/80 transition-all duration-300 ease-in-out hover:border-violet-600/80 hover:scale-105 hover:shadow-[0_0_25px_-5px_rgba(167,139,250,0.4)]">
-                <div class="w-full aspect-square flex items-center justify-center">
-                   <img src="https://raw.githubusercontent.com/navasdo/navacite/refs/heads/main/gems/Navacite-TNG.png" alt="Session Scribe Icon" class="max-w-full max-h-full object-contain transition-transform duration-300 group-hover:scale-110 [filter:drop-shadow(0_0_15px_rgba(255,255,255,0.3))]" onerror="this.onerror=null; this.src='https://placehold.co/200x200/1e293b/a78bfa?text=Tool+Icon';"/>
-                </div>
-                <div class="text-center"><h2 class="text-xl font-bold text-slate-200 group-hover:text-violet-400 transition-colors duration-300">Session Scribe</h2></div>
-            </a>
-
-            <a href="https://grammar-grid.vercel.app" class="group relative flex flex-col items-center justify-between p-6 bg-slate-900/40 rounded-2xl border border-violet-900/80 transition-all duration-300 ease-in-out hover:border-violet-600/80 hover:scale-105 hover:shadow-[0_0_25px_-5px_rgba(167,139,250,0.4)]">
-                <div class="w-full aspect-square flex items-center justify-center">
-                   <img src="https://raw.githubusercontent.com/navasdo/navacite/refs/heads/main/gems/navacite-gg.png" alt="Grammar Grid Icon" class="max-w-full max-h-full object-contain transition-transform duration-300 group-hover:scale-110 [filter:drop-shadow(0_0_15px_rgba(255,255,255,0.3))]" onerror="this.onerror=null; this.src='https://placehold.co/200x200/1e293b/a78bfa?text=Tool+Icon';"/>
-                </div>
-                <div class="text-center"><h2 class="text-xl font-bold text-slate-200 group-hover:text-violet-400 transition-colors duration-300">Grammar Grid</h2></div>
-            </a>
-
+        <div id="tool-grid" class="mt-16 grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-10 p-4">
+            <!-- Tool cards will be dynamically injected here by JavaScript -->
         </div>
     </main>
 
@@ -153,15 +125,97 @@
 
     <script>
         document.addEventListener('DOMContentLoaded', () => {
+
+            // --- Configuration for all tools ---
+            // Edit the information for each tool here.
+            const tools = [
+                {
+                    name: 'Language Lens (coming soon)',
+                    href: '#',
+                    imgSrc: 'https://raw.githubusercontent.com/navasdo/oliver/refs/heads/main/navacite/gems/Navacite-Ellv2.png',
+                    imgAlt: 'Language Lens Icon',
+                    description: 'Analyzes language samples to identify patterns and areas of difficulty for English Language Learners.'
+                },
+                {
+                    name: 'Comprehension Crystal',
+                    href: 'https://comprehension-crystal.vercel.app',
+                    imgSrc: 'https://raw.githubusercontent.com/navasdo/oliver/refs/heads/main/navacite/gems/navacite-rpgv2.png',
+                    imgAlt: 'Comprehension Crystal Icon',
+                    description: 'Generates reading comprehension probes based on grade level and topics of interest. Also has the ability to read the story, questions, and answer choices to the user.'
+                },
+                {
+                    name: 'Session Scribe',
+                    href: 'https://session-scribev1.vercel.app',
+                    imgSrc: 'https://raw.githubusercontent.com/navasdo/navacite/refs/heads/main/gems/Navacite-TNG.png',
+                    imgAlt: 'Session Scribe Icon',
+                    description: 'Uses shorthand to automatically generate detailed and accurate therapy session notes, saving valuable time.'
+                },
+                {
+                    name: 'Grammar Grid',
+                    href: 'https://grammar-grid.vercel.app',
+                    imgSrc: 'https://raw.githubusercontent.com/navasdo/navacite/refs/heads/main/gems/navacite-gg.png',
+                    imgAlt: 'Grammar Grid Icon',
+                    description: 'Assesses the student’s ability to create meaningful, grammatically correct sentences using and transforming given words.'
+                },
+                {
+                    name: 'Echoform (coming soon)',
+                    href: '/',
+                    imgSrc: 'https://raw.githubusercontent.com/navasdo/navacite/refs/heads/main/gems/navacite-echoform.png',
+                    imgAlt: 'Echoform Icon',
+                    description: 'Assesses the student’s ability to repeat increasingly complex sentences accurately, preserving meaning, word forms, and syntax — key skills that support short-term memory and linguistic competence.'
+                },
+                {
+                    name: 'LexiMind (coming soon)',
+                    href: '/',
+                    imgSrc: 'https://raw.githubusercontent.com/navasdo/navacite/refs/heads/main/gems/navacite-leximind.png',
+                    imgAlt: 'Leximind Icon',
+                    description: 'Assesses the student’s ability to analyze and define words through class relationships, shared features, and unique referential meanings.'
+                },
+                {
+                    name: 'Syntax Spire (coming soon)',
+                    href: '/',
+                    imgSrc: 'https://raw.githubusercontent.com/navasdo/navacite/refs/heads/main/gems/navacite-syntax_spire.png',
+                    imgAlt: 'Syntax Spire Icon',
+                    description: 'Assesses the student’s ability to interpret sentences involving comparison, location/direction, time, sequence, and passive voice.'
+                }
+            ];
+
+            const toolGrid = document.getElementById('tool-grid');
+            if (toolGrid) {
+                toolGrid.innerHTML = tools.map(tool => `
+                    <a href="${tool.href}" class="group relative flex flex-col items-center justify-between p-6 bg-slate-900/40 rounded-2xl border border-violet-900/80 transition-all duration-300 ease-in-out hover:border-violet-600/80 hover:scale-105 hover:shadow-[0_0_25px_-5px_rgba(167,139,250,0.4)]">
+                        
+                        <!-- Tooltip -->
+                        <div class="absolute top-2 right-2">
+                            <div class="relative">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-slate-500 group-hover:text-violet-400 transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                </svg>
+                                <span class="absolute bottom-full right-0 mb-2 w-48 p-2 text-xs text-center text-white bg-slate-700 rounded-md opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
+                                    ${tool.description}
+                                </span>
+                            </div>
+                        </div>
+
+                        <div class="w-full aspect-square flex items-center justify-center">
+                           <img src="${tool.imgSrc}" alt="${tool.imgAlt}" class="max-w-full max-h-full object-contain transition-transform duration-300 group-hover:scale-110 [filter:drop-shadow(0_0_15px_rgba(255,255,255,0.3))]" onerror="this.onerror=null; this.src='https://placehold.co/200x200/1e293b/a78bfa?text=Tool+Icon';"/>
+                        </div>
+                        <div class="text-center"><h2 class="text-xl font-bold text-slate-200 group-hover:text-violet-400 transition-colors duration-300">${tool.name}</h2></div>
+                    </a>
+                `).join('');
+            }
             
            // --- Configuration for Updates ---
             const updatesConfig = {
-                id: '2025-09-03-v1', // *** CHANGE THIS ID FOR NEW UPDATES ***
+                id: '2025-09-03-v2', // *** CHANGE THIS ID FOR NEW UPDATES ***
                 date: '09/02/2025',
                 items: [
                     'The Navacite Library homepage is now live!',
                     'Added the "Updates" pop-up you are currently reading.',
                     'Implemented magic to only show new updates to returning users.',
+                    '[Echoform]: New App, in development, see app card for details.',
+                    '[LexiMind]: New App, in development, see app card for details.',
+                    '[Syntax Spire]: New App, in development, see app card for details.',
                     '[Grammar Grid]: grades K-5 now available.',
                     '[Session Scribe]: "Tome" has been added. Users can reference shorthand. Note: Scribe will still attempt to extend other shorthands based on context.'
                 ]
