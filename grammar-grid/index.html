@@ -4299,7 +4299,7 @@
               audioRef.current.question = new Audio("https://raw.githubusercontent.com/navasdo/grammar-grid/main/audio/question.wav");
               audioRef.current.finished = new Audio("https://raw.githubusercontent.com/navasdo/grammar-grid/main/audio/finished.wav"); 
               audioRef.current.correctAnswerSound = new Audio("https://raw.githubusercontent.com/navasdo/grammar-grid/main/audio/2_out_of_2.wav"); 
-              audioRef.current.incorrect = new Audio("audio/incorrect.mp3"); 
+              audioRef.current.incorrect = new Audio("audio/incorrect.wav"); 
           }, []);
 
           const playAudio = (audioElement, onEnded) => { if (audioElement) { audioElement.onended = onEnded; audioElement.play().catch(e => console.error("Audio playback failed:", e)); } };
