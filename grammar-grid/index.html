@@ -1,7 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <link rel="icon" type="images/navacite.ico" href="images/navacite.ico">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Grammar Grid</title>
@@ -57,6 +56,19 @@
         }
         .image-glow {
             animation: blooming-glow 1.5s ease-in-out forwards;
+        }
+        @keyframes pulse-glow {
+            0%, 100% {
+                transform: scale(1);
+                filter: drop-shadow(0 0 10px rgba(218, 112, 214, 0.5));
+            }
+            50% {
+                transform: scale(1.05);
+                filter: drop-shadow(0 0 25px rgba(218, 112, 214, 1)) drop-shadow(0 0 40px rgba(195, 177, 225, 0.8));
+            }
+        }
+        .loading-pulse {
+            animation: pulse-glow 2s ease-in-out infinite;
         }
     </style>
 </head>
@@ -4165,7 +4177,7 @@
 
 
     <script type="text/babel">
-        const { useState, useEffect, useRef, useMemo } = React;
+        const { useState, useEffect, useRef, useMemo, useCallback } = React;
 
         // --- Data ---
         // Load questions from the JSON data block in the HTML
@@ -4252,7 +4264,7 @@
           return (
             <div className="bg-[#5B4B62] min-h-screen font-sans text-[#dee2e6] relative">
               <button onClick={toggleFullscreen} className="absolute top-4 left-4 z-10 p-2 rounded-full bg-[#8B87A1]/50 hover:bg-[#C3B1E1] transition" title={isFullscreen ? "Exit Fullscreen" : "Enter Fullscreen"}> {isFullscreen ? <IconFullscreenExit /> : <IconFullscreenEnter />} </button>
-              <a href="https://navacite.com" className="absolute top-4 right-4 z-10 p-1 rounded-full bg-[#8B87A1]/50 hover:bg-[#C3B1E1] transition" title="Back to Homepage"> <img src="https://raw.githubusercontent.com/navasdo/oliver/main/navacite/gems/Navacite-Main.png" alt="Navacite Homepage" className="w-10 h-10 rounded-full"/> </a>
+              <a href="https://navacite.vercel.app" className="absolute top-4 right-4 z-10 p-1 rounded-full bg-[#8B87A1]/50 hover:bg-[#C3B1E1] transition" title="Back to Homepage"> <img src="https://raw.githubusercontent.com/navasdo/oliver/main/navacite/gems/Navacite-Main.png" alt="Navacite Homepage" className="w-10 h-10 rounded-full"/> </a>
               <div className="container mx-auto p-4 sm:p-6 lg:p-8">
                 <header className="text-center mb-8">
                   <img src="https://raw.githubusercontent.com/navasdo/grammar-grid/refs/heads/main/navacite-gg.png" alt="App Gem" className="w-48 mx-auto mb-4 drop-shadow-[0_0_15px_rgba(255,255,255,0.7)]" />
@@ -4373,7 +4385,7 @@
                     <IconReset />
                     <span>Reset Blocks</span>
                 </button>
-                <button onClick={onStartAssessment} className="px-6 py-3 bg-[#DA70D6] rounded-lg text-white font-bold hover:bg-[#C3B1E1] transition"> Pass </button> 
+                <button onClick={onStartAssessment} className="px-6 py-3 bg-[#DA70D6] rounded-lg text-white font-bold transition disabled:bg-gray-500 disabled:opacity-75 disabled:cursor-not-allowed" disabled={true} title="Please complete the tutorial first."> Pass </button> 
               </div> 
             </div> 
           );
@@ -4487,6 +4499,7 @@
             const [shake, setShake] = useState(false);
             const [isQuestionCompleteGlow, setIsQuestionCompleteGlow] = useState(false);
             const [isCorrectGlow, setIsCorrectGlow] = useState(false);
+            const [isChangingQuestion, setIsChangingQuestion] = useState(false);
             const audioRef = useRef({});
             
             const [score, setScore] = useState(0);
@@ -4501,6 +4514,22 @@
                 "Subordinate Clause": 0, "Subordinate Clause as Subject": 0
             });
             const [assessmentLog, setAssessmentLog] = useState([]);
+
+            const normalize = (str) => str.toLowerCase().replace(/[^\w\s]|_/g, "").replace(/\s+/g, " ").trim();
+            
+            const getShuffledWords = (words, correctAnswers) => {
+                const correctOrders = correctAnswers.map(ans => normalize(ans));
+                let shuffled;
+                let isCorrectOrder = true;
+                let attempts = 0; // Safety break for infinite loops
+                while (isCorrectOrder && attempts < 10) {
+                    shuffled = shuffleArray([...words]);
+                    const shuffledSentence = normalize(shuffled.join(' '));
+                    isCorrectOrder = correctOrders.some(ans => ans.startsWith(shuffledSentence));
+                    attempts++;
+                }
+                return shuffled;
+            };
 
             const relevantTypes = useMemo(() => {
                 if (!questions || questions.length === 0) return [];
@@ -4534,18 +4563,18 @@
                 setTotalPossibleScore(finalQuestions.reduce((acc, q) => acc + q.required, 0));
             }, [settings]);
 
+            const currentQuestion = questions[currentQIndex];
+
             useEffect(() => {
                 if (questions.length > 0 && currentQIndex < questions.length) {
-                    const currentQuestion = questions[currentQIndex];
-                    setShuffledWords(shuffleArray([...currentQuestion.words]));
+                    setShuffledWords(getShuffledWords(currentQuestion.words, currentQuestion.correct));
                     setCurrentSentence([]);
                     setCompletedSentences([]);
                 }
             }, [currentQIndex, questions]);
 
-            const currentQuestion = questions[currentQIndex];
 
-            const handleNextQuestion = React.useCallback(() => {
+            const handleNextQuestion = useCallback(() => {
                 const logEntry = {
                     question: currentQuestion,
                     correctlyFormed: completedSentences,
@@ -4553,18 +4582,22 @@
                 };
                 setAssessmentLog(prev => [...prev, logEntry]);
 
-                if (currentQIndex < questions.length - 1) {
-                    setCurrentQIndex(prev => prev + 1);
-                } else {
-                    onSubmit({
-                        settings,
-                        finalScore: score,
-                        totalPossible: totalPossibleScore,
-                        struggledTypes,
-                        log: [...assessmentLog, logEntry],
-                        relevantTypes
-                    });
-                }
+                setIsChangingQuestion(true);
+                setTimeout(() => {
+                    if (currentQIndex < questions.length - 1) {
+                        setCurrentQIndex(prev => prev + 1);
+                        setIsChangingQuestion(false);
+                    } else {
+                        onSubmit({
+                            settings,
+                            finalScore: score,
+                            totalPossible: totalPossibleScore,
+                            struggledTypes,
+                            log: [...assessmentLog, logEntry],
+                            relevantTypes
+                        });
+                    }
+                }, 1000);
             }, [currentQIndex, questions, completedSentences, currentQuestion, assessmentLog, onSubmit, score, totalPossibleScore, struggledTypes, settings, relevantTypes]);
 
             useEffect(() => {
@@ -4578,14 +4611,19 @@
                 }
             }, [completedSentences, currentQuestion, handleNextQuestion]);
 
-            const handleWordClick = (word) => {
+            const handleWordClick = useCallback((word) => {
                 setCurrentSentence(prev => [...prev, word]);
                 setShuffledWords(prev => prev.filter(w => w !== word));
-            };
+            }, []);
             
-            const normalize = (str) => str.toLowerCase().replace(/[^\w\s]|_/g, "").replace(/\s+/g, " ").trim();
+            const handleReset = useCallback(() => {
+                setCurrentSentence([]);
+                if (currentQuestion) {
+                    setShuffledWords(getShuffledWords(currentQuestion.words, currentQuestion.correct));
+                }
+            }, [currentQuestion]);
 
-            const handleCheck = () => {
+            const handleCheck = useCallback(() => {
                 const sentenceText = currentSentence.join(' ');
                 const normalizedUserSentence = normalize(sentenceText);
                 const isCorrect = currentQuestion.correct.some(correctAnswer => normalize(correctAnswer) === normalizedUserSentence) && !completedSentences.includes(sentenceText);
@@ -4607,24 +4645,48 @@
                     });
                 }
                 handleReset();
-            };
+            }, [currentSentence, currentQuestion, completedSentences, handleReset]);
             
-            const handleReset = () => {
-                setCurrentSentence([]);
-                if (currentQuestion) {
-                    setShuffledWords(shuffleArray([...currentQuestion.words]));
-                }
-            };
-
-            const handlePass = () => {
+            const handlePass = useCallback(() => {
                 const allTypes = ["Active Declarative", ...currentQuestion.types];
                 allTypes.forEach(type => {
                     setStruggledTypes(prev => prev.hasOwnProperty(type) ? { ...prev, [type]: prev[type] + 1 } : prev);
                 });
                 handleNextQuestion();
-            };
+            }, [currentQuestion, handleNextQuestion]);
+            
+            useEffect(() => {
+                const handleKeyDown = (e) => {
+                    if (document.activeElement.tagName === 'INPUT' || document.activeElement.tagName === 'SELECT') return;
 
-            if (!currentQuestion) return <div className="text-center"><IconSpinner className="animate-spin h-8 w-8 mx-auto" /></div>;
+                    const key = e.key;
+                    if (key >= '1' && key <= '9') {
+                        const index = parseInt(key, 10) - 1;
+                        if (shuffledWords[index]) handleWordClick(shuffledWords[index]);
+                    } else if (key === '0') {
+                        if (shuffledWords[9]) handleWordClick(shuffledWords[9]);
+                    }
+
+                    switch (key) {
+                        case '-': e.preventDefault(); handleCheck(); break;
+                        case '=': e.preventDefault(); handleReset(); break;
+                        case 'ArrowRight': e.preventDefault(); handlePass(); break;
+                        default: break;
+                    }
+                };
+
+                window.addEventListener('keydown', handleKeyDown);
+                return () => window.removeEventListener('keydown', handleKeyDown);
+            }, [shuffledWords, handleWordClick, handleCheck, handleReset, handlePass]);
+
+            if (isChangingQuestion || !currentQuestion) {
+                 return (
+                    <div className="flex flex-col items-center justify-center space-y-4 min-h-[50vh]">
+                        <img src="https://raw.githubusercontent.com/navasdo/grammar-grid/refs/heads/main/images/gg_blocks.png" alt="Loading..." className="w-52 h-auto loading-pulse" />
+                        <p className="text-lg font-semibold text-[#C3B1E1]">Loading next question...</p>
+                    </div>
+                );
+            }
 
             const sentencesNeeded = currentQuestion.required - completedSentences.length;
 
@@ -4635,31 +4697,54 @@
                         <p className="font-bold text-lg">Score: {score}</p>
                     </div>
 
-                    <div className="text-center">
-                        <h2 className="text-xl font-bold text-[#dee2e6]"> Make {currentQuestion.required} correct sentence{currentQuestion.required > 1 ? 's' : ''}. </h2>
-                        {sentencesNeeded > 0 ? <p className="text-[#C3B1E1]">You still need to make {sentencesNeeded} more.</p> : <p className="text-green-400 font-bold">Great! Please wait for the next question.</p>}
-                    </div>
-
-                    <div className="text-center my-2">
-                         <img src="https://raw.githubusercontent.com/navasdo/grammar-grid/refs/heads/main/images/gg_blocks.png" alt="Grammar Blocks" className={`w-48 mx-auto transition-all duration-500 ${isQuestionCompleteGlow ? 'image-glow' : ''}`} />
+                    <div className="flex justify-between items-center mb-4">
+                        <div className="w-1/3 text-left">
+                            <h3 className="font-semibold text-sm text-[#C3B1E1]">Completed:</h3>
+                            {completedSentences.length > 0 ? (
+                                <ul className="list-disc list-inside text-xs">
+                                    {completedSentences.map((s, i) => <li key={i}>{s}</li>)}
+                                </ul>
+                            ) : (
+                                <p className="text-xs italic text-[#aea2a6]">None yet.</p>
+                            )}
+                        </div>
+                        <div className="w-1/3 text-center">
+                            <h2 className="text-xl font-bold text-[#dee2e6]"> Make {currentQuestion.required} correct sentence{currentQuestion.required > 1 ? 's' : ''}. </h2>
+                            {sentencesNeeded > 0 ? <p className="text-[#C3B1E1]">You still need {sentencesNeeded} more.</p> : <p className="text-green-400 font-bold">Great!</p>}
+                        </div>
+                         <div className="w-1/3 flex justify-end">
+                            <img src="https://raw.githubusercontent.com/navasdo/grammar-grid/refs/heads/main/images/gg_blocks.png" alt="Grammar Blocks" className={`w-32 h-auto transition-all duration-500 ${isQuestionCompleteGlow ? 'image-glow' : ''}`} />
+                        </div>
                     </div>
 
                     <div className={`p-4 min-h-[6rem] border border-dashed border-[#AEA2A6] rounded-lg flex flex-wrap items-center justify-center gap-2 ${shake ? 'shake' : ''} ${isQuestionCompleteGlow || isCorrectGlow ? 'glow' : ''}`}>
                         {currentSentence.map((word, i) => <span key={i} className="px-3 py-2 bg-[#AEA2A6]/50 text-[#5B4B62] rounded-lg shadow-sm font-semibold">{word}</span>)}
                     </div>
                     
-                    <div className="p-4 rounded-lg flex flex-wrap justify-center gap-2 bg-[#8B87A1]/50 min-h-[6rem]">
+                    <div className="p-4 rounded-lg flex flex-wrap justify-center gap-4 bg-[#8B87A1]/50 min-h-[6rem]">
                         {shuffledWords.map((word, i) => (
-                            <button key={i} onClick={() => handleWordClick(word)} className="word-box px-4 py-2 bg-[#AEA2A6]/50 text-[#dee2e6] rounded-lg shadow-sm font-semibold hover:bg-[#C3B1E1]">
-                                {word}
-                            </button>
+                            <div key={i} className="text-center">
+                                <button onClick={() => handleWordClick(word)} className="word-box px-4 py-2 bg-[#AEA2A6]/50 text-[#dee2e6] rounded-lg shadow-sm font-semibold hover:bg-[#C3B1E1]">
+                                    {word}
+                                </button>
+                                <span className="text-xs text-[#C3B1E1] mt-1 block">{i < 9 ? i + 1 : 0}</span>
+                            </div>
                         ))}
                     </div>
 
-                    <div className="flex items-center justify-center space-x-4 mt-6">
-                        <button onClick={handleCheck} className="flex items-center justify-center gap-2 px-5 py-3 bg-[#DA70D6] rounded-lg font-bold text-white hover:bg-[#C3B1E1] transition"> <IconCheck /> <span>Check Sentence</span> </button>
-                        <button onClick={handleReset} className="flex items-center justify-center gap-2 px-5 py-3 bg-[#DA70D6] rounded-lg font-bold text-white hover:bg-[#C3B1E1] transition"> <IconReset /> <span>Reset Blocks</span> </button>
-                        <button onClick={handlePass} className="px-6 py-3 bg-[#DA70D6] rounded-lg text-white font-bold hover:bg-[#C3B1E1] transition"> Pass </button>
+                    <div className="flex items-start justify-center space-x-4 mt-6">
+                        <div className="text-center">
+                            <button onClick={handleCheck} className="flex items-center justify-center gap-2 px-5 py-3 bg-[#DA70D6] rounded-lg font-bold text-white hover:bg-[#C3B1E1] transition"> <IconCheck /> <span>Check</span> </button>
+                            <span className="text-xs text-[#C3B1E1] mt-1 block">-</span>
+                        </div>
+                        <div className="text-center">
+                            <button onClick={handleReset} className="flex items-center justify-center gap-2 px-5 py-3 bg-[#DA70D6] rounded-lg font-bold text-white hover:bg-[#C3B1E1] transition"> <IconReset /> <span>Reset</span> </button>
+                             <span className="text-xs text-[#C3B1E1] mt-1 block">=</span>
+                        </div>
+                        <div className="text-center">
+                            <button onClick={handlePass} className="px-6 py-3 bg-[#DA70D6] rounded-lg text-white font-bold hover:bg-[#C3B1E1] transition"> Pass </button>
+                            <span className="text-xs text-[#C3B1E1] mt-1 block">→</span>
+                        </div>
                     </div>
                 </div>
             );
