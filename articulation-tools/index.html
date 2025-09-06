@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <link rel="icon" type="image/x-icon" href="https://raw.githubusercontent.com/navasdo/navacite/main/images/navacite.ico">
+                <a href="https://navacite.com" class="absolute top-4 right-4 z-10 p-1 rounded-full bg-gray-700/50 hover:bg-gray-600/50 transition" title="Back to Homepage"><img src="https://raw.githubusercontent.com/navasdo/oliver/main/navacite/gems/Navacite-Main.png" alt="Navacite Homepage" class="w-10 h-10 rounded-full"/></a>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Navacite Library: Articulation</title>
+    <!-- Direct link to Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Smooth scrolling behavior */
+        html {
+            scroll-behavior: smooth;
+        }
+        /* Custom styles for checkbox labels */
+        .filter-label {
+            transition: all 0.2s ease-in-out;
+            cursor: pointer;
+        }
+        .filter-label:hover {
+            background-color: #3e2e6b; /* A slightly lighter violet for hover */
+        }
+        input:checked + .filter-label {
+            background-color: #7c3aed; /* bg-violet-600 */
+            border-color: #a78bfa; /* border-violet-400 */
+            color: #ffffff;
+            transform: scale(1.05);
+            box-shadow: 0 0 15px rgba(167, 139, 250, 0.5);
+        }
+        /* Hide the actual checkbox */
+        input[type="checkbox"] {
+            display: none;
+        }
+    </style>
+</head>
+<body class="bg-[#0c0a18] min-h-screen font-sans text-slate-300 flex flex-col items-center p-4 sm:p-6 lg:p-8 overflow-x-hidden">
+
+    <!-- Header Section -->
+    <header class="w-full max-w-5xl mx-auto my-8">
+        <div class="text-center pt-8">
+            <img
+              src="https://raw.githubusercontent.com/navasdo/navacite/refs/heads/main/gems/Navacite-Main.png"
+              alt="Navacite Main Visual"
+              class="w-48 mx-auto mb-4 [filter:drop-shadow(0_0_15px_rgba(255,255,255,0.3))]"
+              onerror="this.onerror=null; this.src='https://placehold.co/192x108/0c0a18/a78bfa?text=Navacite-Main';"
+            />
+            <h1 class="text-5xl md:text-6xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-violet-400 to-fuchsia-500">
+              Articulation Library
+            </h1>
+            <p class="text-md md:text-lg text-slate-400 italic max-w-3xl mx-auto mt-2">
+              A collection of AI tools created by Daniel Navas, M.A., CCC-SLP in tandem with Google Gemini.
+            </p>
+        </div>
+    </header>
+
+    <!-- Main Content - Tool Library Section -->
+    <main class="w-full max-w-5xl mx-auto flex-grow">
+        
+        <!-- ===== Filter Section ===== -->
+        <div id="filter-container" class="mb-12 p-6 bg-slate-900/40 rounded-2xl border border-violet-900/80">
+            <p class="text-center text-slate-400 mb-6">Select one <strong>Place</strong> and one <strong>Manner</strong> to sort the phonemes.</p>
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                <!-- Place Filters -->
+                <div>
+                    <h3 class="text-xl font-bold text-violet-400 mb-4 text-center">Place</h3>
+                    <div id="place-filters" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
+                        <!-- Place checkboxes will be inserted here -->
+                    </div>
+                </div>
+                <!-- Manner Filters -->
+                <div>
+                    <h3 class="text-xl font-bold text-violet-400 mb-4 text-center">Manner</h3>
+                    <div id="manner-filters" class="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                         <!-- Manner checkboxes will be inserted here -->
+                    </div>
+                </div>
+            </div>
+            <div class="text-center mt-6">
+                <button id="reset-filters" class="bg-slate-600 hover:bg-slate-700 text-white font-bold py-2 px-6 rounded-lg transition-colors duration-300">Reset</button>
+            </div>
+        </div>
+
+        <!-- ===== Phoneme Buttons Section ===== -->
+        <div id="phoneme-grid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-6 transition-all duration-500">
+            <!-- Phoneme buttons will be injected here by JavaScript -->
+        </div>
+    </main>
+
+    <!-- Footer Section -->
+    <footer class="w-full max-w-3xl mx-auto mt-24 mb-8 text-center text-sm text-slate-500 p-6 border-t border-slate-800/50">
+        <p class="font-bold text-violet-400">
+            &copy; 2025 Navacite | All Rights Reserved
+        </p>
+    </footer>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            
+            const phonemes = [
+                { symbol: '/p/', slug: 'p', place: ['Bilabial'], manner: 'Stop', voiced: false },
+                { symbol: '/b/', slug: 'b', place: ['Bilabial'], manner: 'Stop', voiced: true },
+                { symbol: '/m/', slug: 'm', place: ['Bilabial'], manner: 'Nasal', voiced: true },
+                { symbol: '/w/', slug: 'w', place: ['Bilabial', 'Velar'], manner: 'Glide', voiced: true },
+                { symbol: '/f/', slug: 'f', place: ['Labio-dental'], manner: 'Fricative', voiced: false },
+                { symbol: '/v/', slug: 'v', place: ['Labio-dental'], manner: 'Fricative', voiced: true },
+                { symbol: '/θ/', slug: 'theta', place: ['Lingua-dental'], manner: 'Fricative', voiced: false },
+                { symbol: '/ð/', slug: 'eth', place: ['Lingua-dental'], manner: 'Fricative', voiced: true },
+                { symbol: '/t/', slug: 't', place: ['Alveolar'], manner: 'Stop', voiced: false },
+                { symbol: '/d/', slug: 'd', place: ['Alveolar'], manner: 'Stop', voiced: true },
+                { symbol: '/s/', slug: 's', place: ['Alveolar'], manner: 'Fricative', voiced: false },
+                { symbol: '/z/', slug: 'z', place: ['Alveolar'], manner: 'Fricative', voiced: true },
+                { symbol: '/n/', slug: 'n', place: ['Alveolar'], manner: 'Nasal', voiced: true },
+                { symbol: '/l/', slug: 'l', place: ['Alveolar'], manner: 'Liquid', voiced: true },
+                { symbol: '/ʃ/', slug: 'esh', place: ['Post-alveolar'], manner: 'Fricative', voiced: false },
+                { symbol: '/ʒ/', slug: 'ezh', place: ['Post-alveolar'], manner: 'Fricative', voiced: true },
+                { symbol: '/t͡ʃ/', slug: 'tch', place: ['Post-alveolar'], manner: 'Affricate', voiced: false },
+                { symbol: '/d͡ʒ/', slug: 'dzh', place: ['Post-alveolar'], manner: 'Affricate', voiced: true },
+                { symbol: '/ɹ/', slug: 'r', place: ['Post-alveolar'], manner: 'Liquid', voiced: true },
+                { symbol: '/j/', slug: 'j', place: ['Palatal'], manner: 'Glide', voiced: true },
+                { symbol: '/k/', slug: 'k', place: ['Velar'], manner: 'Stop', voiced: false },
+                { symbol: '/g/', slug: 'g', place: ['Velar'], manner: 'Stop', voiced: true },
+                { symbol: '/ŋ/', slug: 'eng', place: ['Velar'], manner: 'Nasal', voiced: true },
+                { symbol: '/h/', slug: 'h', place: ['Glottal'], manner: 'Fricative', voiced: false },
+            ];
+
+            const places = [...new Set(phonemes.flatMap(p => p.place))].sort();
+            const manners = [...new Set(phonemes.map(p => p.manner))].sort();
+
+            const phonemeGrid = document.getElementById('phoneme-grid');
+            const placeFilters = document.getElementById('place-filters');
+            const mannerFilters = document.getElementById('manner-filters');
+            const filterContainer = document.getElementById('filter-container');
+            const resetButton = document.getElementById('reset-filters');
+
+            // --- Create Filter Checkboxes ---
+            const createCheckbox = (category, value) => {
+                const cleanValue = value.replace(/\s+/g, '-').toLowerCase();
+                return `
+                    <div class="relative">
+                        <input type="checkbox" id="${category}-${cleanValue}" name="${category}" value="${value}">
+                        <label for="${category}-${cleanValue}" class="filter-label block w-full text-center p-2.5 rounded-md border border-slate-700 bg-slate-800/60 text-slate-300 font-semibold text-sm">
+                            ${value}
+                        </label>
+                    </div>
+                `;
+            };
+
+            placeFilters.innerHTML = places.map(p => createCheckbox('place', p)).join('');
+            mannerFilters.innerHTML = manners.map(m => createCheckbox('manner', m)).join('');
+
+            // --- Create Phoneme Buttons ---
+            const createPhonemeButton = (phoneme) => {
+                const button = document.createElement('a');
+                button.href = `./${phoneme.slug}/index.html`;
+                button.className = "group relative flex flex-col items-center justify-center p-8 bg-slate-900/40 rounded-2xl border border-violet-900/80 transition-all duration-300 ease-in-out hover:border-violet-600/80 hover:scale-105 hover:shadow-[0_0_25px_-5px_rgba(167,139,250,0.4)]";
+                button.dataset.place = phoneme.place.join(' ');
+                button.dataset.manner = phoneme.manner;
+                button.dataset.voiced = phoneme.voiced;
+                
+                button.innerHTML = `
+                    <h2 class="text-4xl font-bold text-slate-200 group-hover:text-violet-400 transition-colors duration-300">${phoneme.symbol}</h2>
+                    <p class="text-slate-400 mt-2 text-center text-xs">${phoneme.place.join('/')} - ${phoneme.manner}</p>
+                `;
+                return button;
+            };
+
+            let phonemeButtons = phonemes.map(createPhonemeButton);
+            phonemeButtons.forEach(button => phonemeGrid.appendChild(button));
+
+
+            // --- Filter Logic ---
+            const applyFilter = () => {
+                const selectedPlace = document.querySelector('input[name="place"]:checked');
+                const selectedManner = document.querySelector('input[name="manner"]:checked');
+
+                // Only filter if one of each is selected
+                if (selectedPlace && selectedManner) {
+                    const placeValue = selectedPlace.value;
+                    const mannerValue = selectedManner.value;
+
+                    const sortedButtons = [...phonemeButtons].sort((a, b) => {
+                        const aIsMatch = a.dataset.place.includes(placeValue) && a.dataset.manner === mannerValue;
+                        const bIsMatch = b.dataset.place.includes(placeValue) && b.dataset.manner === mannerValue;
+                        
+                        if (aIsMatch && !bIsMatch) return -1;
+                        if (!aIsMatch && bIsMatch) return 1;
+                        return 0; // maintain original relative order
+                    });
+                    
+                    phonemeGrid.innerHTML = '';
+                    sortedButtons.forEach(button => phonemeGrid.appendChild(button));
+
+                } else {
+                     // If not fully selected, restore original order
+                    phonemeGrid.innerHTML = '';
+                    phonemeButtons.forEach(button => phonemeGrid.appendChild(button));
+                }
+            };
+            
+            const handleCheckboxChange = (e) => {
+                if(e.target.type !== 'checkbox') return;
+
+                // Uncheck other checkboxes in the same category
+                const category = e.target.name;
+                document.querySelectorAll(`input[name="${category}"]:checked`).forEach(cb => {
+                    if(cb !== e.target) {
+                        cb.checked = false;
+                    }
+                });
+                applyFilter();
+            };
+
+            const resetAllFilters = () => {
+                document.querySelectorAll('input[type="checkbox"]:checked').forEach(cb => {
+                    cb.checked = false;
+                });
+                applyFilter();
+            };
+
+            filterContainer.addEventListener('click', handleCheckboxChange);
+            resetButton.addEventListener('click', resetAllFilters);
+        });
+    </script>
+</body>
+</html>
+
+
