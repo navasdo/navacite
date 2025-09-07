@@ -112,7 +112,7 @@ def character_sheet():
 def articulation_tools():
     app.logger.info("Request for /articulation-tools. Trying 'templates/articulation-tools/index.html'.")
     try:
-        return render_template('templates/articulation-tools/index.html')
+        return render_template('articulation-tools/index.html')
     except Exception as e:
         app.logger.error(f"CRITICAL: Could not find 'templates/articulation-tools/index.html'. Error: {e}")
         abort(500)
@@ -123,7 +123,7 @@ def articulation_tools():
 def language_tools():
     app.logger.info("Request for /language-tools. Trying 'templates/language-tools/index.html'.")
     try:
-        return render_template('templates/language-tools/index.html')
+        return render_template('language-tools/index.html')
     except Exception as e:
         app.logger.error(f"CRITICAL: Could not find 'templates/language-tools/index.html'. Error: {e}")
         abort(500)
@@ -134,7 +134,7 @@ def language_tools():
 def fluency_tools():
     app.logger.info("Request for /fluency-tools. Trying 'templates/fluency-tools/index.html'.")
     try:
-        return render_template('templates/fluency-tools/index.html')
+        return render_template('fluency-tools/index.html')
     except Exception as e:
         app.logger.error(f"CRITICAL: Could not find 'templates/fluency-tools/index.html'. Error: {e}")
         abort(500)
@@ -145,7 +145,7 @@ def fluency_tools():
 def slp_tools():
     app.logger.info("Request for /slp-tools. Trying 'templates/slp-tools/index.html'.")
     try:
-        return render_template('templates/slp-tools/index.html')
+        return render_template('slp-tools/index.html')
     except Exception as e:
         app.logger.error(f"CRITICAL: Could not find 'templates/slp-tools/index.html'. Error: {e}")
         abort(500)
