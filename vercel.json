@@ -13,7 +13,17 @@
       "destination": "/apply.html"
     },
     {
-      "source": "/:path*",
+      "source": "/",
+      "missing": [
+        {
+          "type": "cookie",
+          "key": "token"
+        }
+      ],
+      "destination": "/login.html"
+    },
+    {
+      "source": "/:path(.+)",
       "missing": [
         {
           "type": "cookie",
