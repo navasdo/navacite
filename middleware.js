@@ -1,15 +1,18 @@
 import { jwtVerify } from 'jose';
 
 export async function middleware(request) {
-    // This log has served its purpose and can be removed if you like,
-    // but it's fine to leave for future debugging.
     console.log(`Middleware triggered for path: ${request.nextUrl.pathname}`);
 
     const { pathname } = request.nextUrl;
 
+    // --- THE FIX ---
+    // This list now includes both the direct .html files in the root
+    // and their potential "clean URL" equivalents, making it more robust.
     const publicPaths = [
         '/login.html',
+        '/login',
         '/apply.html',
+        '/apply',
         '/api/login',
     ];
 
@@ -23,9 +26,6 @@ export async function middleware(request) {
     // If no token is found, perform the redirect.
     if (!token) {
         console.log(`No token for ${pathname}. Redirecting...`);
-        // --- THE FIX ---
-        // Instead of Response.redirect(loginUrl), we build the response manually.
-        // This is more explicit and reliable in all edge environments.
         return new Response(null, {
             status: 307, // Temporary Redirect
             headers: {
