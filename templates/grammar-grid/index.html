@@ -4265,10 +4265,10 @@
           return (
             <div className="bg-[#5B4B62] min-h-screen font-sans text-[#dee2e6] relative">
               <button onClick={toggleFullscreen} className="absolute top-4 left-4 z-10 p-2 rounded-full bg-[#8B87A1]/50 hover:bg-[#C3B1E1] transition" title={isFullscreen ? "Exit Fullscreen" : "Enter Fullscreen"}> {isFullscreen ? <IconFullscreenExit /> : <IconFullscreenEnter />} </button>
-              <a href="https://navacite.vercel.app" className="absolute top-4 right-4 z-10 p-1 rounded-full bg-[#8B87A1]/50 hover:bg-[#C3B1E1] transition" title="Back to Homepage"> <img src="https://raw.githubusercontent.com/navasdo/oliver/main/navacite/gems/Navacite-Main.png" alt="Navacite Homepage" className="w-10 h-10 rounded-full"/> </a>
+              <a href="https://navacite.vercel.app" className="absolute top-4 right-4 z-10 p-1 rounded-full bg-[#8B87A1]/50 hover:bg-[#C3B1E1] transition" title="Back to Homepage"> <img src="/templates/static/navacite-images/Navacite-Main.png" alt="Navacite Homepage" className="w-10 h-10 rounded-full"/> </a>
               <div className="container mx-auto p-4 sm:p-6 lg:p-8">
                 <header className="text-center mb-8">
-                  <img src="https://raw.githubusercontent.com/navasdo/grammar-grid/refs/heads/main/navacite-gg.png" alt="App Gem" className="w-48 mx-auto mb-4 drop-shadow-[0_0_15px_rgba(255,255,255,0.7)]" />
+                  <img src="/templates/static/navacite-images/navacite-gg.png" alt="App Gem" className="w-48 mx-auto mb-4 drop-shadow-[0_0_15px_rgba(255,255,255,0.7)]" />
                   <h1 className="text-4xl font-bold text-[7F00FF]">Grammar Grid</h1>
                   <p className="text-sm text-[#aea2a6] italic mt-2">Concept by Daniel Navas, M.A., CCC-SLP & Coded in Tandem with Google Gemini</p>
                 </header>
@@ -4295,12 +4295,12 @@
           const normalize = (str) => str.toLowerCase().replace(/[^\w\s]|_/g, "").replace(/\s+/g, " ").trim();
 
           useEffect(() => { 
-              audioRef.current.tutorial = new Audio("https://raw.githubusercontent.com/navasdo/grammar-grid/main/audio/tutorial.wav");
-              audioRef.current.statement = new Audio("https://raw.githubusercontent.com/navasdo/grammar-grid/main/audio/statement.wav");
-              audioRef.current.question = new Audio("https://raw.githubusercontent.com/navasdo/grammar-grid/main/audio/question.wav");
-              audioRef.current.finished = new Audio("https://raw.githubusercontent.com/navasdo/grammar-grid/main/audio/finished.wav"); 
-              audioRef.current.correctAnswerSound = new Audio("https://raw.githubusercontent.com/navasdo/grammar-grid/main/audio/2_out_of_2.wav"); 
-              audioRef.current.incorrect = new Audio("https://raw.githubusercontent.com/navasdo/grammar-grid/main/audio/incorrect.wav"); 
+              audioRef.current.tutorial = new Audio("/templates/static/audio/grammar-grid/tutorial.wav");
+              audioRef.current.statement = new Audio("/templates/static/audio/grammar-grid/statement.wav");
+              audioRef.current.question = new Audio("/templates/static/audio/grammar-grid/question.wav");
+              audioRef.current.finished = new Audio("/templates/static/audio/grammar-grid/finished.wav"); 
+              audioRef.current.correctAnswerSound = new Audio("/templates/static/audio/grammar-grid/2_out_of_2.wav"); 
+              audioRef.current.incorrect = new Audio("/templates/static/audio/grammar-grid/incorrect.wav"); 
           }, []);
 
           const playAudio = (audioElement, onEnded) => { if (audioElement) { audioElement.onended = onEnded; audioElement.play().catch(e => console.error("Audio playback failed:", e)); } };
@@ -4544,7 +4544,7 @@
             }, [questions]);
 
             useEffect(() => {
-                audioRef.current.correctAnswerSound = new Audio("https://raw.githubusercontent.com/navasdo/grammar-grid/main/audio/2_out_of_2.wav");
+                audioRef.current.correctAnswerSound = new Audio("templates/static/audio/grammar-grid/2_out_of_2.wav");
             }, []);
 
             useEffect(() => {
@@ -4683,7 +4683,7 @@
             if (isChangingQuestion || !currentQuestion) {
                  return (
                     <div className="flex flex-col items-center justify-center space-y-4 min-h-[50vh]">
-                        <img src="https://raw.githubusercontent.com/navasdo/grammar-grid/refs/heads/main/images/gg_blocks.png" alt="Loading..." className="w-52 h-auto loading-pulse" />
+                        <img src="/templates/static/grammar-grid/gg_blocks.png" alt="Loading..." className="w-52 h-auto loading-pulse" />
                         <p className="text-lg font-semibold text-[#C3B1E1]">Loading next question...</p>
                     </div>
                 );
@@ -4714,7 +4714,7 @@
                             {sentencesNeeded > 0 ? <p className="text-[#C3B1E1]">You still need {sentencesNeeded} more.</p> : <p className="text-green-400 font-bold">Great!</p>}
                         </div>
                          <div className="w-1/3 flex justify-end">
-                            <img src="https://raw.githubusercontent.com/navasdo/grammar-grid/refs/heads/main/images/gg_blocks.png" alt="Grammar Blocks" className={`w-32 h-auto transition-all duration-500 ${isQuestionCompleteGlow ? 'image-glow' : ''}`} />
+                            <img src="/templates/static/grammar-grid/gg_blocks.png" alt="Grammar Blocks" className={`w-32 h-auto transition-all duration-500 ${isQuestionCompleteGlow ? 'image-glow' : ''}`} />
                         </div>
                     </div>
 
@@ -4785,7 +4785,7 @@
                     </style></head><body>
                     <div class="container">
                         <header>
-                            <img src="https://raw.githubusercontent.com/navasdo/grammar-grid/refs/heads/main/navacite-gg.png" alt="Grammar Grid Gem">
+                            <img src="/templates/static/navacite-images/navacite-gg.png" alt="Grammar Grid Gem">
                             <h1>Assessment Report</h1>
                         </header>
                         <section>
