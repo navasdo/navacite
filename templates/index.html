@@ -1,11 +1,10 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <link rel="icon" type="/static/ico/navacite.ico" href="/static/ico/navacite.ico">
+    <link rel="icon" type="static/ico/navacite.ico" href="static/ico/navacite.ico">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Navacite Library</title>
-    <!-- Direct link to Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         /* Smooth scrolling behavior */
@@ -13,19 +12,19 @@
             scroll-behavior: smooth;
         }
         /* Style for the modal backdrop to animate in */
-        #updatesModal.modal-enter {
+        #updatesModal.modal-enter, #termsModal.modal-enter {
             opacity: 0;
         }
-        #updatesModal.modal-enter-active {
+        #updatesModal.modal-enter-active, #termsModal.modal-enter-active {
             opacity: 1;
             transition: opacity 300ms;
         }
         /* Style for the modal content to animate in */
-        #updatesModal .modal-content-enter {
+        #updatesModal .modal-content-enter, #termsModal .modal-content-enter {
             opacity: 0;
             transform: scale(0.95);
         }
-        #updatesModal .modal-content-enter-active {
+        #updatesModal .modal-content-enter-active, #termsModal .modal-content-enter-active {
             opacity: 1;
             transform: scale(1);
             transition: opacity 300ms, transform 300ms;
@@ -49,18 +48,15 @@
     }
   </script>
 
-    <!-- Audio element for the update sound -->
-    <audio id="updateSound" src="https://github.com/navasdo/navacite/raw/406b3c70feafc7e885aaa1dffe1d92c1007ecc2b/audio/updates.mp3" preload="auto"></audio>
+    <audio id="updateSound" src="static/updates/updates.mp3" preload="auto"></audio>
 
-    <!-- Updates Modal -->
     <div id="updatesModal" class="hidden fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4 modal-enter">
         <div class="bg-slate-800 border border-violet-700/50 rounded-2xl shadow-2xl shadow-violet-500/10 p-6 sm:p-8 text-center max-w-md w-full modal-content-enter">
-            <img src="/static/updates/updates_scholar.png" alt="The Scholar" class="w-48 mx-auto mb-4 rounded-full [filter:drop-shadow(0_0_15px_rgba(255,255,255,0.6))]" onerror="this.onerror=null; this.src='https://placehold.co/192x192/1e293b/a78bfa?text=DN';" />
+            <img src="static/updates/updates_scholar.png" alt="The Scholar" class="w-48 mx-auto mb-4 rounded-full [filter:drop-shadow(0_0_15px_rgba(255,255,255,0.6))]" onerror="this.onerror=null; this.src='https://placehold.co/192x192/1e293b/a78bfa?text=DN';" />
             
             <h2 class="text-3xl font-bold text-slate-100">Latest Updates</h2>
             <p id="updateDate" class="text-sm text-violet-400 mb-6"></p>
 
-            <!-- Initial View -->
             <div id="initialUpdateView">
                 <p class="text-slate-300 italic mb-6"> The Navacites have been polished~!</p>
                 <div class="flex flex-col sm:flex-row gap-3">
@@ -69,11 +65,9 @@
                 </div>
             </div>
 
-            <!-- Revealed View -->
             <div id="revealedUpdateView" class="hidden">
                 <ul id="updateList" class="text-left list-disc list-inside space-y-2 text-slate-300 mb-8">
-                    <!-- Update items will be injected here by JavaScript -->
-                </ul>
+                    </ul>
                 <button id="finalCloseButton" class="w-full bg-violet-600 hover:bg-violet-700 text-white font-bold py-3 px-4 rounded-lg transition-colors duration-300">Close</button>
             </div>
             
@@ -85,14 +79,55 @@
             </div>
         </div>
     </div>
+    
+    <div id="termsModal" class="hidden fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4 modal-enter">
+        <div class="bg-slate-800 border border-violet-700/50 rounded-2xl shadow-2xl shadow-violet-500/10 p-6 sm:p-8 max-w-2xl w-full max-h-[90vh] overflow-y-auto modal-content-enter">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-3xl font-bold text-slate-100">Terms & Disclaimer</h2>
+                <button id="closeTermsModal" class="text-slate-400 hover:text-white transition-colors">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                </button>
+            </div>
+            <div class="space-y-6 text-slate-300 text-left text-sm">
+                <div>
+                    <h3 class="text-xl font-semibold text-violet-400 mb-2">Disclaimer</h3>
+                    <p>Navacite tools are provided “as is” and are not intended to diagnose, prevent, or cure any speech-language disorder. They are designed as supplemental engagement supports to be used by qualified professionals. Navacite makes no warranties, expressed or implied, and hereby disclaims and negates all other warranties, including without limitation, implied warranties of merchantability, fitness for a particular purpose, and non-infringement of intellectual property or other rights. Navacite does not warrant or make any representations concerning the accuracy, likely results, or reliability of the materials on this site or on any sites linked to it.</p>
+                </div>
+                <div>
+                    <h3 class="text-xl font-semibold text-violet-400 mb-2">Professional Responsibility</h3>
+                    <p>The responsibility for all clinical decisions, interpretations, and applications of Navacite tools rests solely with the licensed professional using them. Navacite assumes no liability for misuse, misapplication, or outcomes resulting from the use of these materials.</p>
+                </div>
+                <div>
+                    <h3 class="text-xl font-semibold text-violet-400 mb-2">Revisions and Errata</h3>
+                    <p>The materials appearing on Navacite’s web site may include technical, typographical, or content errors. Navacite does not warrant that any of the materials are accurate, complete, or current. Navacite may make changes to the materials contained on its site at any time without notice, but makes no commitment to update them.</p>
+                </div>
+                <div>
+                    <h3 class="text-xl font-semibold text-violet-400 mb-2">Terms of Use Modifications</h3>
+                    <p>Navacite may revise these terms of use at any time without notice. By using this site you agree to be bound by the then-current version of these Terms & Disclaimer provisions.</p>
+                </div>
+                <div>
+                    <h3 class="text-xl font-semibold text-violet-400 mb-2">Conflict of Interest Disclaimer</h3>
+                    <p>Navacite is an independent project created in a personal capacity by its author. It is not a product of, nor is it affiliated with, endorsed by, or representative of any school district, university, or employer. All intellectual property, design, and code on this site were developed as an independent effort, outside the scope of employment. Use of Navacite does not imply involvement, approval, or responsibility by any employer, past or present.</p>
+                </div>
+                <div>
+                    <h3 class="text-xl font-semibold text-violet-400 mb-2">Limitation of Liability</h3>
+                    <p>In no event shall Navacite or its creator be liable for any damages (including, without limitation, damages for loss of data, income, or clinical outcomes) arising out of the use or inability to use the materials on this site, even if Navacite has been notified of the possibility of such damages.</p>
+                </div>
+                <div>
+                    <h3 class="text-xl font-semibold text-violet-400 mb-2">Governing Law</h3>
+                    <p>Any claim relating to Navacite’s web site shall be governed by the laws of the State of Nebraska (USA), without regard to its conflict of law provisions.</p>
+                </div>
+            </div>
+        </div>
+    </div>
 
 
-    <!-- Header Section -->
     <header class="w-full max-w-5xl mx-auto my-8">
-        <!-- Centered content -->
         <div class="text-center pt-8">
             <img
-              src="/static/navacite-images/Navacite-Main.png"
+              src="static/navacite-images/Navacite-Main.png"
               alt="Navacite Main Visual"
               class="w-48 mx-auto mb-4 [filter:drop-shadow(0_0_15px_rgba(255,255,255,0.3))]"
               onerror="this.onerror=null; this.src='https://placehold.co/192x108/0c0a18/a78bfa?text=Navacite-Main';"
@@ -113,40 +148,33 @@
         </div>
     </header>
 
-    <!-- Main Content - Tool Library Section -->
     <main class="w-full max-w-5xl mx-auto flex-grow">
-        <!-- ===== NEW SECTION: Main Category Selection ===== -->
         <div class="mt-16 grid grid-cols-1 md:grid-cols-2 gap-10 p-4">
-            <!-- Language Tools Button -->
             <a href="/language-tools/" class="group relative flex flex-col items-center justify-center p-8 bg-slate-900/40 rounded-2xl border border-violet-900/80 transition-all duration-300 ease-in-out hover:border-violet-600/80 hover:scale-105 hover:shadow-[0_0_25px_-5px_rgba(167,139,250,0.4)]">
-                <img src="/static/navacite-images/navacite-languagev2.png" alt="Language Tools Icon" class="w-64 h-64 mb-4 transition-transform duration-300 group-hover:scale-110 [filter:drop-shadow(0_0_15px_rgba(255,255,255,0.3))]">
+                <img src="static/navacite-images/navacite-languagev2.png" alt="Language Tools Icon" class="w-64 h-64 mb-4 transition-transform duration-300 group-hover:scale-110 [filter:drop-shadow(0_0_15px_rgba(255,255,255,0.3))]">
                 <h2 class="text-3xl font-bold text-slate-200 group-hover:text-violet-400 transition-colors duration-300">Language</h2>
                 <p class="text-slate-400 mt-2 text-center">Tools for writing, reading, comprehension, and more.</p>
             </a>
-             <!-- Fluency Tools Button -->
-            <a href="/fluency-tools/" class="group relative flex flex-col items-center justify-center p-8 bg-slate-900/40 rounded-2xl border border-violet-900/80 transition-all duration-300 ease-in-out hover:border-violet-600/80 hover:scale-105 hover:shadow-[0_0_25px_-5px_rgba(167,139,250,0.4)]">
-                 <img src="/static/navacite-images/navacite-fluency.png" alt="Fluency Tools Icon" class="w-64 h-64 mb-4 transition-transform duration-300 group-hover:scale-110 [filter:drop-shadow(0_0_15px_rgba(255,255,255,0.3))]">
+             <a href="/fluency-tools/" class="group relative flex flex-col items-center justify-center p-8 bg-slate-900/40 rounded-2xl border border-violet-900/80 transition-all duration-300 ease-in-out hover:border-violet-600/80 hover:scale-105 hover:shadow-[0_0_25px_-5px_rgba(167,139,250,0.4)]">
+                 <img src="static/navacite-images/navacite-fluency.png" alt="Fluency Tools Icon" class="w-64 h-64 mb-4 transition-transform duration-300 group-hover:scale-110 [filter:drop-shadow(0_0_15px_rgba(255,255,255,0.3))]">
                 <h2 class="text-3xl font-bold text-slate-200 group-hover:text-violet-400 transition-colors duration-300">Fluency</h2>
                 <p class="text-slate-400 mt-2 text-center">Tools for promoting smooth and confident speech.</p>
             </a>
-            <!-- Articulation Tools Button -->
             <a href="/articulation-tools/" class="group relative flex flex-col items-center justify-center p-8 bg-slate-900/40 rounded-2xl border border-violet-900/80 transition-all duration-300 ease-in-out hover:border-violet-600/80 hover:scale-105 hover:shadow-[0_0_25px_-5px_rgba(167,139,250,0.4)]">
-                 <img src="/static/navacite-images/navacite-artic.png" alt="Articulation Tools Icon" class="w-64 h-64 mb-4 transition-transform duration-300 group-hover:scale-110 [filter:drop-shadow(0_0_15px_rgba(255,255,255,0.3))]">
+                 <img src="static/navacite-images/navacite-artic.png" alt="Articulation Tools Icon" class="w-64 h-64 mb-4 transition-transform duration-300 group-hover:scale-110 [filter:drop-shadow(0_0_15px_rgba(255,255,255,0.3))]">
                 <h2 class="text-3xl font-bold text-slate-200 group-hover:text-violet-400 transition-colors duration-300">Articulation</h2>
                 <p class="text-slate-400 mt-2 text-center">Tools for speech sound production and clarity.</p>
             </a>
 
-            <!-- SLP Tools Button -->
             <a href="/slp-tools/" class="group relative flex flex-col items-center justify-center p-8 bg-slate-900/40 rounded-2xl border border-violet-900/80 transition-all duration-300 ease-in-out hover:border-violet-600/80 hover:scale-105 hover:shadow-[0_0_25px_-5px_rgba(167,139,250,0.4)]">
-                 <img src="/static/navacite-images/navacite-slp.png" alt="SLP Tools Icon" class="w-64 h-64 mb-4 transition-transform duration-300 group-hover:scale-110 [filter:drop-shadow(0_0_15px_rgba(255,255,255,0.3))]">
+                 <img src="static/navacite-images/navacite-slp.png" alt="SLP Tools Icon" class="w-64 h-64 mb-4 transition-transform duration-300 group-hover:scale-110 [filter:drop-shadow(0_0_15px_rgba(255,255,255,0.3))]">
                 <h2 class="text-3xl font-bold text-slate-200 group-hover:text-violet-400 transition-colors duration-300">SLP Tools</h2>
                 <p class="text-slate-400 mt-2 text-center">Clerical tools for speech-language pathologists.</p>
             </a>
         </div>
     </main>
 
-    <!-- Footer Section -->
-   <footer id="navacite-definition" class="w-full max-w-3xl mx-auto mt-24 mb-8 text-left text-sm text-slate-500 p-6 border-t border-slate-800/50 scroll-mt-20">
+    <footer id="navacite-definition" class="w-full max-w-3xl mx-auto mt-24 mb-8 text-left text-sm text-slate-500 p-6 border-t border-slate-800/50 scroll-mt-20">
     <dl>
         <dt class="text-lg font-bold text-slate-300">Navacite<span class="ml-3 font-normal text-slate-400">na·va·cite | /ˈnævəˌsaɪt/</span></dt>
         <dd class="italic text-slate-400 mt-2">noun</dd>
@@ -157,12 +185,13 @@
 
     <hr class="my-16 border-slate-700" />
 
-    <p class="text-violet-400">
-        <strong class="font-bold">Disclaimer:</strong> These tools are not intended to diagnose speech-language disorders. They are designed as engagement supports to supplement language-based exercises. By using these resources, you acknowledge that the apps are experimental and may contain errors. Always verify content for accuracy and rely on your professional judgment when using them in practice.
-    </p>
-
     <p class="mt-16 font-bold text-violet-400 text-center">
         &copy; 2025 Navacite | All Rights Reserved
+    </p>
+
+    <p class="mt-4 text-xs text-slate-500 text-center">
+        Navacite tools are provided ‘as is’ and are not intended to diagnose. Use requires professional judgment. 
+        <a href="#" id="openTermsModal" class="underline hover:text-violet-400 transition-colors">Terms & Disclaimer</a>
     </p>
     
 </footer>
@@ -184,7 +213,7 @@
                 ]
 };
 
-            // --- Modal Logic ---
+            // --- Updates Modal Logic ---
             const modal = document.getElementById('updatesModal');
             const checkbox = document.getElementById('dontShowAgainCheckbox');
             const updateSound = document.getElementById('updateSound');
@@ -202,7 +231,6 @@
             const lastSeenUpdateId = localStorage.getItem('lastSeenUpdateId');
 
             function revealUpdates() {
-                // Play sound
                 updateSound.play().catch(error => {
                     console.log("Audio autoplay was prevented by the browser.");
                 });
@@ -213,12 +241,10 @@
             }
 
             function showModal() {
-                // Populate modal with content from config
                 updateDateEl.textContent = updatesConfig.date;
                 updateListEl.innerHTML = updatesConfig.items.map(item => `<li>${item}</li>`).join('');
 
                 modal.classList.remove('hidden');
-                // Use a tiny timeout to allow the CSS transitions to trigger correctly
                 setTimeout(() => {
                     modal.classList.add('modal-enter-active');
                     modal.querySelector('.modal-content-enter').classList.add('modal-content-enter-active');
@@ -234,7 +260,6 @@
                 modal.querySelector('.modal-content-enter').classList.remove('modal-content-enter-active');
             }
 
-            // Check if the user has already seen this specific update
             if (updatesConfig.id !== lastSeenUpdateId) {
                 showModal();
             }
@@ -243,15 +268,41 @@
             closeExcitingButton.addEventListener('click', hideModal);
             finalCloseButton.addEventListener('click', hideModal);
 
-            // Also close modal if user clicks on the backdrop
             modal.addEventListener('click', (event) => {
                 if (event.target === modal) {
                     hideModal();
+                }
+            });
+
+            // --- Terms & Disclaimer Modal Logic ---
+            const termsModal = document.getElementById('termsModal');
+            const openTermsLink = document.getElementById('openTermsModal');
+            const closeTermsButton = document.getElementById('closeTermsModal');
+
+            function showTermsModal(event) {
+                event.preventDefault(); 
+                termsModal.classList.remove('hidden');
+                setTimeout(() => {
+                    termsModal.classList.add('modal-enter-active');
+                    termsModal.querySelector('.modal-content-enter').classList.add('modal-content-enter-active');
+                }, 10);
+            }
+
+            function hideTermsModal() {
+                termsModal.classList.add('hidden');
+                termsModal.classList.remove('modal-enter-active');
+                termsModal.querySelector('.modal-content-enter').classList.remove('modal-content-enter-active');
+            }
+
+            openTermsLink.addEventListener('click', showTermsModal);
+            closeTermsButton.addEventListener('click', hideTermsModal);
+
+            termsModal.addEventListener('click', (event) => {
+                if (event.target === termsModal) {
+                    hideTermsModal();
                 }
             });
         });
     </script>
 </body>
 </html>
-
-
