@@ -1,9 +1,27 @@
 {
-    "rewrites": [
+  "rewrites": [
+    {
+      "source": "/api/:path*",
+      "destination": "/api/:path*"
+    },
+    {
+      "source": "/login.html",
+      "destination": "/login.html"
+    },
+    {
+      "source": "/apply.html",
+      "destination": "/apply.html"
+    },
+    {
+      "source": "/:path*",
+      "missing": [
         {
-            "source": "/dashboard.html",
-            "destination": "/apply.html"
+          "type": "cookie",
+          "key": "token"
         }
-    ]
+      ],
+      "destination": "/login.html"
+    }
+  ]
 }
 
