@@ -117,6 +117,18 @@ def articulation_tools():
         app.logger.error(f"CRITICAL: Could not find 'templates/articulation-tools/index.html'. Error: {e}")
         abort(500)
 
+# --- Dynamic Route for Individual Phoneme Pages ---
+@app.route('/articulation-tools/<phoneme_slug>')
+@token_required
+def phoneme_page(phoneme_slug):
+    app.logger.info(f"Request received for phoneme page: /articulation-tools/{phoneme_slug}")
+    try:
+        # This is the correct path, starting from inside the 'templates' folder.
+        return render_template(f'articulation-tools/{phoneme_slug}/index.html')
+    except Exception as e:
+        app.logger.error(f"CRITICAL: Could not find template for phoneme '{phoneme_slug}'. Error: {e}")
+        abort(404)
+
 # --- Language Tools ---
 @app.route('/language-tools')
 @token_required
