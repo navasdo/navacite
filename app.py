@@ -106,6 +106,50 @@ def character_sheet():
         app.logger.error(f"CRITICAL: Could not find 'templates/character-sheet/index.html'. Error: {e}")
         abort(500)
 
+# --- Articulation Tools ---
+@app.route('/articulation-tools')
+@token_required
+def articulation_tools():
+    app.logger.info("Request for /articulation-tools. Trying 'templates/articulation-tools/index.html'.")
+    try:
+        return render_template('articulation-tools/index.html')
+    except Exception as e:
+        app.logger.error(f"CRITICAL: Could not find 'templates/articulation-tools/index.html'. Error: {e}")
+        abort(500)
+
+# --- Language Tools ---
+@app.route('/language-tools')
+@token_required
+def language_tools():
+    app.logger.info("Request for /language-tools. Trying 'templates/language-tools/index.html'.")
+    try:
+        return render_template('language-tools/index.html')
+    except Exception as e:
+        app.logger.error(f"CRITICAL: Could not find 'templates/language-tools/index.html'. Error: {e}")
+        abort(500)
+
+# --- Fluency Tools ---
+@app.route('/fluency-tools')
+@token_required
+def fluency_tools():
+    app.logger.info("Request for /fluency-tools. Trying 'templates/fluency-tools/index.html'.")
+    try:
+        return render_template('fluency-tools/index.html')
+    except Exception as e:
+        app.logger.error(f"CRITICAL: Could not find 'templates/fluency-tools/index.html'. Error: {e}")
+        abort(500)
+
+# --- SLP Tools ---
+@app.route('/slp-tools')
+@token_required
+def slp_tools():
+    app.logger.info("Request for /slp-tools. Trying 'templates/slp-tools/index.html'.")
+    try:
+        return render_template('slp-tools/index.html')
+    except Exception as e:
+        app.logger.error(f"CRITICAL: Could not find 'templates/slp-tools/index.html'. Error: {e}")
+        abort(500)
+
 # --- Redirects to enforce clean URLs ---
 # These catch old links and point them to the correct, clean URL.
 @app.route('/index.html')
