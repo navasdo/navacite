@@ -10,15 +10,18 @@ app = Flask(__name__, template_folder='templates', static_folder='static')
 logging.basicConfig(level=logging.INFO)
 
 # --- Security Configuration ---
+# This securely reads your secret key from Render's environment variables.
 app.config['SECRET_KEY'] = os.environ.get('JWT_SECRET', 'a-very-secret-key-that-you-should-change')
 
 # --- User Management ---
+# This is where you add and remove users for your closed alpha.
 USERS = {
-    "user1": "password123",
+    "dnavas": "Almanueva1!",
     "user2": "anotherSecurePassword",
 }
 
 # --- Decorator for Token Authentication ---
+# This function is the "gatekeeper" for your protected pages.
 def token_required(f):
     @wraps(f)
     def decorated(*args, **kwargs):
@@ -28,7 +31,8 @@ def token_required(f):
             app.logger.warning("No token found. Redirecting to login.")
             return redirect(url_for('login_page'))
         try:
-            jwt.decode(token, app.config['SECRET_KEY'], algorithms=["HS265"])
+            # CRITICAL FIX: Ensures the token is validated with the correct algorithm.
+            jwt.decode(token, app.config['SECRET_KEY'], algorithms=["HS256"])
             app.logger.info("Token is valid.")
         except Exception as e:
             app.logger.error(f"Token validation failed: {e}. Redirecting to login.")
@@ -37,6 +41,7 @@ def token_required(f):
     return decorated
 
 # --- API Route for Login ---
+# This handles the form submission from your login page.
 @app.route('/api/login', methods=['POST'])
 def login_api():
     data = request.get_json()
@@ -65,9 +70,9 @@ def login_page():
 @app.route('/apply')
 def apply_page():
     app.logger.info("Request received for /apply route.")
-    return render_template('apply')
+    return render_template('apply.html')
 
-# UPDATED: The main route is now the protected homepage.
+# The main route is now the protected homepage.
 @app.route('/')
 @token_required
 def index():
@@ -94,13 +99,23 @@ def session_scribe():
 @app.route('/character-sheet')
 @token_required
 def character_sheet():
-    # This tells Flask to find and serve 'index.html' from the 'templates/character-sheet/' folder.
     app.logger.info("Request for /character-sheet. Trying 'templates/character-sheet/index.html'.")
     try:
         return render_template('character-sheet/index.html')
     except Exception as e:
         app.logger.error(f"CRITICAL: Could not find 'templates/character-sheet/index.html'. Error: {e}")
         abort(500)
+
+# --- Redirects to enforce clean URLs ---
+# These catch old links and point them to the correct, clean URL.
+@app.route('/index.html')
+def index_html_redirect():
+    return redirect(url_for('index'), 301)
+
+@app.route('/apply.html')
+def apply_html_redirect():
+    return redirect(url_for('apply_page'), 301)
+
 
 # --- Error Handling ---
 @app.errorhandler(404)
