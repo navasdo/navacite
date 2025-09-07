@@ -1,34 +1,40 @@
 import { jwtVerify } from 'jose';
 
 export async function middleware(request) {
-    // --- DIAGNOSTIC LOG ---
-    // This is the most important line. It will tell us if the middleware is running.
+    // This log has served its purpose and can be removed if you like,
+    // but it's fine to leave for future debugging.
     console.log(`Middleware triggered for path: ${request.nextUrl.pathname}`);
 
     const { pathname } = request.nextUrl;
 
-    // --- Define Public File Paths ---
     const publicPaths = [
         '/login.html',
         '/apply.html',
         '/api/login',
     ];
 
-    // --- Gate 1: Check for Public Paths ---
     if (publicPaths.includes(pathname)) {
         return; // Allow request to proceed
     }
 
-    // --- Gate 2: Protect Everything Else ---
     const token = request.cookies.get('token')?.value;
     const loginUrl = new URL('/login.html', request.url);
 
+    // If no token is found, perform the redirect.
     if (!token) {
-        console.log(`No token found for path ${pathname}. Redirecting to login.`);
-        return Response.redirect(loginUrl);
+        console.log(`No token for ${pathname}. Redirecting...`);
+        // --- THE FIX ---
+        // Instead of Response.redirect(loginUrl), we build the response manually.
+        // This is more explicit and reliable in all edge environments.
+        return new Response(null, {
+            status: 307, // Temporary Redirect
+            headers: {
+                'Location': loginUrl.toString()
+            }
+        });
     }
 
-    // --- Gate 3: Verify Token ---
+    // If a token is found, verify it.
     try {
         const JWT_SECRET = process.env.JWT_SECRET;
         if (!JWT_SECRET) throw new Error('JWT_SECRET not set.');
@@ -36,21 +42,24 @@ export async function middleware(request) {
         const secret = new TextEncoder().encode(JWT_SECRET);
         await jwtVerify(token, secret);
         
-        // Token is valid, proceed to the requested page.
+        // Token is valid, let the user proceed.
         return;
 
     } catch (err) {
-        console.log(`Token verification failed for path ${pathname}. Redirecting.`);
-        const response = Response.redirect(loginUrl);
+        console.log(`Token verification failed for ${pathname}. Redirecting...`);
+        const response = new Response(null, {
+            status: 307, // Temporary Redirect
+            headers: {
+                'Location': loginUrl.toString()
+            }
+        });
+        // Clear the bad cookie
         response.headers.set('Set-Cookie', 'token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT');
         return response;
     }
 }
 
-// --- Path Matching Configuration (Simplified & More Robust) ---
-// This matcher tells Vercel to run the middleware on ALL paths,
-// except for internal Next.js assets, API routes (handled in code),
-// and common static file types. This is more reliable.
+// The matcher is correct and does not need to be changed.
 export const config = {
   matcher: [
     '/((?!api|_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
