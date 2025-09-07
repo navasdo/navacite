@@ -1,14 +1,8 @@
 {
     "rewrites": [
         {
-            "source": "/((?!api/|login\\.html|apply\\.html|_next/|favicon\\.ico).*)",
-            "missing": [
-                {
-                    "type": "cookie",
-                    "key": "token"
-                }
-            ],
-            "destination": "/login.html"
+            "source": "/dashboard.html",
+            "destination": "/apply.html"
         }
     ]
 }
