@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <link rel="icon" type="images/navacite.ico" href="images/navacite.ico">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Navacite Library</title>
+    <!-- Direct link to Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Smooth scrolling behavior */
+        html {
+            scroll-behavior: smooth;
+        }
+        /* Style for the modal backdrop to animate in */
+        #updatesModal.modal-enter {
+            opacity: 0;
+        }
+        #updatesModal.modal-enter-active {
+            opacity: 1;
+            transition: opacity 300ms;
+        }
+        /* Style for the modal content to animate in */
+        #updatesModal .modal-content-enter {
+            opacity: 0;
+            transform: scale(0.95);
+        }
+        #updatesModal .modal-content-enter-active {
+            opacity: 1;
+            transform: scale(1);
+            transition: opacity 300ms, transform 300ms;
+        }
+        /* Simple transition for the update list reveal */
+        .fade-in {
+            animation: fadeIn 0.5s ease-in-out forwards;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+    
+</head>
+<body class="bg-[#0c0a18] min-h-screen font-sans text-slate-300 flex flex-col items-center p-4 sm:p-6 lg:p-8 relative overflow-x-hidden">
+
+    <!-- Audio element for the update sound -->
+    <audio id="updateSound" src="https://github.com/navasdo/navacite/raw/406b3c70feafc7e885aaa1dffe1d92c1007ecc2b/audio/updates.mp3" preload="auto"></audio>
+
+    <!-- Updates Modal -->
+    <div id="updatesModal" class="hidden fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4 modal-enter">
+        <div class="bg-slate-800 border border-violet-700/50 rounded-2xl shadow-2xl shadow-violet-500/10 p-6 sm:p-8 text-center max-w-md w-full modal-content-enter">
+            <img src="https://raw.githubusercontent.com/navasdo/navacite/refs/heads/main/images/updates_daniel.png" alt="The Scholar" class="w-48 mx-auto mb-4 rounded-full [filter:drop-shadow(0_0_15px_rgba(255,255,255,0.6))]" onerror="this.onerror=null; this.src='https://placehold.co/192x192/1e293b/a78bfa?text=DN';" />
+            
+            <h2 class="text-3xl font-bold text-slate-100">Latest Updates</h2>
+            <p id="updateDate" class="text-sm text-violet-400 mb-6"></p>
+
+            <!-- Initial View -->
+            <div id="initialUpdateView">
+                <p class="text-slate-300 italic mb-6"> The Navacites have been polished~!</p>
+                <div class="flex flex-col sm:flex-row gap-3">
+                    <button id="seeUpdatesButton" class="w-full bg-violet-600 hover:bg-violet-700 text-white font-bold py-3 px-4 rounded-lg transition-colors duration-300">See Updates</button>
+                    <button id="closeExcitingButton" class="w-full bg-slate-600 hover:bg-slate-700 text-white font-bold py-3 px-4 rounded-lg transition-colors duration-300">Oooh, exciting! But I hate reading.</button>
+                </div>
+            </div>
+
+            <!-- Revealed View -->
+            <div id="revealedUpdateView" class="hidden">
+                <ul id="updateList" class="text-left list-disc list-inside space-y-2 text-slate-300 mb-8">
+                    <!-- Update items will be injected here by JavaScript -->
+                </ul>
+                <button id="finalCloseButton" class="w-full bg-violet-600 hover:bg-violet-700 text-white font-bold py-3 px-4 rounded-lg transition-colors duration-300">Close</button>
+            </div>
+            
+            <div class="text-center mt-6">
+                <label for="dontShowAgainCheckbox" class="text-xs text-slate-400 flex items-center justify-center cursor-pointer">
+                    <input type="checkbox" id="dontShowAgainCheckbox" class="mr-2 h-4 w-4 rounded bg-slate-700 border-slate-600 text-violet-600 focus:ring-violet-500">
+                    Don't show this update again, please & thank you.
+                </label>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- Header Section -->
+    <header class="w-full max-w-5xl mx-auto my-8">
+        <!-- Centered content -->
+        <div class="text-center pt-8">
+            <img
+              src="https://raw.githubusercontent.com/navasdo/navacite/refs/heads/main/gems/Navacite-Main.png"
+              alt="Navacite Main Visual"
+              class="w-48 mx-auto mb-4 [filter:drop-shadow(0_0_15px_rgba(255,255,255,0.3))]"
+              onerror="this.onerror=null; this.src='https://placehold.co/192x108/0c0a18/a78bfa?text=Navacite-Main';"
+            />
+            <div class="flex justify-center items-center gap-x-2 mb-3">
+                <h1 class="text-5xl md:text-6xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-violet-400 to-fuchsia-500">
+                  Navacite Library
+                </h1>
+                <a href="#navacite-definition" class="text-slate-500 hover:text-violet-400 transition-colors duration-300" aria-label="Scroll to definition" title="What is a Navacite?">
+                   <svg xmlns="http://www.w3.org/2000/svg" class="h-7 w-7" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                     <path stroke-linecap="round" stroke-linejoin="round" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                   </svg>
+                </a>
+            </div>
+            <p class="text-md md:text-lg text-slate-400 italic max-w-3xl mx-auto">
+              A Library of Web Apps for Speech-Language Therapy.
+            </p>
+        </div>
+    </header>
+
+    <!-- Main Content - Tool Library Section -->
+    <main class="w-full max-w-5xl mx-auto flex-grow">
+        <div id="tool-grid" class="mt-16 grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-10 p-4">
+            <!-- Tool cards will be dynamically injected here by JavaScript -->
+        </div>
+    </main>
+
+    <!-- Footer Section -->
+   <footer id="navacite-definition" class="w-full max-w-3xl mx-auto mt-24 mb-8 text-left text-sm text-slate-500 p-6 border-t border-slate-800/50 scroll-mt-20">
+    <dl>
+        <dt class="text-lg font-bold text-slate-300">Navacite<span class="ml-3 font-normal text-slate-400">na·va·cite | /ˈnævəˌsaɪt/</span></dt>
+        <dd class="italic text-slate-400 mt-2">noun</dd>
+        <dd class="mt-2 text-slate-400 leading-relaxed">1. An enchanted artifact that, in the hands of a speech-pathologist, causes keyboards to type attendance notes on their own, places every language at their fingertips, and summons the very spirits of authors to weave stories for their students.</dd>
+        <dd class="mt-2 text-slate-400 leading-relaxed">2. A tool, framework, or conceptual instrument that is used to reveal or bring clarity to complex information, particularly in educational or diagnostic contexts.</dd>
+        <dd class="mt-4 text-slate-500 italic"><span class="font-semibold text-slate-400 not-italic">USAGE</span><br/>"With a Navacite in hand, the SLP watched in awe as the spirits of classic authors crafted a perfect narrative prompt for the student's therapy session."</dd>
+    </dl>
+
+    <!-- ===== CHANGE #1: ADD THE HORIZONTAL RULE ===== -->
+    <hr class="my-16 border-slate-700" />
+
+    <!-- ===== CHANGE #2: REMOVED THE TOP MARGIN FROM THIS PARAGRAPH ===== -->
+    <p class="text-violet-400">
+        <strong class="font-bold">Disclaimer:</strong> These tools are not intended to diagnose speech-language disorders. They are designed as engagement supports to supplement language-based therapy. By using these resources, you acknowledge that the apps are experimental and may contain errors. Always verify content for accuracy and rely on your professional judgment when using them in practice.
+    </p>
+
+    <p class="mt-16 font-bold text-violet-400 text-center">
+        &copy; 2025 Navacite | All Rights Reserved
+    </p>
+    
+</footer>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+
+            // --- Configuration for all tools ---
+            // Edit the information for each tool here.
+            const tools = [
+                {
+                    name: 'Language Lens<br><span class="text-sm text-slate-400">(coming soon)</span>',
+                    href: '#',
+                    imgSrc: 'https://raw.githubusercontent.com/navasdo/oliver/refs/heads/main/navacite/gems/Navacite-Ellv2.png',
+                    imgAlt: 'Language Lens Icon',
+                    description: 'Analyzes language samples to identify patterns and areas of difficulty for English Language Learners.'
+                },
+                {
+                    name: 'Comprehension Crystal',
+                    href: '/comprehension-crystal/',
+                    imgSrc: 'https://raw.githubusercontent.com/navasdo/oliver/refs/heads/main/navacite/gems/navacite-rpgv2.png',
+                    imgAlt: 'Comprehension Crystal Icon',
+                    description: 'Generates reading comprehension probes based on grade level and topics of interest. Also has the ability to read the story, questions, and answer choices to the user.'
+                },
+                {
+                    name: 'Session Scribe',
+                    href: '/session-scribe/',
+                    imgSrc: 'https://raw.githubusercontent.com/navasdo/navacite/refs/heads/main/gems/Navacite-TNG.png',
+                    imgAlt: 'Session Scribe Icon',
+                    description: 'Uses shorthand to automatically generate detailed and accurate therapy session notes, saving valuable time.'
+                },
+                {
+                    name: 'Grammar Grid',
+                    href: '/grammar-grid/',
+                    imgSrc: 'https://raw.githubusercontent.com/navasdo/navacite/refs/heads/main/gems/navacite-gg.png',
+                    imgAlt: 'Grammar Grid Icon',
+                    description: 'Assesses the student’s ability to create meaningful, grammatically correct sentences using and transforming given words.'
+                },
+                {
+                    name: 'Echoform<br><span class="text-sm text-slate-400">(coming soon)</span>',
+                    href: '/',
+                    imgSrc: 'https://raw.githubusercontent.com/navasdo/navacite/refs/heads/main/gems/navacite-echoform.png',
+                    imgAlt: 'Echoform Icon',
+                    description: 'Assesses the student’s ability to repeat increasingly complex sentences accurately, preserving meaning, word forms, and syntax — key skills that support short-term memory and linguistic competence.'
+                },
+                {
+                    name: 'LexiMind<br><span class="text-sm text-slate-400">(coming soon)</span>',
+                    href: '/',
+                    imgSrc: 'https://raw.githubusercontent.com/navasdo/navacite/refs/heads/main/gems/navacite-leximind.png',
+                    imgAlt: 'Leximind Icon',
+                    description: 'Assesses the student’s ability to analyze and define words through class relationships, shared features, and unique referential meanings.'
+                },
+                {
+                    name: 'Syntax Spire<br><span class="text-sm text-slate-400">(coming soon)</span>',
+                    href: '/',
+                    imgSrc: 'https://raw.githubusercontent.com/navasdo/navacite/refs/heads/main/gems/navacite-syntax_spire.png',
+                    imgAlt: 'Syntax Spire Icon',
+                    description: 'Assesses the student’s ability to interpret sentences involving comparison, location/direction, time, sequence, and passive voice.'
+                },
+                {
+                    name: 'Concordia<br><span class="text-sm text-slate-400">(coming soon)</span>',
+                    href: '/',
+                    imgSrc: 'gems/navacite-concordia.png',
+                    imgAlt: 'Concordia Icon',
+                    description: 'Assesses the student’s ability to interpret and respond to social scenarios by identifying appropriate actions, perspectives, and emotional cues across varied contexts.'
+                },
+                {
+                    name: 'Scribeweft<br><span class="text-sm text-slate-400">(coming soon)</span>',
+                    href: '/',
+                    imgSrc: 'gems/navacite-scribeweft.png',
+                    imgAlt: 'Scribeweft Icon',
+                    description: 'Assesses the student’s writing using six key traits—ideas, organization, voice, word choice, sentence fluency, and conventions—to identify strengths and target areas for language-based intervention.'
+                }
+            ];
+
+            const toolGrid = document.getElementById('tool-grid');
+            if (toolGrid) {
+                toolGrid.innerHTML = tools.map(tool => `
+                    <a href="${tool.href}" class="group relative flex flex-col items-center justify-between p-6 bg-slate-900/40 rounded-2xl border border-violet-900/80 transition-all duration-300 ease-in-out hover:border-violet-600/80 hover:scale-105 hover:shadow-[0_0_25px_-5px_rgba(167,139,250,0.4)]">
+                        
+                        <!-- Tooltip -->
+                        <div class="absolute top-2 right-2">
+                            <div class="relative">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-slate-500 group-hover:text-violet-400 transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                </svg>
+                                <span class="absolute bottom-full right-0 mb-2 w-48 p-2 text-xs text-center text-white bg-slate-700 rounded-md opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
+                                    ${tool.description}
+                                </span>
+                            </div>
+                        </div>
+
+                        <div class="w-full aspect-square flex items-center justify-center">
+                           <img src="${tool.imgSrc}" alt="${tool.imgAlt}" class="max-w-full max-h-full object-contain transition-transform duration-300 group-hover:scale-110 [filter:drop-shadow(0_0_15px_rgba(255,255,255,0.3))]" onerror="this.onerror=null; this.src='https://placehold.co/200x200/1e293b/a78bfa?text=Tool+Icon';"/>
+                        </div>
+                        <div class="text-center"><h2 class="text-xl font-bold text-slate-200 group-hover:text-violet-400 transition-colors duration-300">${tool.name}</h2></div>
+                    </a>
+                `).join('');
+            }
+            
+           // --- Configuration for Updates ---
+            const updatesConfig = {
+                id: '2025-09-04-v2',
+                date: '09/04/2025', // Just the date string
+                items: [
+                    '<span class="text-violet-600"><b><u>[Grammar Grid: Quality of Life Updates]</u></b></span><br><i>Just rolled out some updates to make your experience even better. Here’s a quick look at what’s new:</i><br>',
+                    '<b>Smarter Word Shuffling:</b> No more accidental hints! Word blocks are now shuffled more intelligently to keep every question a fresh challenge.',
+                    '<b>Keyboard Shortcuts:</b> Use number keys (1-0) for words, and quick keys to Check (-), Reset (=), and Pass (→).',
+                    '<b>Cleaner Assessment Layout:</b> Students completed sentences now appear on the left, making their progress easier to track.',
+                    '<b>Improved Tutorial Flow:</b>  The tutorial has been streamlined to provide a clearer and more focused introduction.',
+                    '<b>New Loading Animation:</b> Students can now enjoy a cool, glowing animation while the next question loads.'
+                ]
+};
+
+            // --- Modal Logic ---
+            const modal = document.getElementById('updatesModal');
+            const checkbox = document.getElementById('dontShowAgainCheckbox');
+            const updateSound = document.getElementById('updateSound');
+            
+            const initialView = document.getElementById('initialUpdateView');
+            const revealedView = document.getElementById('revealedUpdateView');
+
+            const seeUpdatesButton = document.getElementById('seeUpdatesButton');
+            const closeExcitingButton = document.getElementById('closeExcitingButton');
+            const finalCloseButton = document.getElementById('finalCloseButton');
+
+            const updateDateEl = document.getElementById('updateDate');
+            const updateListEl = document.getElementById('updateList');
+
+            const lastSeenUpdateId = localStorage.getItem('lastSeenUpdateId');
+
+            function revealUpdates() {
+                // Play sound
+                updateSound.play().catch(error => {
+                    console.log("Audio autoplay was prevented by the browser.");
+                });
+                
+                initialView.classList.add('hidden');
+                revealedView.classList.remove('hidden');
+                revealedView.classList.add('fade-in');
+            }
+
+            function showModal() {
+                // Populate modal with content from config
+                updateDateEl.textContent = updatesConfig.date;
+                updateListEl.innerHTML = updatesConfig.items.map(item => `<li>${item}</li>`).join('');
+
+                modal.classList.remove('hidden');
+                // Use a tiny timeout to allow the CSS transitions to trigger correctly
+                setTimeout(() => {
+                    modal.classList.add('modal-enter-active');
+                    modal.querySelector('.modal-content-enter').classList.add('modal-content-enter-active');
+                }, 10);
+            }
+
+            function hideModal() {
+                if (checkbox.checked) {
+                    localStorage.setItem('lastSeenUpdateId', updatesConfig.id);
+                }
+                modal.classList.add('hidden');
+                modal.classList.remove('modal-enter-active');
+                modal.querySelector('.modal-content-enter').classList.remove('modal-content-enter-active');
+            }
+
+            // Check if the user has already seen this specific update
+            if (updatesConfig.id !== lastSeenUpdateId) {
+                showModal();
+            }
+            
+            seeUpdatesButton.addEventListener('click', revealUpdates);
+            closeExcitingButton.addEventListener('click', hideModal);
+            finalCloseButton.addEventListener('click', hideModal);
+
+            // Also close modal if user clicks on the backdrop
+            modal.addEventListener('click', (event) => {
+                if (event.target === modal) {
+                    hideModal();
+                }
+            });
+        });
+    </script>
+</body>
+</html>
+
+
