@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <link rel="icon" type="images/navacite.ico" href="images/navacite.ico">
+    <link rel="icon" type="/templates/static/ico/navacite.ico" href="/templates/static/ico/navacite.ico">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Navacite Library</title>
@@ -42,6 +42,12 @@
     
 </head>
 <body class="bg-[#0c0a18] min-h-screen font-sans text-slate-300 flex flex-col items-center p-4 sm:p-6 lg:p-8 relative overflow-x-hidden">
+<body class="...">
+  <script>
+    if (window.top !== window.self) {
+      window.top.location = window.self.location;
+    }
+  </script>
 
     <!-- Audio element for the update sound -->
     <audio id="updateSound" src="https://github.com/navasdo/navacite/raw/406b3c70feafc7e885aaa1dffe1d92c1007ecc2b/audio/updates.mp3" preload="auto"></audio>
@@ -49,7 +55,7 @@
     <!-- Updates Modal -->
     <div id="updatesModal" class="hidden fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4 modal-enter">
         <div class="bg-slate-800 border border-violet-700/50 rounded-2xl shadow-2xl shadow-violet-500/10 p-6 sm:p-8 text-center max-w-md w-full modal-content-enter">
-            <img src="https://raw.githubusercontent.com/navasdo/navacite/refs/heads/main/images/updates_daniel.png" alt="The Scholar" class="w-48 mx-auto mb-4 rounded-full [filter:drop-shadow(0_0_15px_rgba(255,255,255,0.6))]" onerror="this.onerror=null; this.src='https://placehold.co/192x192/1e293b/a78bfa?text=DN';" />
+            <img src="/templates/static/updates/updates_scholar.png" alt="The Scholar" class="w-48 mx-auto mb-4 rounded-full [filter:drop-shadow(0_0_15px_rgba(255,255,255,0.6))]" onerror="this.onerror=null; this.src='https://placehold.co/192x192/1e293b/a78bfa?text=DN';" />
             
             <h2 class="text-3xl font-bold text-slate-100">Latest Updates</h2>
             <p id="updateDate" class="text-sm text-violet-400 mb-6"></p>
@@ -86,7 +92,7 @@
         <!-- Centered content -->
         <div class="text-center pt-8">
             <img
-              src="https://raw.githubusercontent.com/navasdo/navacite/refs/heads/main/gems/Navacite-Main.png"
+              src="/templates/static/navacite-images/Navacite-Main.png"
               alt="Navacite Main Visual"
               class="w-48 mx-auto mb-4 [filter:drop-shadow(0_0_15px_rgba(255,255,255,0.3))]"
               onerror="this.onerror=null; this.src='https://placehold.co/192x108/0c0a18/a78bfa?text=Navacite-Main';"
@@ -102,15 +108,40 @@
                 </a>
             </div>
             <p class="text-md md:text-lg text-slate-400 italic max-w-3xl mx-auto">
-              A Library of Web Apps for Speech-Language Therapy.
+              A Repository of Speech-Language Therapy Related Web Apps.
             </p>
         </div>
     </header>
 
     <!-- Main Content - Tool Library Section -->
     <main class="w-full max-w-5xl mx-auto flex-grow">
-        <div id="tool-grid" class="mt-16 grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-10 p-4">
-            <!-- Tool cards will be dynamically injected here by JavaScript -->
+        <!-- ===== NEW SECTION: Main Category Selection ===== -->
+        <div class="mt-16 grid grid-cols-1 md:grid-cols-2 gap-10 p-4">
+            <!-- Language Tools Button -->
+            <a href="/language-tools/" class="group relative flex flex-col items-center justify-center p-8 bg-slate-900/40 rounded-2xl border border-violet-900/80 transition-all duration-300 ease-in-out hover:border-violet-600/80 hover:scale-105 hover:shadow-[0_0_25px_-5px_rgba(167,139,250,0.4)]">
+                <img src="/templates/static/navacite-images/navacite-languagev2.png" alt="Language Tools Icon" class="w-64 h-64 mb-4 transition-transform duration-300 group-hover:scale-110 [filter:drop-shadow(0_0_15px_rgba(255,255,255,0.3))]">
+                <h2 class="text-3xl font-bold text-slate-200 group-hover:text-violet-400 transition-colors duration-300">Language</h2>
+                <p class="text-slate-400 mt-2 text-center">Tools for writing, reading, comprehension, and more.</p>
+            </a>
+             <!-- Fluency Tools Button -->
+            <a href="/fluency-tools/" class="group relative flex flex-col items-center justify-center p-8 bg-slate-900/40 rounded-2xl border border-violet-900/80 transition-all duration-300 ease-in-out hover:border-violet-600/80 hover:scale-105 hover:shadow-[0_0_25px_-5px_rgba(167,139,250,0.4)]">
+                 <img src="/templates/static/navacite-images/navacite-fluency.png" alt="Fluency Tools Icon" class="w-64 h-64 mb-4 transition-transform duration-300 group-hover:scale-110 [filter:drop-shadow(0_0_15px_rgba(255,255,255,0.3))]">
+                <h2 class="text-3xl font-bold text-slate-200 group-hover:text-violet-400 transition-colors duration-300">Fluency</h2>
+                <p class="text-slate-400 mt-2 text-center">Tools for promoting smooth and confident speech.</p>
+            </a>
+            <!-- Articulation Tools Button -->
+            <a href="/articulation-tools/" class="group relative flex flex-col items-center justify-center p-8 bg-slate-900/40 rounded-2xl border border-violet-900/80 transition-all duration-300 ease-in-out hover:border-violet-600/80 hover:scale-105 hover:shadow-[0_0_25px_-5px_rgba(167,139,250,0.4)]">
+                 <img src="/templates/static/navacite-images/navacite-artic.png" alt="Articulation Tools Icon" class="w-64 h-64 mb-4 transition-transform duration-300 group-hover:scale-110 [filter:drop-shadow(0_0_15px_rgba(255,255,255,0.3))]">
+                <h2 class="text-3xl font-bold text-slate-200 group-hover:text-violet-400 transition-colors duration-300">Articulation</h2>
+                <p class="text-slate-400 mt-2 text-center">Tools for speech sound production and clarity.</p>
+            </a>
+
+            <!-- SLP Tools Button -->
+            <a href="/slp-tools/" class="group relative flex flex-col items-center justify-center p-8 bg-slate-900/40 rounded-2xl border border-violet-900/80 transition-all duration-300 ease-in-out hover:border-violet-600/80 hover:scale-105 hover:shadow-[0_0_25px_-5px_rgba(167,139,250,0.4)]">
+                 <img src="/templates/static/navacite-images/navacite-slp.png" alt="SLP Tools Icon" class="w-64 h-64 mb-4 transition-transform duration-300 group-hover:scale-110 [filter:drop-shadow(0_0_15px_rgba(255,255,255,0.3))]">
+                <h2 class="text-3xl font-bold text-slate-200 group-hover:text-violet-400 transition-colors duration-300">SLP Tools</h2>
+                <p class="text-slate-400 mt-2 text-center">Clerical tools for speech-language pathologists.</p>
+            </a>
         </div>
     </main>
 
@@ -124,10 +155,8 @@
         <dd class="mt-4 text-slate-500 italic"><span class="font-semibold text-slate-400 not-italic">USAGE</span><br/>"With a Navacite in hand, the SLP watched in awe as the spirits of classic authors crafted a perfect narrative prompt for the student's therapy session."</dd>
     </dl>
 
-    <!-- ===== CHANGE #1: ADD THE HORIZONTAL RULE ===== -->
     <hr class="my-16 border-slate-700" />
 
-    <!-- ===== CHANGE #2: REMOVED THE TOP MARGIN FROM THIS PARAGRAPH ===== -->
     <p class="text-violet-400">
         <strong class="font-bold">Disclaimer:</strong> These tools are not intended to diagnose speech-language disorders. They are designed as engagement supports to supplement language-based therapy. By using these resources, you acknowledge that the apps are experimental and may contain errors. Always verify content for accuracy and rely on your professional judgment when using them in practice.
     </p>
@@ -140,99 +169,6 @@
 
     <script>
         document.addEventListener('DOMContentLoaded', () => {
-
-            // --- Configuration for all tools ---
-            // Edit the information for each tool here.
-            const tools = [
-                {
-                    name: 'Language Lens<br><span class="text-sm text-slate-400">(coming soon)</span>',
-                    href: '#',
-                    imgSrc: 'https://raw.githubusercontent.com/navasdo/oliver/refs/heads/main/navacite/gems/Navacite-Ellv2.png',
-                    imgAlt: 'Language Lens Icon',
-                    description: 'Analyzes language samples to identify patterns and areas of difficulty for English Language Learners.'
-                },
-                {
-                    name: 'Comprehension Crystal',
-                    href: '/comprehension-crystal/',
-                    imgSrc: 'https://raw.githubusercontent.com/navasdo/oliver/refs/heads/main/navacite/gems/navacite-rpgv2.png',
-                    imgAlt: 'Comprehension Crystal Icon',
-                    description: 'Generates reading comprehension probes based on grade level and topics of interest. Also has the ability to read the story, questions, and answer choices to the user.'
-                },
-                {
-                    name: 'Session Scribe',
-                    href: '/session-scribe/',
-                    imgSrc: 'https://raw.githubusercontent.com/navasdo/navacite/refs/heads/main/gems/Navacite-TNG.png',
-                    imgAlt: 'Session Scribe Icon',
-                    description: 'Uses shorthand to automatically generate detailed and accurate therapy session notes, saving valuable time.'
-                },
-                {
-                    name: 'Grammar Grid',
-                    href: '/grammar-grid/',
-                    imgSrc: 'https://raw.githubusercontent.com/navasdo/navacite/refs/heads/main/gems/navacite-gg.png',
-                    imgAlt: 'Grammar Grid Icon',
-                    description: 'Assesses the student’s ability to create meaningful, grammatically correct sentences using and transforming given words.'
-                },
-                {
-                    name: 'Echoform<br><span class="text-sm text-slate-400">(coming soon)</span>',
-                    href: '/',
-                    imgSrc: 'https://raw.githubusercontent.com/navasdo/navacite/refs/heads/main/gems/navacite-echoform.png',
-                    imgAlt: 'Echoform Icon',
-                    description: 'Assesses the student’s ability to repeat increasingly complex sentences accurately, preserving meaning, word forms, and syntax — key skills that support short-term memory and linguistic competence.'
-                },
-                {
-                    name: 'LexiMind<br><span class="text-sm text-slate-400">(coming soon)</span>',
-                    href: '/',
-                    imgSrc: 'https://raw.githubusercontent.com/navasdo/navacite/refs/heads/main/gems/navacite-leximind.png',
-                    imgAlt: 'Leximind Icon',
-                    description: 'Assesses the student’s ability to analyze and define words through class relationships, shared features, and unique referential meanings.'
-                },
-                {
-                    name: 'Syntax Spire<br><span class="text-sm text-slate-400">(coming soon)</span>',
-                    href: '/',
-                    imgSrc: 'https://raw.githubusercontent.com/navasdo/navacite/refs/heads/main/gems/navacite-syntax_spire.png',
-                    imgAlt: 'Syntax Spire Icon',
-                    description: 'Assesses the student’s ability to interpret sentences involving comparison, location/direction, time, sequence, and passive voice.'
-                },
-                {
-                    name: 'Concordia<br><span class="text-sm text-slate-400">(coming soon)</span>',
-                    href: '/',
-                    imgSrc: 'gems/navacite-concordia.png',
-                    imgAlt: 'Concordia Icon',
-                    description: 'Assesses the student’s ability to interpret and respond to social scenarios by identifying appropriate actions, perspectives, and emotional cues across varied contexts.'
-                },
-                {
-                    name: 'Scribeweft<br><span class="text-sm text-slate-400">(coming soon)</span>',
-                    href: '/',
-                    imgSrc: 'gems/navacite-scribeweft.png',
-                    imgAlt: 'Scribeweft Icon',
-                    description: 'Assesses the student’s writing using six key traits—ideas, organization, voice, word choice, sentence fluency, and conventions—to identify strengths and target areas for language-based intervention.'
-                }
-            ];
-
-            const toolGrid = document.getElementById('tool-grid');
-            if (toolGrid) {
-                toolGrid.innerHTML = tools.map(tool => `
-                    <a href="${tool.href}" class="group relative flex flex-col items-center justify-between p-6 bg-slate-900/40 rounded-2xl border border-violet-900/80 transition-all duration-300 ease-in-out hover:border-violet-600/80 hover:scale-105 hover:shadow-[0_0_25px_-5px_rgba(167,139,250,0.4)]">
-                        
-                        <!-- Tooltip -->
-                        <div class="absolute top-2 right-2">
-                            <div class="relative">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-slate-500 group-hover:text-violet-400 transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                                    <path stroke-linecap="round" stroke-linejoin="round" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                                </svg>
-                                <span class="absolute bottom-full right-0 mb-2 w-48 p-2 text-xs text-center text-white bg-slate-700 rounded-md opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
-                                    ${tool.description}
-                                </span>
-                            </div>
-                        </div>
-
-                        <div class="w-full aspect-square flex items-center justify-center">
-                           <img src="${tool.imgSrc}" alt="${tool.imgAlt}" class="max-w-full max-h-full object-contain transition-transform duration-300 group-hover:scale-110 [filter:drop-shadow(0_0_15px_rgba(255,255,255,0.3))]" onerror="this.onerror=null; this.src='https://placehold.co/200x200/1e293b/a78bfa?text=Tool+Icon';"/>
-                        </div>
-                        <div class="text-center"><h2 class="text-xl font-bold text-slate-200 group-hover:text-violet-400 transition-colors duration-300">${tool.name}</h2></div>
-                    </a>
-                `).join('');
-            }
             
            // --- Configuration for Updates ---
             const updatesConfig = {
