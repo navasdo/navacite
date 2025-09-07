@@ -1,73 +1,62 @@
 import { jwtVerify } from 'jose';
 
-// This function is the middleware that will run on specified paths
 export async function middleware(request) {
-    // Get the pathname from the request URL (e.g., '/', '/session-scribe')
     const { pathname } = request.nextUrl;
 
-    // --- Normalize the Path for Clean URLs ---
-    // Vercel serves 'page.html' at '/page'. We need to handle both.
-    // This removes the .html extension if it exists, so we can reliably check paths.
-    const normalizedPath = pathname.endsWith('.html') ? pathname.slice(0, -5) : pathname;
-
-    // --- Define Public Paths (without .html) ---
-    // These are the pages a user can visit without being logged in.
+    // --- Define Public File Paths ---
+    // Based on your site's structure, these are the ONLY paths
+    // that can be accessed without a login token.
     const publicPaths = [
-        '/login',
-        '/apply',
-        '/api/login', // The API endpoint for logging in must be public
-        '/navacite.ico' // Your favicon should be public
+        '/login.html',
+        '/apply.html',
+        '/api/login',    // The API endpoint for authentication
+        '/navacite.ico'  // The site favicon
     ];
 
-    // Check if the NORMALIZED path is one of the public paths.
-    // If it is, we do nothing and let the request proceed.
-    if (publicPaths.some(path => normalizedPath === path)) {
-        // By returning nothing, we allow the request to continue.
-        return; 
+    // --- Gate 1: Check for Public Paths ---
+    // If the user is requesting one of the exact public paths,
+    // let the request proceed without any checks.
+    if (publicPaths.includes(pathname)) {
+        return;
     }
-    
-    // --- Authentication Check ---
-    // Try to get the authentication token from the user's cookies.
-    const tokenCookie = request.cookies.get('token');
+
+    // --- Gate 2: Protect Everything Else ---
+    // If the path was not in the public list, it is a protected route.
+    // We must now verify the user has a valid token.
+    const token = request.cookies.get('token')?.value;
     const loginUrl = new URL('/login.html', request.url);
-    const JWT_SECRET = process.env.JWT_SECRET;
-    
-    // If the token cookie doesn't exist or is empty, redirect to login.
-    if (!tokenCookie || !tokenCookie.value) {
+
+    // If there is no token, redirect to the login page immediately.
+    if (!token) {
         return Response.redirect(loginUrl);
     }
-    
+
     // If a token exists, we must verify it.
     try {
+        const JWT_SECRET = process.env.JWT_SECRET;
         if (!JWT_SECRET) {
-             throw new Error('JWT_SECRET environment variable is not set on Vercel.');
+            throw new Error('JWT_SECRET environment variable is not set on Vercel.');
         }
-        // Create the secret key for verification.
         const secret = new TextEncoder().encode(JWT_SECRET);
+        await jwtVerify(token, secret);
         
-        // Verify the token. If it's invalid, this will throw an error.
-        await jwtVerify(tokenCookie.value, secret);
-        
-        // If jwtVerify() succeeds, the token is valid. Allow the request to proceed.
+        // If jwtVerify() succeeds, the token is valid.
+        // The user is authenticated and can access the protected route.
         return;
-        
+
     } catch (err) {
-        // If verification fails (token is expired, malformed, etc.), redirect to login.
-        console.log('JWT Verification Failed:', err.message);
-        
-        // Create a redirect response.
+        // If jwtVerify() fails, the token is invalid (expired, malformed, etc.).
+        // Redirect to the login page and clear the bad cookie from the browser.
+        console.log('JWT Verification Failed, redirecting to login:', err.message);
         const response = Response.redirect(loginUrl);
-        
-        // IMPORTANT: Clear the invalid cookie from the user's browser.
-        response.headers.append('Set-Cookie', 'token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT');
-        
+        response.headers.set('Set-Cookie', 'token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT');
         return response;
     }
 }
 
 // --- Path Matching Configuration ---
-// This config doesn't need to change. It correctly runs the middleware on
-// page routes (like '/' or '/session-scribe') while ignoring static assets.
+// This config correctly runs the middleware on page routes 
+// while ignoring static file assets (e.g. images, fonts).
 export const config = {
   matcher: [
     '/((?!.*\\.(?:ico|png|jpg|jpeg|gif|svg|webp|woff2)$).*)',
