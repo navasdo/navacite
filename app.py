@@ -14,8 +14,13 @@ app.config['SECRET_KEY'] = os.environ.get('JWT_SECRET', 'a-very-secret-key-that-
 
 # --- User Management ---
 USERS = {
-    "user1": "password123",
-    "user2": "anotherSecurePassword",
+    "dnavas": "Almanueva1!",
+    "user3": "anotherSecurePassword",
+    "user4": "anotherSecurePassword2",
+    "user5": "anotherSecurePassword3",
+    "user6": "anotherSecurePassword4",
+    "user7": "anotherSecurePassword5",
+    "user8": "anotherSecurePassword6",
 }
 
 # --- Decorator for Token Authentication ---
