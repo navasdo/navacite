@@ -1,101 +1,119 @@
-from flask import Flask, render_template, request, make_response, redirect, url_for
+from flask import Flask, render_template, request, make_response, redirect, url_for, abort
 import jwt
 import os
 from functools import wraps
 from datetime import datetime, timedelta
+import logging
 
+# --- Basic Configuration ---
 app = Flask(__name__, template_folder='templates', static_folder='static')
+logging.basicConfig(level=logging.INFO)
 
-# --- Configuration ---
-# It's crucial to set a secret key for signing the JWTs.
-# On Render, set this as an environment variable named JWT_SECRET.
+# --- Security Configuration ---
 app.config['SECRET_KEY'] = os.environ.get('JWT_SECRET', 'a-very-secret-key-that-you-should-change')
 
 # --- User Management ---
-# For your closed alpha, you can hardcode the approved users here.
-# To add/remove users, just edit this dictionary and redeploy.
 USERS = {
-    "dnavas": "Almanueva1!",
+    "user1": "password123",
     "user2": "anotherSecurePassword",
-    # Example for a new user:
-    # "new_user": "their_password"
 }
 
 # --- Decorator for Token Authentication ---
-# This is the "gatekeeper" that protects your pages.
 def token_required(f):
     @wraps(f)
     def decorated(*args, **kwargs):
         token = request.cookies.get('token')
+        app.logger.info(f"Checking token for protected path: {request.path}")
         if not token:
-            # If no token is found, redirect to the login page.
+            app.logger.warning("No token found. Redirecting to login.")
             return redirect(url_for('login_page'))
         try:
-            # Verify the token is valid and not expired.
             jwt.decode(token, app.config['SECRET_KEY'], algorithms=["HS256"])
-        except:
-            # If the token is invalid for any reason, send them to login.
+            app.logger.info("Token is valid.")
+        except Exception as e:
+            app.logger.error(f"Token validation failed: {e}. Redirecting to login.")
             return redirect(url_for('login_page'))
-        # If the token is valid, let them see the page they requested.
         return f(*args, **kwargs)
     return decorated
 
 # --- API Route for Login ---
 @app.route('/api/login', methods=['POST'])
 def login_api():
+    # (No changes to this function)
     data = request.get_json()
     if not data or not data.get('username') or not data.get('password'):
         return {"error": "Username and password are required"}, 400
-
     username = data.get('username')
     password = data.get('password')
-
-    # Check if the submitted username and password match our USERS list.
     if username in USERS and USERS[username] == password:
-        # If they match, create a secure token that expires in 24 hours.
         token = jwt.encode({
             'user': username,
             'exp': datetime.utcnow() + timedelta(hours=24)
         }, app.config['SECRET_KEY'], algorithm="HS256")
-
-        # Send a success message and set the token in a secure, http-only cookie.
         response = make_response({"message": "Login successful"})
         response.set_cookie('token', token, httponly=True, secure=True, samesite='Lax')
         return response
     else:
-        # If credentials are wrong, return an error.
         return {"error": "Invalid credentials"}, 401
 
-# --- Page Routes ---
+# --- Page Routes with Logging ---
 
-# Serves the login page. This route is public.
 @app.route('/login')
 def login_page():
+    app.logger.info("Request received for /login route.")
     return render_template('login.html')
 
-# Serves the application info page. This route is public.
 @app.route('/apply')
 def apply_page():
+    app.logger.info("Request received for /apply route.")
     return render_template('apply.html')
 
-# This is your main landing page. The @token_required decorator protects it.
-@app.route('/index')
-@token_required
+# NEW: This is now a "gatekeeper" route. It decides where the user should go.
+@app.route('/')
 def index():
-    return render_template('index.html')
+    token = request.cookies.get('token')
+    app.logger.info("Root path '/' accessed. Checking for token.")
+    if not token:
+        app.logger.warning("No token found at root. Redirecting to login.")
+        return redirect(url_for('login_page'))
+    try:
+        # Check if the token is valid
+        jwt.decode(token, app.config['SECRET_KEY'], algorithms=["HS256"])
+        app.logger.info("Valid token found at root. Redirecting to home page.")
+        # If token is valid, send them to the actual protected home page
+        return redirect(url_for('home_page'))
+    except:
+        # If token is invalid for any reason, send them to login
+        app.logger.error("Invalid token found at root. Redirecting to login.")
+        return redirect(url_for('login_page'))
 
-# Example of another protected route for a sub-page.
+# NEW: This is the actual homepage, which is protected.
+@app.route('/home')
+@token_required
+def home_page():
+    app.logger.info("Request received for protected /home route. Serving index.html.")
+    try:
+        return render_template('index.html')
+    except Exception as e:
+        app.logger.error(f"CRITICAL: Could not find or render 'templates/index.html'. Error: {e}")
+        abort(500)
+
 @app.route('/session-scribe')
 @token_required
 def session_scribe():
-    # This serves the index.html file from the templates/session-scribe/ directory.
+    app.logger.info("Request for /session-scribe. Trying 'templates/session-scribe/index.html'.")
     try:
         return render_template('session-scribe/index.html')
-    except:
-        return "Page not found", 404
+    except Exception as e:
+        app.logger.error(f"CRITICAL: Could not find 'templates/session-scribe/index.html'. Error: {e}")
+        abort(500)
 
+# --- Error Handling ---
+@app.errorhandler(404)
+def page_not_found(e):
+    app.logger.warning(f"404 Not Found error triggered for path: {request.path}")
+    return "This page was not found in the application.", 404
 
-# This allows the app to run when you execute `python app.py` on your own computer.
 if __name__ == '__main__':
     app.run(debug=True)
 
