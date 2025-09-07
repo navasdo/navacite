@@ -65,7 +65,7 @@ def login_page():
 @app.route('/apply')
 def apply_page():
     app.logger.info("Request received for /apply route.")
-    return render_template('apply.html')
+    return render_template('apply')
 
 # UPDATED: The main route is now the protected homepage.
 @app.route('/')
