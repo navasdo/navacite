@@ -1,0 +1,19 @@
+{
+    "functions": {
+        "api/login.js": {
+            "runtime": "nodejs22.x"
+        }
+    },
+    "rewrites": [
+        {
+            "source": "/((?!api/|login\\.html|apply\\.html|_next/|favicon\\.ico).*)",
+            "missing": [
+                {
+                    "type": "cookie",
+                    "key": "token"
+                }
+            ],
+            "destination": "/login.html"
+        }
+    ]
+}
