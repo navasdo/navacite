@@ -2,21 +2,26 @@ import { jwtVerify } from 'jose';
 
 // This function is the middleware that will run on specified paths
 export async function middleware(request) {
-    // Get the pathname from the request URL (e.g., '/', '/dashboard.html')
+    // Get the pathname from the request URL (e.g., '/', '/session-scribe')
     const { pathname } = request.nextUrl;
 
-    // --- Define Public Paths ---
+    // --- Normalize the Path for Clean URLs ---
+    // Vercel serves 'page.html' at '/page'. We need to handle both.
+    // This removes the .html extension if it exists, so we can reliably check paths.
+    const normalizedPath = pathname.endsWith('.html') ? pathname.slice(0, -5) : pathname;
+
+    // --- Define Public Paths (without .html) ---
     // These are the pages a user can visit without being logged in.
     const publicPaths = [
-        '/login.html',
-        '/apply.html',
+        '/login',
+        '/apply',
         '/api/login', // The API endpoint for logging in must be public
         '/navacite.ico' // Your favicon should be public
     ];
 
-    // Check if the requested path is one of the public paths.
+    // Check if the NORMALIZED path is one of the public paths.
     // If it is, we do nothing and let the request proceed.
-    if (publicPaths.some(path => pathname === path)) {
+    if (publicPaths.some(path => normalizedPath === path)) {
         // By returning nothing, we allow the request to continue.
         return; 
     }
@@ -54,7 +59,6 @@ export async function middleware(request) {
         const response = Response.redirect(loginUrl);
         
         // IMPORTANT: Clear the invalid cookie from the user's browser.
-        // We do this by setting a cookie with the same name and an expiration date in the past.
         response.headers.append('Set-Cookie', 'token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT');
         
         return response;
@@ -62,14 +66,10 @@ export async function middleware(request) {
 }
 
 // --- Path Matching Configuration ---
-// This tells Vercel which requests should trigger the middleware.
+// This config doesn't need to change. It correctly runs the middleware on
+// page routes (like '/' or '/session-scribe') while ignoring static assets.
 export const config = {
   matcher: [
-    /*
-     * Match all request paths except for the ones that end with a file extension
-     * for common static assets like images or fonts. This ensures the middleware
-     * runs on all page routes (e.g., '/', '/dashboard.html').
-     */
     '/((?!.*\\.(?:ico|png|jpg|jpeg|gif|svg|webp|woff2)$).*)',
   ],
 };
