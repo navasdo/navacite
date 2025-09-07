@@ -66,14 +66,11 @@ export async function middleware(request) {
 export const config = {
   matcher: [
     /*
-     * Match all request paths except for the ones starting with:
-     * - _next/static (Next.js static files, good practice to keep)
-     * - _next/image (Next.js image optimization files)
-     * - and any files with extensions (e.g., .png, .jpg), as these are static assets.
+     * Match all request paths except for the ones that end with a file extension
+     * for common static assets like images or fonts. This ensures the middleware
+     * runs on all page routes (e.g., '/', '/dashboard.html').
      */
-    '/((?!_next/static|_next/image|.*\\..*).*)',
-    // This second part explicitly includes the root path ('/')
-    '/' 
+    '/((?!.*\\.(?:ico|png|jpg|jpeg|gif|svg|webp|woff2)$).*)',
   ],
 };
 
