@@ -152,7 +152,7 @@
             // --- Create Phoneme Buttons ---
             const createPhonemeButton = (phoneme) => {
                 const button = document.createElement('a');
-                button.href = `./${phoneme.slug}/index.html`;
+                button.href = `/articulation-tools/${phoneme.slug}`;
                 button.className = "group relative flex flex-col items-center justify-center p-8 bg-slate-900/40 rounded-2xl border border-violet-900/80 transition-all duration-300 ease-in-out hover:border-violet-600/80 hover:scale-105 hover:shadow-[0_0_25px_-5px_rgba(167,139,250,0.4)]";
                 button.dataset.place = phoneme.place.join(' ');
                 button.dataset.manner = phoneme.manner;
