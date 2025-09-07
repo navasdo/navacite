@@ -79,7 +79,7 @@ def apply_page():
     return render_template('apply.html')
 
 # This is your main landing page. The @token_required decorator protects it.
-@app.route('/')
+@app.route('/index')
 @token_required
 def index():
     return render_template('index.html')
