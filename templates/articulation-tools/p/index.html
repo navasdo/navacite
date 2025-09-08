@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <link rel="icon" type="image/x-icon" href="https://raw.githubusercontent.com/navasdo/navacite/main/images/navacite.ico">
+    <a href="/articulation-tools" class="absolute top-4 right-4 z-20 p-1 rounded-full bg-gray-700/50 hover:bg-gray-600/50 transition" title="Back to Articulation Library"><img src="https://raw.githubusercontent.com/navasdo/oliver/main/navacite/gems/Navacite-Main.png" alt="Back to Library" class="w-10 h-10 rounded-full"/></a>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Navacite Articulation: /p/</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        html { scroll-behavior: smooth; }
+        .filter-label { transition: all 0.2s ease-in-out; cursor: pointer; }
+        .filter-label:hover { background-color: #3e2e6b; }
+        input:checked + .filter-label {
+            background-color: #7c3aed;
+            border-color: #a78bfa;
+            color: #ffffff;
+            transform: scale(1.05);
+            box-shadow: 0 0 15px rgba(167, 139, 250, 0.5);
+        }
+        input:disabled + .filter-label {
+            cursor: not-allowed;
+            background-color: #2c2a38;
+            color: #6b7280;
+            opacity: 0.6;
+        }
+        input[type="checkbox"] { display: none; }
+        
+        /* Flashcard Modal Styles */
+        #flashcard-modal {
+            background-color: rgba(12, 10, 24, 0.9);
+            backdrop-filter: blur(8px);
+        }
+        .flashcard {
+            aspect-ratio: 16 / 9;
+        }
+        .nav-arrow {
+            transition: transform 0.2s ease, color 0.2s ease;
+        }
+        .nav-arrow:hover {
+            transform: scale(1.2);
+            color: #c4b5fd; /* violet-300 */
+        }
+    </style>
+</head>
+<body class="bg-[#0c0a18] min-h-screen font-sans text-slate-300 flex flex-col items-center p-4 sm:p-6 lg:p-8 overflow-x-hidden">
+
+    <!-- Header Section -->
+    <header class="w-full max-w-5xl mx-auto my-8">
+        <div class="text-center pt-8">
+            <img
+              src="https://raw.githubusercontent.com/navasdo/navacite/refs/heads/main/templates/navacite-images/navacite-p.png"
+              alt="Navacite /p/ Phoneme Visual"
+              class="w-48 mx-auto mb-4 [filter:drop-shadow(0_0_15px_rgba(255,255,255,0.3))]"
+              onerror="this.onerror=null; this.src='https://placehold.co/192x108/0c0a18/a78bfa?text=Navacite-Main';"
+            />
+            <h1 class="text-5xl md:text-6xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-violet-400 to-fuchsia-500">
+              /p/
+            </h1>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="w-full max-w-5xl mx-auto flex-grow">
+        
+        <!-- Filter Section -->
+        <div id="filter-container" class="mb-12 p-6 bg-slate-900/40 rounded-2xl border border-violet-900/80">
+            <p class="text-center text-slate-400 mb-6">Select the area you would like to target. Choosing more than one area will shuffle that target's flashcards into the rotation.</p>
+            <div>
+                <h3 class="text-xl font-bold text-violet-400 mb-4 text-center">Target Area</h3>
+                <div id="target-area-filters" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
+                    <!-- Target Area checkboxes will be inserted here by JavaScript -->
+                </div>
+            </div>
+            <div class="text-center mt-8">
+                <button id="start-drill-btn" class="bg-violet-600 hover:bg-violet-700 text-white font-bold py-3 px-8 rounded-lg transition-all duration-300 disabled:bg-slate-600 disabled:cursor-not-allowed disabled:opacity-50" disabled>
+                    Start Drill
+                </button>
+            </div>
+        </div>
+
+    </main>
+    
+    <!-- Flashcard Modal (Hidden by default) -->
+    <div id="flashcard-modal" class="hidden fixed inset-0 z-50 items-center justify-center p-4">
+        <div class="flashcard w-full max-w-4xl bg-slate-900 rounded-2xl border border-violet-700 shadow-2xl shadow-violet-500/20 flex flex-col relative">
+            <!-- Close Button -->
+            <button id="close-modal-btn" class="absolute -top-3 -right-3 text-white bg-slate-700 rounded-full h-10 w-10 flex items-center justify-center hover:bg-red-500 transition-colors z-10">&times;</button>
+
+            <!-- Image Placeholder -->
+            <div class="flex-grow w-full bg-slate-800/50 rounded-t-2xl flex items-center justify-center">
+                <span class="text-slate-500">Image Placeholder</span>
+            </div>
+            
+            <!-- Card Content & Navigation -->
+            <div class="flex items-center justify-between p-4 bg-slate-900/50 rounded-b-2xl">
+                <!-- Prev Arrow -->
+                <button id="prev-card-btn" class="nav-arrow text-4xl text-violet-400 p-4">
+                    &#x276E;
+                </button>
+                <!-- Text -->
+                <p id="flashcard-text" class="text-xl md:text-3xl lg:text-4xl font-bold text-center text-white flex-grow px-4"></p>
+                <!-- Next Arrow -->
+                <button id="next-card-btn" class="nav-arrow text-4xl text-violet-400 p-4">
+                    &#x276F;
+                </button>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- Footer Section -->
+    <footer class="w-full max-w-3xl mx-auto mt-24 mb-8 text-center text-sm text-slate-500 p-6 border-t border-slate-800/50">
+        <p class="font-bold text-violet-400">&copy; 2025 Navacite | All Rights Reserved</p>
+    </footer>
+
+    <script>
+    document.addEventListener('DOMContentLoaded', () => {
+
+        // --- Data from your CSV file ---
+        const phonemeData = {
+            "Initial /p/": ["pan", "pig", "pen", "pie", "path", "pour", "pet", "pass", "pool"],
+            "Medial /p/": ["happy", "apple", "puppy", "open", "paper", "hippo", "napkin", "important", "computer"],
+            "Final /p/": ["up", "cup", "map", "hop", "soap", "rope", "sheep", "weep", "jump"],
+            "2 Syllable Initial /p/": ["pencil", "party", "panda", "packet", "pavement", "pirate", "pasture", "purchase", "purpose"],
+            "3 Syllable Initial /p/": ["potato", "pajamas", "pelican", "paradise", "passenger", "possible", "photograph", "important", "computer"],
+            "4 Syllable Initial /p/": ["population", "particular", "participant", "participate", "phenomenon", "potentiality", "paparazzi", "disappointment", "helicopter"],
+            "5 Syllable Initial /p/": ["parliamentarian", "personalization", "photosynthesis", "personification", "procrastination", "pasteurization", "professionalism", "unpopularly", "interpersonal"],
+            "2 Syllable Medial /p/": ["open", "happy", "paper", "staple", "captain", "napkin", "support", "happen", "popcorn"],
+            "3 Syllable Medial /p/": ["important", "computer", "pineapple", "September", "carpenter", "newspaper", "crackup", "important", "September"],
+            "4 Syllable Medial /p/": ["helicopter", "disappointment", "encyclopedia", "hippopotamus", "supermarket", "application", "opportunity", "polar opposite", "supermarket"],
+            "5 Syllable Medial /p/": ["interpersonal", "unpopularly", "misinterpretation", "inappropriately", "underappreciated", "entrepreneurship", "congratulations", "deepest apologies", "fill up"],
+            "2 Syllable Final /p/": ["ketchup", "gallop", "tulip", "syrup", "catsup", "startup", "nightcap", "nightcap", "group"],
+            "3 Syllable Final /p/": ["cantaloupe", "escalope", "chimpanzee", "intergroup", "overtop", "tabletop", "zip up", "meet up", "clean up"],
+            "4 Syllable Final /p/": ["relationship", "championship", "scholarship", "internship", "entrepreneur", "get up", "stand up", "wake up", "pick up"],
+            "Initial /p/ Phrases": ["pretty pony", "purple paint", "pink pig", "perfect pear", "paved path", "paved path"],
+            "Initial /p/ Sentences": ["Please pass the pepper for my pizza.", "Paul painted the pretty pink pony.", "The people packed a picnic for the party.", "The parrot repeated every single spoken part.", "I plan to purchase a special paper pad."],
+            "Medial /p/ Phrases": ["happy puppy", "open paper", "apple pie", "September party", "happy hippo"],
+            "Medial /p/ Sentences": ["The happy puppy ate a crisp red apple.", "I need a napkin for my pineapple.", "My grandpa has a computer.", "The supermarket was open on September first.", "The supermarket was open on September first."],
+            "Final /p/ Phrases": ["up top", "deep sleep", "big hop", "clean up", "grape soda"],
+            "Final /p/ Sentences": ["Put the cup on top of the map.", "The sheep took a deep sleep in the ship.", "I hope to get the top prize in the shop.", "I will repeat my order for pepperoni pizza.", "Don't forget to zip up your backpack."],
+            "/p/ Reading Passage": [
+                "Penny the puppy loved to play. Her favorite person was Paul. Paul and Penny played in the park every day. They played with a purple ball. Penny would pounce and pop the ball with her paws. Paul would laugh. One day, Paul packed a picnic. He packed peanut butter sandwiches, pears, and potato chips. Penny hoped for a piece. They sat under a big pine tree. People passed by and smiled at the happy pair. Paul gave Penny a small piece of his pear. It was a perfect afternoon in the park. Penny took a peaceful nap on Paul's lap.",
+                "Peter Piper picked a peck of pickled peppers. A peck of pickled peppers Peter Piper picked. If Peter Piper picked a peck of pickled peppers, where's the peck of pickled peppers Peter Piper picked? This popular tongue twister is a playful way to practice the /p/ sound. People have been repeating this rhyme for many years. It is important to pronounce each word properly to get the full effect of the passage.",
+                "The peacock is a beautiful bird known for its impressive tail feathers. People appreciate the peacock for its appearance. When the male peacock displays its feathers, it creates a spectacular fan of iridescent blue, green, and gold. This display is part of its courtship ritual to attract a mate. Peacocks are native to India and Sri Lanka. They spend their days foraging for plants and insects on the ground. Watching a pelican dive for a fish is a special and memorable part of any trip to the coast.",
+                "I got a pogo stick for my birthday. It has a spring at the bottom that lets you jump up and down. It is tricky to learn. At first, I kept falling off. I had to practice my balance. I started by holding onto a fence. After a lot of practice, I could hop a few times in a row. Now I can hop all the way down the path. It's super fun. It's important to be careful and wear a helmet. Jumping on the pogo stick is great exercise. I hope I can learn to do tricks on it someday.",
+                "My grandpa loves popcorn. Whenever we watch a movie, he makes a huge bowl. He puts it in a special pot on the stove. We can hear the kernels pop, pop, popping. It's a happy sound. He puts melted butter and a little salt on top. It's the perfect movie snack. We share the bowl and try not to drop any pieces. It is important to have a napkin to wipe your hands. Popcorn and a good movie is a perfect way to spend a peaceful evening with my grandpa. I will always remember these happy times."
+            ]
+        };
+
+        const targetAreas = Object.keys(phonemeData);
+        const MAX_SELECTIONS = 3;
+
+        // --- DOM Elements ---
+        const targetAreaFilters = document.getElementById('target-area-filters');
+        const startDrillBtn = document.getElementById('start-drill-btn');
+        const modal = document.getElementById('flashcard-modal');
+        const closeModalBtn = document.getElementById('close-modal-btn');
+        const flashcardText = document.getElementById('flashcard-text');
+        const nextBtn = document.getElementById('next-card-btn');
+        const prevBtn = document.getElementById('prev-card-btn');
+        
+        let currentDrillItems = [];
+        let currentCardIndex = 0;
+
+        // --- Initialization ---
+        const createCheckbox = (value) => {
+            const cleanValue = value.replace(/[\s/&]+/g, '-').toLowerCase();
+            return `
+                <div>
+                    <input type="checkbox" id="tag-${cleanValue}" name="targetArea" value="${value}">
+                    <label for="tag-${cleanValue}" class="filter-label block w-full text-center p-2.5 rounded-md border border-slate-700 bg-slate-800/60 text-slate-300 font-semibold text-sm">
+                        ${value}
+                    </label>
+                </div>
+            `;
+        };
+        targetAreaFilters.innerHTML = targetAreas.map(createCheckbox).join('');
+        const allCheckboxes = targetAreaFilters.querySelectorAll('input[type="checkbox"]');
+
+        // --- Event Handlers ---
+        targetAreaFilters.addEventListener('change', () => {
+            const selected = targetAreaFilters.querySelectorAll('input:checked');
+            startDrillBtn.disabled = selected.length === 0;
+
+            if (selected.length >= MAX_SELECTIONS) {
+                allCheckboxes.forEach(cb => {
+                    if (!cb.checked) cb.disabled = true;
+                });
+            } else {
+                allCheckboxes.forEach(cb => cb.disabled = false);
+            }
+        });
+
+        startDrillBtn.addEventListener('click', () => {
+            const selectedTags = Array.from(targetAreaFilters.querySelectorAll('input:checked')).map(cb => cb.value);
+            currentDrillItems = selectedTags.flatMap(tag => phonemeData[tag] || []);
+            
+            if (selectedTags.length > 1) {
+                shuffleArray(currentDrillItems);
+            }
+
+            if(currentDrillItems.length > 0) {
+                currentCardIndex = 0;
+                updateFlashcard();
+                modal.classList.remove('hidden');
+                modal.classList.add('flex');
+            } else {
+                alert("No items found for the selected categories.");
+            }
+        });
+        
+        const closeModal = () => {
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+        };
+
+        closeModalBtn.addEventListener('click', closeModal);
+        nextBtn.addEventListener('click', () => {
+            currentCardIndex = (currentCardIndex + 1) % currentDrillItems.length;
+            updateFlashcard();
+        });
+
+        prevBtn.addEventListener('click', () => {
+            currentCardIndex = (currentCardIndex - 1 + currentDrillItems.length) % currentDrillItems.length;
+            updateFlashcard();
+        });
+
+        // --- Helper Functions ---
+        const updateFlashcard = () => {
+            if (currentDrillItems.length > 0) {
+                flashcardText.textContent = currentDrillItems[currentCardIndex];
+            }
+        };
+
+        const shuffleArray = (array) => {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+        };
+    });
+    </script>
+</body>
+</html>
