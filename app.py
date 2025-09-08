@@ -141,15 +141,15 @@ def language_tools():
         abort(500)
 
 # --- Dynamic Route for Individual Language Pages ---
-@app.route('/language-tools/<tools.slug>')
+@app.route('/language-tools/<langtools_slug>')
 @token_required
-def language_page(tools.slug):
-    app.logger.info(f"Request received for language tools page: /language-tools/{tools.slug}")
+def language_page(langtools_slug):
+    app.logger.info(f"Request received for language tools page: /language-tools/{langtools_slug}")
     try:
         # This is the correct path, starting from inside the 'templates' folder.
-        return render_template(f'/language-tools/{tools.slug}/index.html')
+        return render_template(f'/language-tools/{langtools_slug}/index.html')
     except Exception as e:
-        app.logger.error(f"CRITICAL: Could not find template for '{tools.slug}'. Error: {e}")
+        app.logger.error(f"CRITICAL: Could not find template for '{langtools_slug}'. Error: {e}")
         abort(404)
 
 # --- Fluency Tools ---
