@@ -1,1 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <link rel="icon" type="image/x-icon" href="https://raw.githubusercontent.com/navasdo/navacite/main/images/navacite.ico">
+    <a href="https://navacite.com" class="absolute top-4 right-4 z-10 p-1 rounded-full bg-gray-700/50 hover:bg-gray-600/50 transition" title="Back to Homepage"><img src="https://raw.githubusercontent.com/navasdo/oliver/main/navacite/gems/Navacite-Main.png" alt="Navacite Homepage" class="w-10 h-10 rounded-full"/></a>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Under Construction</title>
+    <!-- Direct link to Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Custom glow effect for the image */
+        .glow {
+            filter: drop-shadow(0 0 15px rgba(167, 139, 250, 0.4)) drop-shadow(0 0 45px rgba(167, 139, 250, 0.2));
+        }
+    </style>
+</head>
+<body class="bg-[#0c0a18] min-h-screen font-sans text-slate-300 flex flex-col items-center justify-center p-4 sm:p-6 lg:p-8 overflow-x-hidden">
+
+    <!-- Main Content -->
+    <main class="w-full max-w-2xl mx-auto flex flex-col items-center justify-center text-center">
+        <!-- Under Construction Image -->
+        <img 
+            src="https://raw.githubusercontent.com/navasdo/navacite/refs/heads/main/templates/static/updates/construction.png" 
+            alt="Under Construction" 
+            class="w-full max-w-sm sm:max-w-md md:max-w-lg mb-8 glow"
+            onerror="this.onerror=null; this.src='https://placehold.co/600x400/0c0a18/a78bfa?text=Image+Not+Found';"
+        >
+
+        <!-- Randomized Quote -->
+        <div id="quote-container" class="max-w-lg">
+             <p id="quote-display" class="text-md md:text-lg text-slate-400 italic"></p>
+        </div>
+    </main>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const quotes = [
+                { text: "The longer you wait for something, the more you appreciate it when it arrives.", author: "Unknown" },
+                { text: "The idea of waiting for something makes it more exciting.", author: "Andy Warhol" },
+                { text: "Beautiful things take time but the wait is the best part.", author: "Kian Sabik" },
+                { text: "Our willingness to wait reveals the value we place on what we're waiting for.", author: "Charles Stanley" },
+                { text: "The two most powerful warriors are patience and time.", author: "Leo Tolstoy" },
+                { text: "Adopt the pace of nature: her secret is patience.", author: "Unknown" },
+                { text: "Patience is bitter, but its fruit is sweet.", author: "Jean-Jacques Rousseau" },
+                { text: "He that can have patience can have what he will.", author: "Benjamin Franklin" },
+                { text: "Rivers know this: there is no hurry. We shall get there some day.", author: "Unknown" }
+            ];
+
+            const quoteDisplay = document.getElementById('quote-display');
+            
+            // Select a random quote from the array
+            const randomIndex = Math.floor(Math.random() * quotes.length);
+            const randomQuote = quotes[randomIndex];
+
+            // Display the quote and author
+            quoteDisplay.innerHTML = `"${randomQuote.text}" <br><span class="text-slate-500 not-italic">— ${randomQuote.author}</span>`;
+        });
+    </script>
+</body>
+</html>
 
