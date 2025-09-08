@@ -140,6 +140,18 @@ def language_tools():
         app.logger.error(f"CRITICAL: Could not find 'templates/language-tools/index.html'. Error: {e}")
         abort(500)
 
+# --- Dynamic Route for Individual Language Pages ---
+@app.route('/language-tools/<slug>')
+@token_required
+def language_page(language_slug):
+    app.logger.info(f"Request received for phoneme page: /language-tools/<slug>")
+    try:
+        # This is the correct path, starting from inside the 'templates' folder.
+        return render_template(f'/language-tools/<slug>/index.html')
+    except Exception as e:
+        app.logger.error(f"CRITICAL: Could not find template for '{language_slug}'. Error: {e}")
+        abort(404)
+
 # --- Fluency Tools ---
 @app.route('/fluency-tools')
 @token_required
