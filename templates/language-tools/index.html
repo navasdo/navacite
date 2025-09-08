@@ -1,1 +1,181 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <link rel="icon" type="image/x-icon" href="https://raw.githubusercontent.com/navasdo/navacite/templates/static/ico/navacite.ico">
+    <a href="https://navacite.com" class="absolute top-4 right-4 z-10 p-1 rounded-full bg-gray-700/50 hover:bg-gray-600/50 transition" title="Back to Homepage"><img src="https://raw.githubusercontent.com/navasdo/oliver/main/navacite/gems/Navacite-Main.png" alt="Navacite Homepage" class="w-10 h-10 rounded-full"/></a>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Navacite Library: Language</title>
+    <!-- Direct link to Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Smooth scrolling behavior */
+        html {
+            scroll-behavior: smooth;
+        }
+        /* Custom styles for checkbox labels */
+        .filter-label {
+            transition: all 0.2s ease-in-out;
+            cursor: pointer;
+        }
+        .filter-label:hover {
+            background-color: #3e2e6b; /* A slightly lighter violet for hover */
+        }
+        input:checked + .filter-label {
+            background-color: #7c3aed; /* bg-violet-600 */
+            border-color: #a78bfa; /* border-violet-400 */
+            color: #ffffff;
+            transform: scale(1.05);
+            box-shadow: 0 0 15px rgba(167, 139, 250, 0.5);
+        }
+        /* Hide the actual checkbox */
+        input[type="checkbox"] {
+            display: none;
+        }
+    </style>
+</head>
+<body class="bg-[#0c0a18] min-h-screen font-sans text-slate-300 flex flex-col items-center p-4 sm:p-6 lg:p-8 overflow-x-hidden">
+
+    <!-- Header Section -->
+    <header class="w-full max-w-5xl mx-auto my-8">
+        <div class="text-center pt-8">
+            <img
+              src="https://raw.githubusercontent.com/navasdo/navacite/refs/heads/main/templates/static/navacite-images/navacite-languagev2.png"
+              alt="Navacite Language Visual"
+              class="w-48 mx-auto mb-4 [filter:drop-shadow(0_0_15px_rgba(255,255,255,0.3))]"
+              onerror="this.onerror=null; this.src='https://placehold.co/192x108/0c0a18/a78bfa?text=Navacite-Main';"
+            />
+            <h1 class="text-5xl md:text-6xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-violet-400 to-fuchsia-500">
+              Language Library
+            </h1>
+            <p class="text-md md:text-lg text-slate-400 italic max-w-3xl mx-auto mt-2">
+                ˈlæŋgwəʤ ˈlaɪˌbrɛri
+            </p>
+        </div>
+    </header>
+
+    <!-- Main Content - Tool Library Section -->
+    <main class="w-full max-w-5xl mx-auto flex-grow">
+        
+        <!-- ===== Filter Section ===== -->
+        <div id="filter-container" class="mb-12 p-6 bg-slate-900/40 rounded-2xl border border-violet-900/80">
+            <p class="text-center text-slate-400 mb-6">Select the area you would like to target.</p>
+            <div>
+                <h3 class="text-xl font-bold text-violet-400 mb-4 text-center">Target Area</h3>
+                <div id="target-area-filters" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
+                    <!-- Target Area checkboxes will be inserted here by JavaScript -->
+                </div>
+            </div>
+            <div class="text-center mt-6">
+                <button id="reset-filters" class="bg-slate-600 hover:bg-slate-700 text-white font-bold py-2 px-6 rounded-lg transition-colors duration-300">Reset Filters</button>
+            </div>
+        </div>
+
+        <!-- ===== Tool Buttons Section ===== -->
+        <div id="tool-grid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 transition-all duration-500">
+            <!-- Tool buttons will be injected here by JavaScript -->
+        </div>
+    </main>
+
+    <!-- Footer Section -->
+    <footer class="w-full max-w-3xl mx-auto mt-24 mb-8 text-center text-sm text-slate-500 p-6 border-t border-slate-800/50">
+        <p class="font-bold text-violet-400">
+            &copy; 2025 Navacite | All Rights Reserved
+        </p>
+    </footer>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            
+            const languageTools = [
+                { name: 'Grammar Grid', slug: 'grammar-grid', tags: ['Syntax & Grammar'] },
+                { name: 'Comprehension Crystal', slug: 'comprehension-crystal', tags: ['Reading Comprehension'] },
+                { name: 'Place_Holder1', slug: 'placeholder-1', tags: [] },
+                { name: 'Place_Holder2', slug: 'placeholder-2', tags: [] },
+                { name: 'Place_Holder3', slug: 'placeholder-3', tags: [] },
+                { name: 'Place_Holder4', slug: 'placeholder-4', tags: [] },
+                { name: 'Place_Holder5', slug: 'placeholder-5', tags: [] }
+            ];
+
+            const targetAreas = [
+                'Cognitive-Linguistic/Executive Functioning',
+                'Reading Comprehension',
+                'Written Expression',
+                'Expressive Language',
+                'Receptive Language',
+                'Pragmatics & Social Language',
+                'Phonological Awareness / Pre-Literacy',
+                'Syntax & Grammar'
+            ];
+
+            const toolGrid = document.getElementById('tool-grid');
+            const targetAreaFilters = document.getElementById('target-area-filters');
+            const resetButton = document.getElementById('reset-filters');
+
+            // --- Create Filter Checkboxes ---
+            const createCheckbox = (value) => {
+                const cleanValue = value.replace(/[\s/&]+/g, '-').toLowerCase();
+                return `
+                    <div class="relative">
+                        <input type="checkbox" id="tag-${cleanValue}" name="targetArea" value="${value}">
+                        <label for="tag-${cleanValue}" class="filter-label block w-full text-center p-2.5 rounded-md border border-slate-700 bg-slate-800/60 text-slate-300 font-semibold text-sm">
+                            ${value}
+                        </label>
+                    </div>
+                `;
+            };
+
+            targetAreaFilters.innerHTML = targetAreas.map(area => createCheckbox(area)).join('');
+
+            // --- Create Tool Buttons ---
+            const createToolButton = (tool) => {
+                const button = document.createElement('a');
+                // You will need a new dynamic route in Flask for '/language-tools/<slug>'
+                button.href = `/language-tools/${tool.slug}`; 
+                button.className = "group relative flex flex-col items-center justify-center p-6 text-center bg-slate-900/40 rounded-2xl border border-violet-900/80 transition-all duration-300 ease-in-out hover:border-violet-600/80 hover:scale-105 hover:shadow-[0_0_25px_-5px_rgba(167,139,250,0.4)]";
+                
+                // Add tags to a data attribute for filtering
+                button.dataset.tags = tool.tags.join('|');
+                
+                button.innerHTML = `
+                    <h2 class="text-xl font-bold text-slate-200 group-hover:text-violet-400 transition-colors duration-300">${tool.name.replace('_', ' ')}</h2>
+                    <p class="text-slate-500 mt-2 text-xs">${tool.tags.join(', ') || 'General Tool'}</p>
+                `;
+                return button;
+            };
+
+            const toolButtons = languageTools.map(createToolButton);
+            toolButtons.forEach(button => toolGrid.appendChild(button));
+
+
+            // --- Filter Logic ---
+            const applyFilter = () => {
+                const selectedTags = Array.from(document.querySelectorAll('input[name="targetArea"]:checked')).map(cb => cb.value);
+
+                toolButtons.forEach(button => {
+                    if (selectedTags.length === 0) {
+                        button.style.display = 'flex'; // Show all if no filter is selected
+                        return;
+                    }
+
+                    const buttonTags = button.dataset.tags.split('|');
+                    const isMatch = selectedTags.some(selectedTag => buttonTags.includes(selectedTag));
+
+                    button.style.display = isMatch ? 'flex' : 'none';
+                });
+            };
+            
+            const resetAllFilters = () => {
+                document.querySelectorAll('input[type="checkbox"]:checked').forEach(cb => {
+                    cb.checked = false;
+                });
+                applyFilter();
+            };
+
+            targetAreaFilters.addEventListener('change', applyFilter);
+            resetButton.addEventListener('click', resetAllFilters);
+        });
+    </script>
+</body>
+</html>
 
