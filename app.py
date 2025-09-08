@@ -18,6 +18,7 @@ app.config['SECRET_KEY'] = os.environ.get('JWT_SECRET', 'a-very-secret-key-that-
 USERS = {
     "dnavas": "Almanueva1!",
     "user2": "anotherSecurePassword",
+    "mburk": "Rockets25",
 }
 
 # --- Decorator for Token Authentication ---
