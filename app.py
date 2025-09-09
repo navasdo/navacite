@@ -176,6 +176,18 @@ def slp_tools():
         app.logger.error(f"CRITICAL: Could not find 'templates/slp-tools/index.html'. Error: {e}")
         abort(500)
 
+# --- Dynamic Route for Individual SLP-Tool Pages ---
+@app.route('/slp-tools/<slpTools_slug>')
+@token_required
+def language_page(slpTools_slug):
+    app.logger.info(f"Request received for SLP tools page: /slp-tools/{slpTools_slug}")
+    try:
+        # This is the correct path, starting from inside the 'templates' folder.
+        return render_template(f'/slp-tools/{slpTools_slug}/index.html')
+    except Exception as e:
+        app.logger.error(f"CRITICAL: Could not find template for '{languageTools_slug}'. Error: {e}")
+        abort(404)
+        
 # --- Redirects to enforce clean URLs ---
 # These catch old links and point them to the correct, clean URL.
 @app.route('/index.html')
