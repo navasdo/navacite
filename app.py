@@ -185,7 +185,7 @@ def language_page(slpTools_slug):
         # This is the correct path, starting from inside the 'templates' folder.
         return render_template(f'/slp-tools/{slpTools_slug}/index.html')
     except Exception as e:
-        app.logger.error(f"CRITICAL: Could not find template for '{languageTools_slug}'. Error: {e}")
+        app.logger.error(f"CRITICAL: Could not find template for '{slpTools_slug}'. Error: {e}")
         abort(404)
         
 # --- Redirects to enforce clean URLs ---
