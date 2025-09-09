@@ -19,6 +19,7 @@ USERS = {
     "dnavas": "Almanueva1!",
     "user2": "anotherSecurePassword",
     "mburk": "Rockets25",
+    "annahower": "Falcons25!",
 }
 
 # --- Decorator for Token Authentication ---
