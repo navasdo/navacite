@@ -179,7 +179,7 @@ def slp_tools():
 # --- Dynamic Route for Individual SLP-Tool Pages ---
 @app.route('/slp-tools/<slpTools_slug>')
 @token_required
-def language_page(slpTools_slug):
+def slp_page(slpTools_slug):
     app.logger.info(f"Request received for SLP tools page: /slp-tools/{slpTools_slug}")
     try:
         # This is the correct path, starting from inside the 'templates' folder.
