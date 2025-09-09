@@ -99,6 +99,26 @@
         &copy; 2025 Navacite | All Rights Reserved
     </p>
 </footer>
+ <!-- SCRIPT LIBRARIES -->
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script>
+<script id="jans-audio-stuff-lib">
+    /* Helper routines for using Web Audio.
+    Borrowed heavily from Corban Brook's dsp.js
+    */
+    var context;
+    function initAudio() {
+      console.log("running initAudio()");
+    
+      if (typeof AudioContext !== "undefined") {
+        context = new AudioContext();
+      } else if (typeof webkitAudioContext !== "undefined") {
+        context = new webkitAudioContext();
+      } else {
+        document.getElementById('noAudioAPI').innerHTML="<strong>This demo requires a browser which supports HTML5 and web audio, such as recent versions of Chrome, Firefox and Opera browsers.</strong>";
+        throw new Error('AudioContext not supported by this web browser. :(');
+      }
+    }
+</script>
 <script>
         // --- Spectrogram Script provided by user ---
         var canv;
@@ -316,7 +336,7 @@
                     phonemeVideo.attr('src', videoUrl);
 
                     // Using a placeholder for the static spectrogram image
-                    const imageUrl = `https://raw.githubusercontent.com/navasdo/navacite/templates/static/articulation/spectrograms/spectro.png`;
+                    const imageUrl = `https://raw.githubusercontent.com/navasdo/navacite/refs/heads/main/templates/static/articulation/spectrograms/spectro.png`;
                     spectrogramImage.attr('src', imageUrl);
 
                     // Show the drill container
@@ -331,7 +351,6 @@
             });
         });
     </script>
-<script src="https://raw.githubusercontent.com/navasdo/navacite/templates/articulation/js/jquery.min.js"></script>
-    <script src="https://raw.githubusercontent.com/navasdo/navacite/templates/articulation/js/JansAudioStuff.js"></script>
+
 </body>
 </html>
