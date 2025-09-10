@@ -31,8 +31,9 @@
             background-color: rgba(12, 10, 24, 0.9);
             backdrop-filter: blur(8px);
         }
+        /* MODIFIED: Removed aspect-ratio from here */
         .flashcard {
-            aspect-ratio: 16 / 9;
+            /* No styles needed here anymore */
         }
         .nav-arrow {
             transition: transform 0.2s ease, color 0.2s ease;
@@ -78,22 +79,24 @@
     </main>
     
     <div id="flashcard-modal" class="hidden fixed inset-0 z-50 items-center justify-center p-4">
-        <div class="flashcard w-full max-w-4xl bg-slate-900 rounded-2xl border border-violet-700 shadow-2xl shadow-violet-500/20 flex flex-col relative">
-            <button id="close-modal-btn" class="absolute -top-3 -right-3 text-white bg-slate-700 rounded-full h-10 w-10 flex items-center justify-center hover:bg-red-500 transition-colors z-10">&times;</button>
+        <div class="w-full max-w-4xl aspect-[16/9]">
+            <div class="flashcard h-full w-full bg-slate-900 rounded-2xl border border-violet-700 shadow-2xl shadow-violet-500/20 flex flex-col relative">
+                <button id="close-modal-btn" class="absolute -top-3 -right-3 text-white bg-slate-700 rounded-full h-10 w-10 flex items-center justify-center hover:bg-red-500 transition-colors z-10">&times;</button>
 
-            <div id="flashcard-image-container" class="flex-grow w-full bg-slate-800/50 rounded-t-2xl flex items-center justify-center p-4 overflow-hidden">
-                <img id="flashcard-image" src="" alt="Flashcard Image" class="hidden max-w-full max-h-full object-contain">
-                <span id="image-placeholder-text" class="text-slate-500">Phrases and sentences do not have images.</span>
-            </div>
-            
-            <div class="flex items-center justify-between p-4 bg-slate-900/50 rounded-b-2xl">
-                <button id="prev-card-btn" class="nav-arrow text-4xl text-violet-400 p-4">
-                    &#x276E;
-                </button>
-                <p id="flashcard-text" class="text-xl md:text-3xl lg:text-4xl font-bold text-center text-white flex-grow px-4"></p>
-                <button id="next-card-btn" class="nav-arrow text-4xl text-violet-400 p-4">
-                    &#x276F;
-                </button>
+                <div id="flashcard-image-container" class="flex-grow w-full bg-slate-800/50 rounded-t-2xl flex items-center justify-center p-4 overflow-hidden min-h-0">
+                    <img id="flashcard-image" src="" alt="Flashcard Image" class="hidden max-w-full max-h-full object-contain">
+                    <span id="image-placeholder-text" class="text-slate-500">Phrases and sentences do not have images.</span>
+                </div>
+                
+                <div class="flex items-center justify-between p-4 bg-slate-900/50 rounded-b-2xl">
+                    <button id="prev-card-btn" class="nav-arrow text-4xl text-violet-400 p-4">
+                        &#x276E;
+                    </button>
+                    <p id="flashcard-text" class="text-xl md:text-3xl lg:text-4xl font-bold text-center text-white flex-grow px-4"></p>
+                    <button id="next-card-btn" class="nav-arrow text-4xl text-violet-400 p-4">
+                        &#x276F;
+                    </button>
+                </div>
             </div>
         </div>
     </div>
@@ -283,7 +286,6 @@
                 modal.classList.remove('hidden');
                 modal.classList.add('flex');
             } else {
-                // Replaced alert with a more user-friendly notification
                 startDrillBtn.textContent = "Please select a category first!";
                 setTimeout(() => {
                     startDrillBtn.textContent = "Start Drill";
