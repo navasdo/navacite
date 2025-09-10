@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <link rel="icon" type="image/x-icon" href="https://raw.githubusercontent.com/navasdo/navacite/main/images/navacite.ico">
+    <link rel="icon" type="image/x-icon" href="https://raw.githubusercontent.com/navasdo/navacite/main/templates/static/ico/navacite.ico">
     <a href="/articulation-tools" class="absolute top-4 right-4 z-20 p-1 rounded-full bg-gray-700/50 hover:bg-gray-600/50 transition" title="Back to Articulation Library"><img src="https://raw.githubusercontent.com/navasdo/oliver/main/navacite/gems/Navacite-Main.png" alt="Back to Library" class="w-10 h-10 rounded-full"/></a>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -45,7 +45,6 @@
 </head>
 <body class="bg-[#0c0a18] min-h-screen font-sans text-slate-300 flex flex-col items-center p-4 sm:p-6 lg:p-8 overflow-x-hidden">
 
-    <!-- Header Section -->
     <header class="w-full max-w-5xl mx-auto my-8">
         <div class="text-center pt-8">
             <img
@@ -60,16 +59,13 @@
         </div>
     </header>
 
-    <!-- Main Content -->
     <main class="w-full max-w-5xl mx-auto flex-grow">
         
-        <!-- Filter Section -->
         <div id="filter-container" class="mb-12 p-6 bg-slate-900/40 rounded-2xl border border-violet-900/80">
             <p class="text-center text-slate-400 mb-6">Select the area you would like to target. Choosing more than one area will shuffle that target's flashcards into the rotation.</p>
             <div>
                 <h3 class="text-xl font-bold text-violet-400 mb-4 text-center">Target Area</h3>
                 <div id="target-area-filters" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
-                    <!-- Target Area checkboxes will be inserted here by JavaScript -->
                 </div>
             </div>
             <div class="text-center mt-8">
@@ -81,26 +77,20 @@
 
     </main>
     
-    <!-- Flashcard Modal (Hidden by default) -->
     <div id="flashcard-modal" class="hidden fixed inset-0 z-50 items-center justify-center p-4">
         <div class="flashcard w-full max-w-4xl bg-slate-900 rounded-2xl border border-violet-700 shadow-2xl shadow-violet-500/20 flex flex-col relative">
-            <!-- Close Button -->
             <button id="close-modal-btn" class="absolute -top-3 -right-3 text-white bg-slate-700 rounded-full h-10 w-10 flex items-center justify-center hover:bg-red-500 transition-colors z-10">&times;</button>
 
-            <!-- Image Placeholder -->
-            <div class="flex-grow w-full bg-slate-800/50 rounded-t-2xl flex items-center justify-center">
-                <span class="text-slate-500">Image Placeholder</span>
+            <div id="flashcard-image-container" class="flex-grow w-full bg-slate-800/50 rounded-t-2xl flex items-center justify-center p-4 overflow-hidden">
+                <img id="flashcard-image" src="" alt="Flashcard Image" class="hidden max-w-full max-h-full object-contain">
+                <span id="image-placeholder-text" class="text-slate-500">Phrases and sentences do not have images.</span>
             </div>
             
-            <!-- Card Content & Navigation -->
             <div class="flex items-center justify-between p-4 bg-slate-900/50 rounded-b-2xl">
-                <!-- Prev Arrow -->
                 <button id="prev-card-btn" class="nav-arrow text-4xl text-violet-400 p-4">
                     &#x276E;
                 </button>
-                <!-- Text -->
                 <p id="flashcard-text" class="text-xl md:text-3xl lg:text-4xl font-bold text-center text-white flex-grow px-4"></p>
-                <!-- Next Arrow -->
                 <button id="next-card-btn" class="nav-arrow text-4xl text-violet-400 p-4">
                     &#x276F;
                 </button>
@@ -109,462 +99,135 @@
     </div>
 
 
-    <!-- Footer Section -->
     <footer class="w-full max-w-3xl mx-auto mt-24 mb-8 text-center text-sm text-slate-500 p-6 border-t border-slate-800/50">
         <p class="font-bold text-violet-400">&copy; 2025 Navacite | All Rights Reserved</p>
     </footer>
 
     <script>
     document.addEventListener('DOMContentLoaded', () => {
+        const baseImagePath = 'https://raw.githubusercontent.com/navasdo/navacite/main/templates/articulation-tools/p/images/';
 
-        // --- Data from your CSV file ---
         const phonemeData = {
-    "Initial /p/": [
-        "pan",
-        "pig",
-        "pop",
-        "pen",
-        "put",
-        "pot",
-        "pet",
-        "pie",
-        "pin",
-        "pack",
-        "pea",
-        "pour",
-        "push",
-        "pull",
-        "park",
-        "path",
-        "pond",
-        "peach",
-        "pear",
-        "pail",
-        "paint",
-        "post",
-        "page",
-        "pass",
-        "pool"
-    ],
-    "Medial /p/": [
-        "happy",
-        "apple",
-        "puppy",
-        "open",
-        "paper",
-        "pepper",
-        "hippo",
-        "supper",
-        "copy",
-        "sleepy",
-        "diaper",
-        "stapler",
-        "captain",
-        "spider",
-        "coupon",
-        "napkin",
-        "shopping",
-        "shampoo",
-        "cupcake",
-        "repeat",
-        "people",
-        "leopard",
-        "helicopter",
-        "important",
-        "computer"
-    ],
-    "Final /p/": [
-        "up",
-        "cup",
-        "top",
-        "hop",
-        "mop",
-        "pop",
-        "shop",
-        "ship",
-        "lip",
-        "zip",
-        "dip",
-        "rip",
-        "map",
-        "nap",
-        "gap",
-        "cap",
-        "tape",
-        "rope",
-        "soap",
-        "soup",
-        "sheep",
-        "keep",
-        "deep",
-        "weep",
-        "jump"
-    ],
-    "2 Syllable Initial /p/": [
-        "pencil",
-        "party",
-        "pillow",
-        "pumpkin",
-        "purple",
-        "present",
-        "pirate",
-        "packet",
-        "poodle",
-        "pony",
-        "penguin",
-        "pancake",
-        "panda",
-        "parent",
-        "parrot",
-        "picnic",
-        "palace",
-        "person",
-        "pilot",
-        "pocket",
-        "pizza",
-        "problem",
-        "public",
-        "purchase",
-        "purpose"
-    ],
-    "3 Syllable Initial /p/": [
-        "potato",
-        "pajamas",
-        "powerful",
-        "principal",
-        "president",
-        "policeman",
-        "pelican",
-        "permission",
-        "pineapple",
-        "passenger",
-        "popular",
-        "porcupine",
-        "piano"
-    ],
-    "4 Syllable Initial /p/": [
-        "population",
-        "particular",
-        "politician",
-        "professional",
-        "preparation",
-        "publication"
-    ],
-    "5 Syllable Initial /p/": [
-        "perpendicular",
-        "participation",
-        "procrastination",
-        "possibility",
-        "pronunciation",
-        "pennsylvania"
+            "Initial /p/": [
+                { word: "pan", image: "pan.png" }, { word: "pig", image: "pig.png" }, { word: "pop", image: "pop.png" },
+                { word: "pen", image: "pen.png" }, { word: "put", image: "put.png" }, { word: "pot", image: "pot.png" },
+                { word: "pet", image: "pet.png" }, { word: "pie", image: "pie.png" }, { word: "pin", image: "pin.png" },
+                { word: "pack", image: "pack.png" }, { word: "pea", image: "pea.png" }, { word: "pour", image: "pour.png" },
+                { word: "push", image: "push.png" }, { word: "pull", image: "pull.png" }, { word: "park", image: "park.png" },
+                { word: "path", image: "path.png" }, { word: "pond", image: "pond.png" }, { word: "peach", image: "peach.png" },
+                { word: "pear", image: "pear.png" }, { word: "pail", image: "pail.png" }, { word: "paint", image: "paint.png" },
+                { word: "post", image: "post.png" }, { word: "page", image: "page.png" }, { word: "pass", image: "pass.png" },
+                { word: "pool", image: "pool.png" }
+            ],
+            "Medial /p/": [
+                { word: "happy", image: "happy.png" }, { word: "apple", image: "apple.png" }, { word: "puppy", image: "puppy.png" },
+                { word: "open", image: "open.png" }, { word: "paper", image: "paper.png" }, { word: "pepper", image: "pepper.png" },
+                { word: "hippo", image: "hippo.png" }, { word: "supper", image: "supper.png" }, { word: "copy", image: "copy.png" },
+                { word: "sleepy", image: "sleepy.png" }, { word: "diaper", image: "diaper.png" }, { word: "stapler", image: "stapler.png" },
+                { word: "captain", image: "captain.png" }, { word: "spider", image: "spider.png" }, { word: "coupon", image: "coupon.png" },
+                { word: "napkin", image: "napkin.png" }, { word: "shopping", image: "shopping.png" }, { word: "shampoo", image: "shampoo.png" },
+                { word: "cupcake", image: "cupcake.png" }, { word: "repeat", image: "repeat.png" }, { word: "people", image: "people.png" },
+                { word: "leopard", image: "leopard.png" }, { word: "helicopter", image: "helicopter.png" }, { word: "important", image: "important.png" },
+                { word: "computer", image: "computer.png" }
+            ],
+            "Final /p/": [
+                { word: "up", image: "up.png" }, { word: "cup", image: "cup.png" }, { word: "top", image: "top.png" },
+                { word: "hop", image: "hop.png" }, { word: "mop", image: "mop.png" }, { word: "pop", image: "pop.png" },
+                { word: "shop", image: "shop.png" }, { word: "ship", image: "ship.png" }, { word: "lip", image: "lip.png" },
+                { word: "zip", image: "zip.png" }, { word: "dip", image: "dip.png" }, { word: "rip", image: "rip.png" },
+                { word: "map", image: "map.png" }, { word: "nap", image: "nap.png" }, { word: "gap", image: "gap.png" },
+                { word: "cap", image: "cap.png" }, { word: "tape", image: "tape.png" }, { word: "rope", image: "rope.png" },
+                { word: "soap", image: "soap.png" }, { word: "soup", image: "soup.png" }, { word: "sheep", image: "sheep.png" },
+                { word: "keep", image: "keep.png" }, { word: "deep", image: "deep.png" }, { word: "weep", image: "weep.png" },
+                { word: "jump", image: "jump.png" }
+            ],
+            "2 Syllable Initial /p/": [
+                { word: "pencil", image: "pencil.png" }, { word: "party", image: "party.png" }, { word: "pillow", image: "pillow.png" },
+                { word: "pumpkin", image: "pumpkin.png" }, { word: "purple", image: "purple.png" }, { word: "present", image: "present.png" },
+                { word: "pirate", image: "pirate.png" }, { word: "packet", image: "packet.png" }, { word: "poodle", image: "poodle.png" },
+                { word: "pony", image: "pony.png" }, { word: "penguin", image: "penguin.png" }, { word: "pancake", image: "pancake.png" },
+                { word: "panda", image: "panda.png" }, { word: "parent", image: "parent.png" }, { word: "parrot", image: "parrot.png" },
+                { word: "picnic", image: "picnic.png" }, { word: "palace", image: "palace.png" }, { word: "person", image: "person.png" },
+                { word: "pilot", image: "pilot.png" }, { word: "pocket", image: "pocket.png" }, { word: "pizza", image: "pizza.png" },
+                { word: "problem", image: "problem.png" }, { word: "public", image: "public.png" }, { word: "purchase", image: "purchase.png" },
+                { word: "purpose", image: "purpose.png" }
+            ],
+            "3 Syllable Initial /p/": [
+                { word: "potato", image: "potato.png" }, { word: "pajamas", image: "pajamas.png" }, { word: "powerful", image: "powerful.png" },
+                { word: "principal", image: "principal.png" }, { word: "president", image: "president.png" }, { word: "policeman", image: "policeman.png" },
+                { word: "pelican", image: "pelican.png" }, { word: "permission", image: "permission.png" }, { word: "pineapple", image: "pineapple.png" },
+                { word: "passenger", image: "passenger.png" }, { word: "popular", image: "popular.png" }, { word: "porcupine", image: "porcupine.png" },
+                { word: "piano", image: "piano.png" }
+            ],
+            "4 Syllable Initial /p/": [
+                { word: "population", image: "population.png" }, { word: "particular", image: "particular.png" }, { word: "politician", image: "politician.png" },
+                { word: "professional", image: "professional.png" }, { word: "preparation", image: "preparation.png" }, { word: "publication", image: "publication.png" }
+            ],
+            "5 Syllable Initial /p/": [
+                { word: "perpendicular", image: "perpendicular.png" }, { word: "participation", image: "participation.png" }, { word: "procrastination", image: "procrastination.png" },
+                { word: "possibility", image: "possibility.png" }, { word: "pronunciation", image: "pronunciation.png" }, { word: "pennsylvania", image: "pennsylvania.png" }
+            ],
+            "2 Syllable Medial /p/": [
+                { word: "open", image: "open.png" }, { word: "happy", image: "happy.png" }, { word: "apple", image: "apple.png" },
+                { word: "paper", image: "paper.png" }, { word: "puppy", image: "puppy.png" }, { word: "supper", image: "supper.png" },
+                { word: "pepper", image: "pepper.png" }, { word: "hippo", image: "hippo.png" }, { word: "coupon", image: "coupon.png" },
+                { word: "captain", image: "captain.png" }, { word: "napkin", image: "napkin.png" }, { word: "cupcake", image: "cupcake.png" },
+                { word: "spider", image: "spider.png" }, { word: "stapler", image: "stapler.png" }, { word: "diaper", image: "diaper.png" },
+                { word: "people", image: "people.png" }, { word: "shopping", image: "shopping.png" }, { word: "sleeping", image: "sleeping.png" },
+                { word: "repeat", image: "repeat.png" }, { word: "leopard", image: "leopard.png" }, { word: "shampoo", image: "shampoo.png" },
+                { word: "depend", image: "depend.png" }, { word: "repair", image: "repair.png" }, { word: "support", image: "support.png" },
+                { word: "happen", image: "happen.png" }, { word: "popcorn", image: "popcorn.png" }
+            ],
+            "3 Syllable Medial /p/": [
+                { word: "important", image: "important.png" }, { word: "computer", image: "computer.png" }, { word: "apartment", image: "apartment.png" },
+                { word: "opinion", image: "opinion.png" }, { word: "September", image: "September.png" }, { word: "opposite", image: "opposite.png" },
+                { word: "company", image: "company.png" }, { word: "spaghetti", image: "spaghetti.png" }, { word: "unhappy", image: "unhappy.png" },
+                { word: "example", image: "example.png" }, { word: "newspaper", image: "newspaper.png" }, { word: "peppermint", image: "peppermint.png" }
+            ],
+            "4 Syllable Medial /p/": [
+                { word: "helicopter", image: "helicopter.png" }, { word: "disappointment", image: "disappointment.png" }, { word: "championship", image: "championship.png" },
+                { word: "application", image: "application.png" }, { word: "supermarket", image: "supermarket.png" }, { word: "temperature", image: "temperature.png" },
+                { word: "operation", image: "operation.png" }
+            ],
+            "5 Syllable Medial /p/": [
+                { word: "interpersonal", image: "interpersonal.png" }, { word: "unpopularly", image: "unpopularly.png" }, { word: "inappropriate", image: "inappropriate.png" },
+                { word: "participation", image: "participation.png" }, { word: "apologetic", image: "apologetic.png" }, { word: "hippopotamus", image: "hippopotamus.png" },
+                { word: "opportunity", image: "opportunity.png" }
+            ],
+            "2 Syllable Final /p/": [
+                { word: "ketchup", image: "ketchup.png" }, { word: "gallop", image: "gallop.png" }, { word: "syrup", image: "syrup.png" },
+                { word: "tulip", image: "tulip.png" }, { word: "lineup", image: "lineup.png" }, { word: "makeup", image: "makeup.png" },
+                { word: "grownup", image: "grownup.png" }, { word: "checkup", image: "checkup.png" }, { word: "backup", image: "backup.png" },
+                { word: "setup", image: "setup.png" }, { word: "cleanup", image: "cleanup.png" }, { word: "letup", image: "letup.png" },
+                { word: "mixup", image: "mixup.png" }, { word: "roundup", image: "roundup.png" }, { word: "stirup", image: "stirup.png" },
+                { word: "teacup", image: "teacup.png" }, { word: "hiccup", image: "hiccup.png" }, { word: "house-top", image: "house-top.png" },
+                { word: "windup", image: "windup.png" }, { word: "getup", image: "getup.png" }, { word: "warmup", image: "warmup.png" },
+                { word: "meetup", image: "meetup.png" }, { word: "pushup", image: "pushup.png" }, { word: "crackup", image: "crackup.png" }
+            ],
+            "3 Syllable Final /p/": [
+                { word: "cantaloupe", image: "cantaloupe.png" }, { word: "escalope", image: "escalope.png" }, { word: "intergroup", image: "intergroup.png" },
+                { word: "paratroop", image: "paratroop.png" }, { word: "buttercup", image: "buttercup.png" }, { word: "overtop", image: "overtop.png" },
+                { word: "underprop", image: "underprop.png" }, { word: "aftercrop", image: "aftercrop.png" }, { word: "intercrop", image: "intercrop.png" },
+                { word: "followup", image: "followup.png" }, { word: "readership", image: "readership.png" }, { word: "scholarship", image: "scholarship.png" },
+                { word: "fellowship", image: "fellowship.png" }, { word: "internship", image: "internship.png" }, { word: "partnership", image: "partnership.png" },
+                { word: "membership", image: "membership.png" }
+            ],
+            "4 Syllable Final /p/": [
+                { word: "relationship", image: "relationship.png" }, { word: "championship", image: "championship.png" }, { word: "apprenticeship", image: "apprenticeship.png" }
+            ],
+            "Initial /p/ Phrases": ["pretty pony", "purple paint", "Peter Piper", "pickled peppers", "puppy paws", "pink pig", "pool party", "perfect pizza", "paper plate", "past participant", "piles of paper", "pencil point", "people passing", "pumpkin patch", "please pass", "peanut butter", "playing piano", "Paul's pet", "pushing past", "pantry pasta", "picnic spot", "pirate's patch", "put pennies", "polar opposite", "paved path"],
+            "Initial /p/ Sentences": ["Please pass the pepper for my pizza.", "Peter Piper picked a peck of pickled peppers.", "My puppy plays peacefully in the park.", "Pam painted a pretty picture of a palace.", "People prepared for the popular pool party.", "Paul put his pencil and paper away.", "The pirate protected his precious pile of pennies.", "Penguins prefer to play on the polar ice.", "Perhaps we can pack a perfect picnic.", "My parents promised a pet pony for passing.", "Please put the presents by the pumpkin.", "The powerful principal presented a special prize.", "Purple pansies popped up in the flower pots.", "The pilot prepared the plane for passengers.", "I packed peanut butter and pears for lunch.", "The poodle puppy pounced on the plush pillow.", "People prefer pancakes with plenty of syrup.", "Please pour the punch into the paper cups.", "The patient person paid for the pineapple.", "A panda played with a piece of paper.", "The police officer patrols the public park.", "My favorite part is picking a perfect pumpkin.", "Put the puzzle pieces properly in place.", "The parrot repeated every single spoken part.", "I plan to purchase a special paper pad."],
+            "Medial /p/ Phrases": ["happy puppy", "open paper", "apple cupcake", "sleepy people", "shopping trip", "pepperoni pizza", "hippo puppet", "captain's ship", "important coupon", "shampoo cap", "computer paper", "spaghetti supper", "leopard spots", "diaper bag", "paper napkin", "super happy", "staple papers", "repeat after", "repair shop", "support people", "happen upon", "opposite opinion", "helicopter pilot", "deepest apologies"],
+            "Medial /p/ Sentences": ["The happy puppy ate a crisp red apple.", "Please open the paper to find the coupon.", "My sleepy parents went shopping for supper.", "The captain's computer is very important to him.", "I need shampoo and a napkin from upstairs.", "She ate a cupcake while looking at leopards.", "Many people repeat what the newspaper says daily.", "The helicopter appeared to be flying super low.", "It is important to support people's opinions.", "The hippo looked happy after his big supper.", "I depend on my stapler for keeping papers.", "I saw a creepy spider in the apartment.", "For example, a hippo is a large animal.", "Her opinion was the opposite of my own.", "We are having spaghetti for supper tonight.", "The repair shop will happen to be open.", "I packed an apple and a napkin.", "My happy puppy is very sleepy right now.", "It's important to keep your computer updated.", "The company will repair the broken telephone.", "He used a coupon to buy cheaper diapers.", "The elephant escaped from the super market.", "The captain gave an important speech to people.", "I will repeat my order for pepperoni pizza.", "The supermarket was open on September first."],
+            "Final /p/ Phrases": ["up top", "red cup", "mop up", "shop trip", "don't stop", "the sheep jump", "deep sleep", "big ship", "keep up", "wipe up", "drip drop", "road map", "short nap", "soup cup", "zip up", "grapevine group", "hip hop", "steep drop", "drop the rope", "soap bubbles", "tape it up", "shape up", "the deep gap", "nightcap nap", "fill up"],
+            "Final /p/ Sentences": ["Put the cup on top of the map.", "Please don't drop the soap in the tub.", "The sheep will jump over the deep gap.", "We will take a short nap after soup.", "He will zip up his cap and top.", "Let's shop for a rope and some tape.", "I hope the ship does not tip over.", "Mop up the drip from the leaky pipe.", "Keep up the good work and don't stop.", "The group will meet up at the shop.", "I will wipe up the grape juice spill.", "Let's help clean up the syrup mess.", "A deep sleep will help you feel better.", "The car came to a stop up top.", "He gave a hop and a leap up.", "Fill up the cup with delicious soup.", "The steep drop made my stomach flip-flop.", "I need to shop for ketchup and syrup.", "Please pick up the cap from the floor.", "Did you see the sheep hop and skip?", "The big ship will dip in the waves.", "Let's get ketchup to dip our fries.", "He will tape up the rip in the map.", "Don't forget to zip up your backpack.", "The group will meet up for a trip."],
+            "/p/ Reading Passage": ["Penny the puppy loved to play. Her favorite person was Paul. Paul and Penny played in the park every day. They played with a purple ball. Penny would pounce and pop the ball with her paws. Paul would laugh. One day, Paul packed a picnic. He packed peanut butter sandwiches, pears, and potato chips. Penny hoped for a piece. They sat under a big pine tree. People passed by and smiled at the happy pair. Paul gave Penny a small piece of his pear. It was a perfect afternoon in the park. Penny took a peaceful nap on Paul's lap.", "Captain Pete had a very important job. He was the pilot of a passenger plane. People depended on him to fly them to places like Pennsylvania or Paris. Before each trip, Captain Pete would prepare. He would inspect the plane and plan his path on a map. He would speak to the passengers, promising a safe and pleasant trip. His copilot, Pam, was also very capable. Together, they made a powerful team. They would fly up, up, up, past the puffy clouds. People felt happy and safe when Captain Pete was their pilot. He loved his important job.", "The annual town picnic was a popular event. People prepared all week. Peter's parents packed a huge basket. They had pepperoni pizza, pineapple pieces, and potato salad. Pam brought cupcakes with purple sprinkles. The park was packed with people. They spread out blankets and opened up their picnics. A puppy show was part of the fun. One puppy, named Pip, could jump over a rope. People clapped and cheered. After eating, they played games. It was a perfect opportunity to spend time with people in the community. Everyone had a happy and peaceful day.", "Shopping with my parents can be an adventure. We get a big shopping cart and push it up and down the aisles. My job is to help pick things. I always pick apples and pears. My dad gets pepper, paper towels, and pasta. My mom uses coupons to pay less. Today, we need to buy shampoo and soap. We also need to pick up a present for my cousin's party. I hope we can get a puzzle. After shopping, we put everything in paper bags. It's important to help put the shopping away when we get home. Then, we can relax.", "A hippopotamus is a powerful animal. People often call them hippos. Hippos spend a lot of time in the water to keep cool. A hippo's skin is very sensitive to the sun. They can open their mouths super wide. It's an impressive sight! In Africa, you might see a hippo sleeping in a pool of water. They are plant eaters, and they come out of the water at night to eat grass. It's important to keep a safe distance from a hippo. Even though they look slow, they can run very fast. People should respect these powerful animals and their space.", "My family is planning a camping trip. We need to pack a lot of supplies. We will sleep in a big tent. My dad has a special sleeping bag to keep warm. I will bring my favorite pillow. We will cook supper over a campfire. I hope we have hot soup. We will need a map to find our spot. My mom is packing a first-aid kit, which is very important. I will help put up the tent. In the evening, we will look up at the stars. Camping is a peaceful way to spend time together. I can't wait for our trip to happen.", "It’s time to clean up my room. I have papers and pencils all over my desk. My purple backpack is on the floor. I need to put my pajamas under my pillow. I will pick up my toys and put them in the toy box. I need to make my bed and plump up the pillows. My mom gave me a cloth to wipe up any dust. When I am done, my room will look perfect. It is important to keep my space tidy. Maybe I can help my parents clean up the house, too. A clean house makes everyone feel happy and peaceful.", "The ship was ready to set sail. People lined up to get on board. The captain stood at the top of the ramp, greeting everyone. The ship was huge, with a deep pool and plenty of space to play. Our room had a small window. I could see the deep blue water. For supper, we ate in a big room with many people. I had a cup of soup. After supper, my parents took a nap. I stayed up to watch the ship pull away from the dock. It was a peaceful feeling, floating on the water. This was the start of a happy trip.", "The school play was a big success. The students put on a wonderful performance. My part was to be a pirate. I had a patch on my eye and a plastic sword. My friend Pam played a princess. She wore a pretty purple dress. The parents and people from the town came to watch. They clapped after every scene. After the play, we had a party with pizza and cupcakes. The principal, Mr. Piper, said he was proud of everyone's participation. It was a happy and memorable experience. I hope I can be in the play again next year.", "Today in art class, we used paint. I chose purple and pink paint. I used a big piece of paper. First, I painted a big pumpkin. Then, I painted a happy pig next to it. I was careful not to drip paint on the floor. Our teacher, Miss Appleby, helped us clean up. We used soap and water to wash our hands and the paintbrushes. We put our paintings up on a rope to dry. I am proud of my painting. I will give it to my parents as a present. They are always happy to see what I create in my art class.", "A spider spun a web in the corner of the porch. It was a perfect, intricate pattern. I watched the spider for a long time. It was patient and precise. Later, a fly happened to get caught in the web. The spider quickly wrapped it up. It was a little creepy, but also a part of nature. My dad said it's good to have spiders because they eat other pests. He explained that most spiders are not dangerous to people. It's important to respect all creatures, even the creepy-crawly ones. I will keep an eye on the spider and its beautiful web.", "The alarm clock beeped. It was time to get up. I was still sleepy, but I pushed myself out of bed. I put on my slippers and went downstairs. My dad was making pancakes. I love pancakes with syrup. After breakfast, I had to get ready for school. I packed my backpack with my pencil case and paper. I put on my coat because it was chilly. My mom gave me an apple for a snack. It's important to have a good breakfast and be prepared for the day. I hope I have a happy and productive day at school with all my people.", "The top of the mountain was steep. The hiking path was a series of sharp turns. We had to stop many times to catch our breath. We had a map to keep us from getting lost. My dad carried a backpack with water and snacks. When we finally reached the top, the view was incredible. We could see the entire valley spread out below. We sat on a big, flat rock and had a small picnic. The air was crisp and clean. It was a peaceful and happy place. The trip down was much easier. I felt proud of our accomplishment.", "My new puppy is named Pepper. He is a mix of different types of dogs. Pepper loves to play fetch with a tennis ball. When I throw it, he will gallop after it and bring it back. He is a happy and playful puppy. After we play, he likes to take a long nap on his soft pillow. It is my job to feed him his supper. He eats special puppy food from a deep bowl. It's important to give him fresh water, too. Having a puppy is a lot of responsibility, but it is also a lot of fun. Pepper is a perfect pet.", "The repair shop was a busy place. People brought in all sorts of broken things. One person had a computer that wouldn't turn on. Another person had a telephone with a cracked screen. The repair person, named Pat, was an expert. He had special tools to open up the electronics and see the problem. He could replace broken parts and make things work again. Pat said it's important to take care of our things, but accidents happen. People were always happy when Pat could repair their items. He provided a very helpful and important service to the people in his town.", "Today is the championship game. Our team has practiced for weeks. Our captain, Paul, gave us a pep talk before the game. He told us to play our best and support each other. The other team is very good. The game will be tough. My parents are in the stands to cheer for me. I hope I play well. The most important thing is to have good sportsmanship, no matter what happens. We will try our best and be proud of our effort. I hope our team can win the championship trophy. That would be a perfect end to the season.", "The library is a peaceful place. It is full of books on every topic you can imagine. People come to the library to read, study, and learn. It's important to be quiet so you don't disturb other people. I like to pick out picture books. My mom helps me find books about animals, like penguins and pandas. We check out a big pile of books to take home. The librarian puts them in a paper bag for us. Reading is a wonderful way to open up your mind to new ideas and adventures. The public library is an important place for everyone.", "We went to a pumpkin patch in September. There were pumpkins of every shape and size. I wanted to pick the perfect pumpkin to make a jack-o'-lantern. I looked for a big, round one. My sister picked a small, bumpy one. After we picked our pumpkins, we had some warm apple cider and a piece of pumpkin pie. There was also a pen with sheep and pigs. We got to pet a soft sheep. It was a happy and fun trip. I can't wait to carve my pumpkin. I will put a candle inside to make it glow.", "The airplane ride was my first. I was a little nervous but also very excited. We had to pack our bags and get to the airport early. We went through security and then waited at our gate. When it was time to board, we walked down a long ramp to the plane. I had a window seat. I could see the people on the ground getting smaller and smaller as we went up. The pilot made an announcement. It was a peaceful and smooth flight. Looking at the clouds up close was a super cool experience. I hope I can fly again soon.", "My dad has a home office where he works on his computer. He has a big desk with lots of paper and pens. Sometimes I help him with simple tasks. I can staple papers together or put them in piles. He says it is a big help. His job is important, and he has to talk on the telephone to many people. I have to be quiet when he is on a call. When he is done with his work, we can play. Sometimes he lets me type on his computer. I am learning the letters. His office is a productive and important place.", "The apartment building was very tall. We took an elevator all the way up to the top floor. Our friend, Penelope, lives there. Her apartment has a beautiful view of the city. We could see the park and all the people walking around. Penelope made us supper. We had spaghetti and a big salad with peppers. For dessert, we had apple pie. After we ate, we played a board game. It was a happy visit. It's always fun to see how different people live. Her apartment was a cozy and happy home high up in the sky.", "The president of the company gave a speech. All the employees gathered to listen. The president spoke about the company's plans for the future. He said it was important for everyone to work together as a team. He praised the employees for their hard work and participation. After the speech, they had a party with snacks and punch. People had the opportunity to talk with the president. It was a positive and hopeful meeting. The employees felt appreciated and happy about the company's direction. It was an important day for everyone involved in the company.", "A pelican is a large bird with a huge beak. The bottom part of its beak has a big pouch. The pelican uses this pouch like a net to scoop up fish from the water. It's an impressive thing to see. Pelicans often fly in a line, just above the waves. They are powerful flyers. You can often see them resting on piers or posts near the water. It's important not to feed them, as they need to find their own food. Watching a pelican dive for a fish is a special and memorable part of any trip to the coast.", "I got a pogo stick for my birthday. It has a spring at the bottom that lets you jump up and down. It is tricky to learn. At first, I kept falling off. I had to practice my balance. I started by holding onto a fence. After a lot of practice, I could hop a few times in a row. Now I can hop all the way down the path. It's super fun. It's important to be careful and wear a helmet. Jumping on the pogo stick is great exercise. I hope I can learn to do tricks on it someday.", "My grandpa loves popcorn. Whenever we watch a movie, he makes a huge bowl. He puts it in a special pot on the stove. We can hear the kernels pop, pop, popping. It's a happy sound. He puts melted butter and a little salt on top. It's the perfect movie snack. We share the bowl and try not to drop any pieces. It is important to have a napkin to wipe your hands. Popcorn and a good movie is a perfect way to spend a peaceful evening with my grandpa. I will always remember these happy times."]
+        };
 
-
-
-
-    ],
-    "2 Syllable Medial /p/": [
-        "open",
-        "happy",
-        "apple",
-        "paper",
-        "puppy",
-        "supper",
-        "pepper",
-        "hippo",
-        "coupon",
-        "captain",
-        "napkin",
-        "cupcake",
-        "spider",
-        "stapler",
-        "diaper",
-        "people",
-        "shopping",
-        "sleeping",
-        "repeat",
-        "leopard",
-        "shampoo",
-        "depend",
-        "repair",
-        "support",
-        "happen",
-        "popcorn"
-    ],
-    "3 Syllable Medial /p/": [
-        "important",
-        "computer",
-        "apartment",
-        "opinion",
-        "September",
-        "opposite",
-        "company",
-        "spaghetti",
-        "unhappy",
-        "example",
-        "newspaper",
-        "peppermint"
-    ],
-    "4 Syllable Medial /p/": [
-        "helicopter",
-        "disappointment",
-        "championship",
-        "application",
-        "supermarket",
-        "temperature",
-        "operation"
-    ],
-    "5 Syllable Medial /p/": [
-        "interpersonal",
-        "unpopularly",
-        "inappropriate",
-        "participation",
-        "apologetic",
-        "hippopotamus",
-        "opportunity"
-    ],
-    "2 Syllable Final /p/": [
-        "ketchup",
-        "gallop",
-        "syrup",
-        "tulip",
-        "lineup",
-        "makeup",
-        "grownup",
-        "checkup",
-        "backup",
-        "setup",
-        "cleanup",
-        "letup",
-        "mixup",
-        "roundup",
-        "stirup",
-        "teacup",
-        "hiccup",
-        "house-top",
-        "windup",
-        "getup",
-        "warmup",
-        "meetup",
-        "pushup",
-        "crackup"
-    ],
-    "3 Syllable Final /p/": [
-        "cantaloupe",
-        "escalope",
-        "intergroup",
-        "paratroop",
-        "buttercup",
-        "overtop",
-        "underprop",
-        "aftercrop",
-        "intercrop",
-        "followup",
-        "readership",
-        "scholarship",
-        "fellowship",
-        "internship",
-        "partnership",
-        "membership"
-    ],
-    "4 Syllable Final /p/": [
-        "relationship",
-        "championship",
-        "apprenticeship"
-    ],
-    "Initial /p/ Phrases": [
-        "pretty pony",
-        "purple paint",
-        "Peter Piper",
-        "pickled peppers",
-        "puppy paws",
-        "pink pig",
-        "pool party",
-        "perfect pizza",
-        "paper plate",
-        "past participant",
-        "piles of paper",
-        "pencil point",
-        "people passing",
-        "pumpkin patch",
-        "please pass",
-        "peanut butter",
-        "playing piano",
-        "Paul's pet",
-        "pushing past",
-        "pantry pasta",
-        "picnic spot",
-        "pirate's patch",
-        "put pennies",
-        "polar opposite",
-        "paved path"
-    ],
-    "Initial /p/ Sentences": [
-        "Please pass the pepper for my pizza.",
-        "Peter Piper picked a peck of pickled peppers.",
-        "My puppy plays peacefully in the park.",
-        "Pam painted a pretty picture of a palace.",
-        "People prepared for the popular pool party.",
-        "Paul put his pencil and paper away.",
-        "The pirate protected his precious pile of pennies.",
-        "Penguins prefer to play on the polar ice.",
-        "Perhaps we can pack a perfect picnic.",
-        "My parents promised a pet pony for passing.",
-        "Please put the presents by the pumpkin.",
-        "The powerful principal presented a special prize.",
-        "Purple pansies popped up in the flower pots.",
-        "The pilot prepared the plane for passengers.",
-        "I packed peanut butter and pears for lunch.",
-        "The poodle puppy pounced on the plush pillow.",
-        "People prefer pancakes with plenty of syrup.",
-        "Please pour the punch into the paper cups.",
-        "The patient person paid for the pineapple.",
-        "A panda played with a piece of paper.",
-        "The police officer patrols the public park.",
-        "My favorite part is picking a perfect pumpkin.",
-        "Put the puzzle pieces properly in place.",
-        "The parrot repeated every single spoken part.",
-        "I plan to purchase a special paper pad."
-    ],
-    "Medial /p/ Phrases": [
-        "happy puppy",
-        "open paper",
-        "apple cupcake",
-        "sleepy people",
-        "shopping trip",
-        "pepperoni pizza",
-        "hippo puppet",
-        "captain's ship",
-        "important coupon",
-        "shampoo cap",
-        "computer paper",
-        "spaghetti supper",
-        "leopard spots",
-        "diaper bag",
-        "paper napkin",
-        "super happy",
-        "staple papers",
-        "repeat after",
-        "repair shop",
-        "support people",
-        "happen upon",
-        "opposite opinion",
-        "helicopter pilot",
-        "deepest apologies"
-    ],
-    "Medial /p/ Sentences": [
-        "The happy puppy ate a crisp red apple.",
-        "Please open the paper to find the coupon.",
-        "My sleepy parents went shopping for supper.",
-        "The captain's computer is very important to him.",
-        "I need shampoo and a napkin from upstairs.",
-        "She ate a cupcake while looking at leopards.",
-        "Many people repeat what the newspaper says daily.",
-        "The helicopter appeared to be flying super low.",
-        "It is important to support people's opinions.",
-        "The hippo looked happy after his big supper.",
-        "I depend on my stapler for keeping papers.",
-        "I saw a creepy spider in the apartment.",
-        "For example, a hippo is a large animal.",
-        "Her opinion was the opposite of my own.",
-        "We are having spaghetti for supper tonight.",
-        "The repair shop will happen to be open.",
-        "I packed an apple and a napkin.",
-        "My happy puppy is very sleepy right now.",
-        "It's important to keep your computer updated.",
-        "The company will repair the broken telephone.",
-        "He used a coupon to buy cheaper diapers.",
-        "The elephant escaped from the super market.",
-        "The captain gave an important speech to people.",
-        "I will repeat my order for pepperoni pizza.",
-        "The supermarket was open on September first."
-    ],
-    "Final /p/ Phrases": [
-        "up top",
-        "red cup",
-        "mop up",
-        "shop trip",
-        "don't stop",
-        "the sheep jump",
-        "deep sleep",
-        "big ship",
-        "keep up",
-        "wipe up",
-        "drip drop",
-        "road map",
-        "short nap",
-        "soup cup",
-        "zip up",
-        "grapevine group",
-        "hip hop",
-        "steep drop",
-        "drop the rope",
-        "soap bubbles",
-        "tape it up",
-        "shape up",
-        "the deep gap",
-        "nightcap nap",
-        "fill up"
-    ],
-    "Final /p/ Sentences": [
-        "Put the cup on top of the map.",
-        "Please don't drop the soap in the tub.",
-        "The sheep will jump over the deep gap.",
-        "We will take a short nap after soup.",
-        "He will zip up his cap and top.",
-        "Let's shop for a rope and some tape.",
-        "I hope the ship does not tip over.",
-        "Mop up the drip from the leaky pipe.",
-        "Keep up the good work and don't stop.",
-        "The group will meet up at the shop.",
-        "I will wipe up the grape juice spill.",
-        "Let's help clean up the syrup mess.",
-        "A deep sleep will help you feel better.",
-        "The car came to a stop up top.",
-        "He gave a hop and a leap up.",
-        "Fill up the cup with delicious soup.",
-        "The steep drop made my stomach flip-flop.",
-        "I need to shop for ketchup and syrup.",
-        "Please pick up the cap from the floor.",
-        "Did you see the sheep hop and skip?",
-        "The big ship will dip in the waves.",
-        "Let's get ketchup to dip our fries.",
-        "He will tape up the rip in the map.",
-        "Don't forget to zip up your backpack.",
-        "The group will meet up for a trip."
-    ],
-    "/p/ Reading Passage": [
-        "Penny the puppy loved to play. Her favorite person was Paul. Paul and Penny played in the park every day. They played with a purple ball. Penny would pounce and pop the ball with her paws. Paul would laugh. One day, Paul packed a picnic. He packed peanut butter sandwiches, pears, and potato chips. Penny hoped for a piece. They sat under a big pine tree. People passed by and smiled at the happy pair. Paul gave Penny a small piece of his pear. It was a perfect afternoon in the park. Penny took a peaceful nap on Paul's lap.",
-        "Captain Pete had a very important job. He was the pilot of a passenger plane. People depended on him to fly them to places like Pennsylvania or Paris. Before each trip, Captain Pete would prepare. He would inspect the plane and plan his path on a map. He would speak to the passengers, promising a safe and pleasant trip. His copilot, Pam, was also very capable. Together, they made a powerful team. They would fly up, up, up, past the puffy clouds. People felt happy and safe when Captain Pete was their pilot. He loved his important job.",
-        "The annual town picnic was a popular event. People prepared all week. Peter's parents packed a huge basket. They had pepperoni pizza, pineapple pieces, and potato salad. Pam brought cupcakes with purple sprinkles. The park was packed with people. They spread out blankets and opened up their picnics. A puppy show was part of the fun. One puppy, named Pip, could jump over a rope. People clapped and cheered. After eating, they played games. It was a perfect opportunity to spend time with people in the community. Everyone had a happy and peaceful day.",
-        "Shopping with my parents can be an adventure. We get a big shopping cart and push it up and down the aisles. My job is to help pick things. I always pick apples and pears. My dad gets pepper, paper towels, and pasta. My mom uses coupons to pay less. Today, we need to buy shampoo and soap. We also need to pick up a present for my cousin's party. I hope we can get a puzzle. After shopping, we put everything in paper bags. It's important to help put the shopping away when we get home. Then, we can relax.",
-        "A hippopotamus is a powerful animal. People often call them hippos. Hippos spend a lot of time in the water to keep cool. A hippo's skin is very sensitive to the sun. They can open their mouths super wide. It's an impressive sight! In Africa, you might see a hippo sleeping in a pool of water. They are plant eaters, and they come out of the water at night to eat grass. It's important to keep a safe distance from a hippo. Even though they look slow, they can run very fast. People should respect these powerful animals and their space.",
-        "My family is planning a camping trip. We need to pack a lot of supplies. We will sleep in a big tent. My dad has a special sleeping bag to keep warm. I will bring my favorite pillow. We will cook supper over a campfire. I hope we have hot soup. We will need a map to find our spot. My mom is packing a first-aid kit, which is very important. I will help put up the tent. In the evening, we will look up at the stars. Camping is a peaceful way to spend time together. I can't wait for our trip to happen.",
-        "It’s time to clean up my room. I have papers and pencils all over my desk. My purple backpack is on the floor. I need to put my pajamas under my pillow. I will pick up my toys and put them in the toy box. I need to make my bed and plump up the pillows. My mom gave me a cloth to wipe up any dust. When I am done, my room will look perfect. It is important to keep my space tidy. Maybe I can help my parents clean up the house, too. A clean house makes everyone feel happy and peaceful.",
-        "The ship was ready to set sail. People lined up to get on board. The captain stood at the top of the ramp, greeting everyone. The ship was huge, with a deep pool and plenty of space to play. Our room had a small window. I could see the deep blue water. For supper, we ate in a big room with many people. I had a cup of soup. After supper, my parents took a nap. I stayed up to watch the ship pull away from the dock. It was a peaceful feeling, floating on the water. This was the start of a happy trip.",
-        "The school play was a big success. The students put on a wonderful performance. My part was to be a pirate. I had a patch on my eye and a plastic sword. My friend Pam played a princess. She wore a pretty purple dress. The parents and people from the town came to watch. They clapped after every scene. After the play, we had a party with pizza and cupcakes. The principal, Mr. Piper, said he was proud of everyone's participation. It was a happy and memorable experience. I hope I can be in the play again next year.",
-        "Today in art class, we used paint. I chose purple and pink paint. I used a big piece of paper. First, I painted a big pumpkin. Then, I painted a happy pig next to it. I was careful not to drip paint on the floor. Our teacher, Miss Appleby, helped us clean up. We used soap and water to wash our hands and the paintbrushes. We put our paintings up on a rope to dry. I am proud of my painting. I will give it to my parents as a present. They are always happy to see what I create in my art class.",
-        "A spider spun a web in the corner of the porch. It was a perfect, intricate pattern. I watched the spider for a long time. It was patient and precise. Later, a fly happened to get caught in the web. The spider quickly wrapped it up. It was a little creepy, but also a part of nature. My dad said it's good to have spiders because they eat other pests. He explained that most spiders are not dangerous to people. It's important to respect all creatures, even the creepy-crawly ones. I will keep an eye on the spider and its beautiful web.",
-        "The alarm clock beeped. It was time to get up. I was still sleepy, but I pushed myself out of bed. I put on my slippers and went downstairs. My dad was making pancakes. I love pancakes with syrup. After breakfast, I had to get ready for school. I packed my backpack with my pencil case and paper. I put on my coat because it was chilly. My mom gave me an apple for a snack. It's important to have a good breakfast and be prepared for the day. I hope I have a happy and productive day at school with all my people.",
-        "The top of the mountain was steep. The hiking path was a series of sharp turns. We had to stop many times to catch our breath. We had a map to keep us from getting lost. My dad carried a backpack with water and snacks. When we finally reached the top, the view was incredible. We could see the entire valley spread out below. We sat on a big, flat rock and had a small picnic. The air was crisp and clean. It was a peaceful and happy place. The trip down was much easier. I felt proud of our accomplishment.",
-        "My new puppy is named Pepper. He is a mix of different types of dogs. Pepper loves to play fetch with a tennis ball. When I throw it, he will gallop after it and bring it back. He is a happy and playful puppy. After we play, he likes to take a long nap on his soft pillow. It is my job to feed him his supper. He eats special puppy food from a deep bowl. It's important to give him fresh water, too. Having a puppy is a lot of responsibility, but it is also a lot of fun. Pepper is a perfect pet.",
-        "The repair shop was a busy place. People brought in all sorts of broken things. One person had a computer that wouldn't turn on. Another person had a telephone with a cracked screen. The repair person, named Pat, was an expert. He had special tools to open up the electronics and see the problem. He could replace broken parts and make things work again. Pat said it's important to take care of our things, but accidents happen. People were always happy when Pat could repair their items. He provided a very helpful and important service to the people in his town.",
-        "Today is the championship game. Our team has practiced for weeks. Our captain, Paul, gave us a pep talk before the game. He told us to play our best and support each other. The other team is very good. The game will be tough. My parents are in the stands to cheer for me. I hope I play well. The most important thing is to have good sportsmanship, no matter what happens. We will try our best and be proud of our effort. I hope our team can win the championship trophy. That would be a perfect end to the season.",
-        "The library is a peaceful place. It is full of books on every topic you can imagine. People come to the library to read, study, and learn. It's important to be quiet so you don't disturb other people. I like to pick out picture books. My mom helps me find books about animals, like penguins and pandas. We check out a big pile of books to take home. The librarian puts them in a paper bag for us. Reading is a wonderful way to open up your mind to new ideas and adventures. The public library is an important place for everyone.",
-        "We went to a pumpkin patch in September. There were pumpkins of every shape and size. I wanted to pick the perfect pumpkin to make a jack-o'-lantern. I looked for a big, round one. My sister picked a small, bumpy one. After we picked our pumpkins, we had some warm apple cider and a piece of pumpkin pie. There was also a pen with sheep and pigs. We got to pet a soft sheep. It was a happy and fun trip. I can't wait to carve my pumpkin. I will put a candle inside to make it glow.",
-        "The airplane ride was my first. I was a little nervous but also very excited. We had to pack our bags and get to the airport early. We went through security and then waited at our gate. When it was time to board, we walked down a long ramp to the plane. I had a window seat. I could see the people on the ground getting smaller and smaller as we went up. The pilot made an announcement. It was a peaceful and smooth flight. Looking at the clouds up close was a super cool experience. I hope I can fly again soon.",
-        "My dad has a home office where he works on his computer. He has a big desk with lots of paper and pens. Sometimes I help him with simple tasks. I can staple papers together or put them in piles. He says it is a big help. His job is important, and he has to talk on the telephone to many people. I have to be quiet when he is on a call. When he is done with his work, we can play. Sometimes he lets me type on his computer. I am learning the letters. His office is a productive and important place.",
-        "The apartment building was very tall. We took an elevator all the way up to the top floor. Our friend, Penelope, lives there. Her apartment has a beautiful view of the city. We could see the park and all the people walking around. Penelope made us supper. We had spaghetti and a big salad with peppers. For dessert, we had apple pie. After we ate, we played a board game. It was a happy visit. It's always fun to see how different people live. Her apartment was a cozy and happy home high up in the sky.",
-        "The president of the company gave a speech. All the employees gathered to listen. The president spoke about the company's plans for the future. He said it was important for everyone to work together as a team. He praised the employees for their hard work and participation. After the speech, they had a party with snacks and punch. People had the opportunity to talk with the president. It was a positive and hopeful meeting. The employees felt appreciated and happy about the company's direction. It was an important day for everyone involved in the company.",
-        "A pelican is a large bird with a huge beak. The bottom part of its beak has a big pouch. The pelican uses this pouch like a net to scoop up fish from the water. It's an impressive thing to see. Pelicans often fly in a line, just above the waves. They are powerful flyers. You can often see them resting on piers or posts near the water. It's important not to feed them, as they need to find their own food. Watching a pelican dive for a fish is a special and memorable part of any trip to the coast.",
-        "I got a pogo stick for my birthday. It has a spring at the bottom that lets you jump up and down. It is tricky to learn. At first, I kept falling off. I had to practice my balance. I started by holding onto a fence. After a lot of practice, I could hop a few times in a row. Now I can hop all the way down the path. It's super fun. It's important to be careful and wear a helmet. Jumping on the pogo stick is great exercise. I hope I can learn to do tricks on it someday.",
-        "My grandpa loves popcorn. Whenever we watch a movie, he makes a huge bowl. He puts it in a special pot on the stove. We can hear the kernels pop, pop, popping. It's a happy sound. He puts melted butter and a little salt on top. It's the perfect movie snack. We share the bowl and try not to drop any pieces. It is important to have a napkin to wipe your hands. Popcorn and a good movie is a perfect way to spend a peaceful evening with my grandpa. I will always remember these happy times."
-    ]
-};
 
         const targetAreas = Object.keys(phonemeData);
         const MAX_SELECTIONS = 3;
 
-        // --- DOM Elements ---
         const targetAreaFilters = document.getElementById('target-area-filters');
         const startDrillBtn = document.getElementById('start-drill-btn');
         const modal = document.getElementById('flashcard-modal');
@@ -573,10 +236,12 @@
         const nextBtn = document.getElementById('next-card-btn');
         const prevBtn = document.getElementById('prev-card-btn');
         
+        const flashcardImage = document.getElementById('flashcard-image');
+        const imagePlaceholderText = document.getElementById('image-placeholder-text');
+        
         let currentDrillItems = [];
         let currentCardIndex = 0;
 
-        // --- Initialization ---
         const createCheckbox = (value) => {
             const cleanValue = value.replace(/[\s/&]+/g, '-').toLowerCase();
             return `
@@ -591,7 +256,6 @@
         targetAreaFilters.innerHTML = targetAreas.map(createCheckbox).join('');
         const allCheckboxes = targetAreaFilters.querySelectorAll('input[type="checkbox"]');
 
-        // --- Event Handlers ---
         targetAreaFilters.addEventListener('change', () => {
             const selected = targetAreaFilters.querySelectorAll('input:checked');
             startDrillBtn.disabled = selected.length === 0;
@@ -619,7 +283,11 @@
                 modal.classList.remove('hidden');
                 modal.classList.add('flex');
             } else {
-                alert("No items found for the selected categories.");
+                // Replaced alert with a more user-friendly notification
+                startDrillBtn.textContent = "Please select a category first!";
+                setTimeout(() => {
+                    startDrillBtn.textContent = "Start Drill";
+                }, 2000);
             }
         });
         
@@ -629,6 +297,7 @@
         };
 
         closeModalBtn.addEventListener('click', closeModal);
+
         nextBtn.addEventListener('click', () => {
             currentCardIndex = (currentCardIndex + 1) % currentDrillItems.length;
             updateFlashcard();
@@ -638,11 +307,35 @@
             currentCardIndex = (currentCardIndex - 1 + currentDrillItems.length) % currentDrillItems.length;
             updateFlashcard();
         });
+        
+        document.addEventListener('keydown', (e) => {
+            if (!modal.classList.contains('hidden')) {
+                if (e.key === 'ArrowRight') {
+                    nextBtn.click();
+                } else if (e.key === 'ArrowLeft') {
+                    prevBtn.click();
+                } else if (e.key === 'Escape') {
+                    closeModal();
+                }
+            }
+        });
 
-        // --- Helper Functions ---
         const updateFlashcard = () => {
             if (currentDrillItems.length > 0) {
-                flashcardText.textContent = currentDrillItems[currentCardIndex];
+                const currentItem = currentDrillItems[currentCardIndex];
+
+                if (typeof currentItem === 'object' && currentItem !== null && currentItem.word) {
+                    flashcardText.textContent = currentItem.word;
+                    flashcardImage.src = baseImagePath + currentItem.image;
+                    flashcardImage.alt = currentItem.word;
+                    flashcardImage.classList.remove('hidden'); 
+                    imagePlaceholderText.classList.add('hidden'); 
+                } else {
+                    flashcardText.textContent = currentItem;
+                    flashcardImage.src = ''; 
+                    flashcardImage.classList.add('hidden'); 
+                    imagePlaceholderText.classList.remove('hidden'); 
+                }
             }
         };
 
