@@ -42,6 +42,40 @@
             transform: scale(1.2);
             color: #c4b5fd; /* violet-300 */
         }
+
+        /* Added for text-only mode */
+        .flashcard.text-only-mode #flashcard-image-container {
+            display: none;
+        }
+        .flashcard.text-only-mode .bottom-bar {
+            position: relative;
+            flex-grow: 1;
+            height: 100%;
+            border-radius: 1rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 1rem 5rem; /* Padding to keep text from hitting nav arrows */
+        }
+        .flashcard.text-only-mode #flashcard-text {
+            /* font-size is now set dynamically by JS */
+            line-height: 1.1;
+            text-align: center;
+            padding-left: 1rem;
+            padding-right: 1rem;
+        }
+
+        .flashcard.text-only-mode .nav-arrow {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+        }
+        .flashcard.text-only-mode #prev-card-btn {
+            left: 1rem;
+        }
+        .flashcard.text-only-mode #next-card-btn {
+            right: 1rem;
+        }
     </style>
 </head>
 <body class="bg-[#0c0a18] min-h-screen font-sans text-slate-300 flex flex-col items-center p-4 sm:p-6 lg:p-8 overflow-x-hidden">
@@ -69,8 +103,16 @@
                 <div id="target-area-filters" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
                 </div>
             </div>
-            <div class="text-center mt-8">
-                <button id="start-drill-btn" class="bg-violet-600 hover:bg-violet-700 text-white font-bold py-3 px-8 rounded-lg transition-all duration-300 disabled:bg-slate-600 disabled:cursor-not-allowed disabled:opacity-50" disabled>
+            <div class="text-center mt-8 flex flex-col sm:flex-row items-center justify-center gap-6">
+                 <!-- Toggle Switch -->
+                <div class="flex items-center justify-center space-x-3 order-2 sm:order-1">
+                    <span class="text-slate-400 font-medium">Show Images</span>
+                    <label for="show-images-toggle" class="relative inline-flex items-center cursor-pointer">
+                        <input type="checkbox" id="show-images-toggle" class="sr-only peer" checked>
+                        <div class="w-11 h-6 bg-slate-700 rounded-full peer peer-focus:ring-4 peer-focus:ring-violet-500/50 peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-violet-600"></div>
+                    </label>
+                </div>
+                <button id="start-drill-btn" class="bg-violet-600 hover:bg-violet-700 text-white font-bold py-3 px-8 rounded-lg transition-all duration-300 disabled:bg-slate-600 disabled:cursor-not-allowed disabled:opacity-50 order-1 sm:order-2" disabled>
                     Start Drill
                 </button>
             </div>
@@ -88,7 +130,7 @@
                     <span id="image-placeholder-text" class="text-slate-500">Phrases and sentences do not have images.</span>
                 </div>
                 
-                <div class="flex items-center justify-between p-4 bg-slate-900/50 rounded-b-2xl">
+                <div class="bottom-bar flex items-center justify-between p-4 bg-slate-900/50 rounded-b-2xl">
                     <button id="prev-card-btn" class="nav-arrow text-4xl text-violet-400 p-4">
                         &#x276E;
                     </button>
@@ -272,6 +314,74 @@
             }
         });
 
+        function shuffleArray(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+        }
+
+        function adjustFlashcardTextSize() {
+            const textElement = document.getElementById('flashcard-text');
+            // Reset font size to allow the container to be its 'natural' size before we measure it.
+            textElement.style.fontSize = ''; 
+            
+            // Set a starting font size. 6rem is a large starting point.
+            let fontSize = 96; // 6rem in pixels
+            textElement.style.fontSize = `${fontSize}px`;
+            textElement.style.lineHeight = '1.1'; // A tighter line height for large text
+
+            // Check if text is overflowing its own container.
+            // Give it a small buffer (e.g., 2px) for rounding errors.
+            while ((textElement.scrollHeight > textElement.clientHeight + 2 || textElement.scrollWidth > textElement.clientWidth + 2) && fontSize > 12) {
+                fontSize -= 2; // Decrease font size by 2px for faster convergence
+                textElement.style.fontSize = `${fontSize}px`;
+            }
+        }
+
+        function resetFlashcardTextSize() {
+            const textElement = document.getElementById('flashcard-text');
+            textElement.style.fontSize = '';
+            textElement.style.lineHeight = '';
+        }
+        
+        function updateFlashcard() {
+            if (currentDrillItems.length === 0) return;
+
+            const item = currentDrillItems[currentCardIndex];
+            const isTextOnly = typeof item === 'string';
+            const flashcardEl = document.querySelector('.flashcard');
+            
+            // Always reset font size before adding new content
+            resetFlashcardTextSize();
+            
+            if (isTextOnly) {
+                flashcardText.textContent = item;
+                flashcardImage.classList.add('hidden');
+                imagePlaceholderText.classList.remove('hidden');
+            } else {
+                flashcardText.textContent = item.word;
+                if (item.image) {
+                    flashcardImage.src = baseImagePath + item.image;
+                    flashcardImage.classList.remove('hidden');
+                    imagePlaceholderText.classList.add('hidden');
+                } else {
+                    flashcardImage.classList.add('hidden');
+                    imagePlaceholderText.classList.remove('hidden');
+                }
+            }
+
+            // Adjust font size if in text-only mode
+            if (flashcardEl.classList.contains('text-only-mode')) {
+                // Use a minimal timeout to allow the browser to render the new text
+                // before we take measurements.
+                setTimeout(adjustFlashcardTextSize, 1); 
+            }
+
+            prevBtn.disabled = currentCardIndex === 0;
+            nextBtn.disabled = currentCardIndex === currentDrillItems.length - 1;
+        }
+
         startDrillBtn.addEventListener('click', () => {
             const selectedTags = Array.from(targetAreaFilters.querySelectorAll('input:checked')).map(cb => cb.value);
             currentDrillItems = selectedTags.flatMap(tag => phonemeData[tag] || []);
@@ -281,73 +391,42 @@
             }
 
             if(currentDrillItems.length > 0) {
+                const showImages = document.getElementById('show-images-toggle').checked;
+                document.querySelector('.flashcard').classList.toggle('text-only-mode', !showImages);
+
                 currentCardIndex = 0;
                 updateFlashcard();
                 modal.classList.remove('hidden');
-                modal.classList.add('flex');
-            } else {
-                startDrillBtn.textContent = "Please select a category first!";
-                setTimeout(() => {
-                    startDrillBtn.textContent = "Start Drill";
-                }, 2000);
             }
         });
-        
-        const closeModal = () => {
-            modal.classList.add('hidden');
-            modal.classList.remove('flex');
-        };
 
-        closeModalBtn.addEventListener('click', closeModal);
+        closeModalBtn.addEventListener('click', () => {
+            modal.classList.add('hidden');
+        });
 
         nextBtn.addEventListener('click', () => {
-            currentCardIndex = (currentCardIndex + 1) % currentDrillItems.length;
-            updateFlashcard();
+            if (currentCardIndex < currentDrillItems.length - 1) {
+                currentCardIndex++;
+                updateFlashcard();
+            }
         });
 
         prevBtn.addEventListener('click', () => {
-            currentCardIndex = (currentCardIndex - 1 + currentDrillItems.length) % currentDrillItems.length;
-            updateFlashcard();
+            if (currentCardIndex > 0) {
+                currentCardIndex--;
+                updateFlashcard();
+            }
         });
-        
+
+        // Close with escape key
         document.addEventListener('keydown', (e) => {
-            if (!modal.classList.contains('hidden')) {
-                if (e.key === 'ArrowRight') {
-                    nextBtn.click();
-                } else if (e.key === 'ArrowLeft') {
-                    prevBtn.click();
-                } else if (e.key === 'Escape') {
-                    closeModal();
-                }
+            if (e.key === "Escape" && !modal.classList.contains('hidden')) {
+                closeModalBtn.click();
             }
         });
-
-        const updateFlashcard = () => {
-            if (currentDrillItems.length > 0) {
-                const currentItem = currentDrillItems[currentCardIndex];
-
-                if (typeof currentItem === 'object' && currentItem !== null && currentItem.word) {
-                    flashcardText.textContent = currentItem.word;
-                    flashcardImage.src = baseImagePath + currentItem.image;
-                    flashcardImage.alt = currentItem.word;
-                    flashcardImage.classList.remove('hidden'); 
-                    imagePlaceholderText.classList.add('hidden'); 
-                } else {
-                    flashcardText.textContent = currentItem;
-                    flashcardImage.src = ''; 
-                    flashcardImage.classList.add('hidden'); 
-                    imagePlaceholderText.classList.remove('hidden'); 
-                }
-            }
-        };
-
-        const shuffleArray = (array) => {
-            for (let i = array.length - 1; i > 0; i--) {
-                const j = Math.floor(Math.random() * (i + 1));
-                [array[i], array[j]] = [array[j], array[i]];
-            }
-        };
     });
     </script>
 </body>
 </html>
+
+
