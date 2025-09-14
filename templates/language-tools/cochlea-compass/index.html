@@ -1,1 +1,829 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <link rel="icon" type="image/x-icon" href="https://raw.githubusercontent.com/navasdo/navacite/main/templates/static/ico/navacite.ico">
+    <a href="https://navacite.com" class="absolute top-4 right-4 z-50 p-1 rounded-full bg-gray-700/50 hover:bg-gray-600/50 transition" title="Back to the Library"><img src="https://raw.githubusercontent.com/navasdo/navacite/refs/heads/main/templates/static/navacite-images/Navacite-Main.png" alt="Back to Library" class="w-10 h-10 rounded-full"/></a>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cochlea Compass</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        html { scroll-behavior: smooth; }
+        .filter-label, .story-btn { transition: all 0.2s ease-in-out; cursor: pointer; }
+        .filter-label:hover, .story-btn:hover { background-color: #3e2e6b; }
+        
+        /* Level Selection Buttons */
+        input.level-checkbox:checked + .filter-label {
+            background-color: #7c3aed;
+            border-color: #a78bfa;
+            color: #ffffff;
+            transform: scale(1.05);
+            box-shadow: 0 0 15px rgba(167, 139, 250, 0.5);
+        }
+        input.level-checkbox:disabled + .filter-label {
+            cursor: not-allowed;
+            background-color: #2c2a38;
+            color: #6b7280;
+            opacity: 0.6;
+        }
+        input[type="checkbox"] { display: none; }
+        
+        /* Story Selection Buttons */
+        .story-btn.selected {
+            background-color: #5b21b6; /* violet-700 */
+            border-color: #a78bfa; /* violet-400 */
+            color: #ffffff;
+            transform: scale(1.05);
+            box-shadow: 0 0 15px rgba(167, 139, 250, 0.4);
+        }
+
+        /* Assessment Modal Styles */
+        #assessment-modal, #report-modal {
+            background-color: rgba(12, 10, 24, 0.9);
+            backdrop-filter: blur(8px);
+        }
+        .score-btn {
+            transition: all 0.2s ease-in-out;
+        }
+        .score-btn.selected {
+            transform: scale(1.1);
+            box-shadow: 0 0 10px rgba(255,255,255,0.5);
+        }
+    </style>
+</head>
+<body class="bg-[#0c0a18] min-h-screen font-sans text-slate-300 flex flex-col items-center p-4 sm:p-6 lg:p-8 overflow-x-hidden">
+
+    <header class="w-full max-w-5xl mx-auto my-8">
+        <div class="text-center pt-8">
+            <img
+              src="https://raw.githubusercontent.com/navasdo/navacite/refs/heads/main/templates/static/navacite-images/navacite-cochlea.png"
+              alt="Navacite Cochlea Compass Visual"
+              class="w-48 mx-auto mb-4 [filter:drop-shadow(0_0_15px_rgba(255,255,255,0.3))]"
+              onerror="this.onerror=null; this.src='https://placehold.co/192x108/0c0a18/a78bfa?text=Navacite-Main';"
+            />
+            <h1 class="text-5xl md:text-6xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-violet-400 to-fuchsia-500">
+            Cochlea Compass
+            </h1>
+        </div>
+    </header>
+
+    <main class="w-full max-w-5xl mx-auto flex-grow">
+        
+        <div id="story-selection-container" class="mb-8">
+            <!-- Story buttons will be dynamically inserted here -->
+        </div>
+        
+        <div id="filter-container" class="mb-12 p-6 bg-slate-900/40 rounded-2xl border border-violet-900/80">
+            <p class="text-center text-slate-400 mb-6">Cochlea Compass is designed to measure how well students understand what they hear. It checks their ability to focus on spoken passages, remember key details, and grasp the main idea. Students answer questions that test memory, sequencing, and deeper thinking - like making inferences or predictions.<br><br> Choose a <b>Listening Difficulty Level</b> ranging from 0~15, choose a passage, and click <b>Begin</b>. You may select up to 3 difficulty levels and a maximum of 5 stories.</p>
+            <div>
+                <h3 class="text-xl font-bold text-violet-400 mb-4 text-center">Listening Difficulty Level</h3>
+                <div id="level-filters" class="grid grid-cols-4 md:grid-cols-8 gap-2">
+                    <!-- Level buttons will be dynamically inserted here -->
+                </div>
+            </div>
+            <div class="text-center mt-8">
+                <button id="begin-assessment-btn" class="bg-violet-600 hover:bg-violet-700 text-white font-bold py-3 px-8 rounded-lg transition-all duration-300 disabled:bg-slate-600 disabled:cursor-not-allowed disabled:opacity-50" disabled>
+                    Begin Assessment
+                </button>
+            </div>
+        </div>
+
+    </main>
+    
+    <!-- Assessment Modal -->
+    <div id="assessment-modal" class="hidden fixed inset-0 z-40 flex items-center justify-center p-4">
+        <div class="bg-slate-900 w-full max-w-4xl h-[90vh] max-h-[1000px] rounded-2xl border border-violet-700 shadow-2xl shadow-violet-500/20 flex flex-col p-6 relative overflow-hidden">
+            <button id="close-assessment-btn" class="absolute top-4 right-4 text-white bg-slate-700 rounded-full h-8 w-8 flex items-center justify-center hover:bg-red-500 transition-colors z-10 text-2xl">&times;</button>
+            
+            <h2 id="passage-title" class="text-3xl font-bold text-center text-violet-400 mb-4"></h2>
+            
+            <!-- Audio Controls -->
+            <div class="flex items-center justify-between gap-4 p-4 mb-4 bg-slate-800/50 rounded-lg">
+                <button id="replay-btn" class="p-2 rounded-full hover:bg-slate-700 transition">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-violet-400"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path><path d="M3 3v5h5"></path></svg>
+                </button>
+                <div class="flex items-center gap-2">
+                    <button id="play-btn" class="p-3 rounded-full bg-violet-600 hover:bg-violet-700 transition shadow-lg">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="currentColor" class="text-white"><path d="M8 5v14l11-7z"></path></svg>
+                    </button>
+                    <button id="pause-btn" class="hidden p-3 rounded-full bg-violet-600 hover:bg-violet-700 transition shadow-lg">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="currentColor" class="text-white"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"></path></svg>
+                    </button>
+                </div>
+                <div id="audio-duration" class="text-sm text-slate-400 font-mono w-24 text-center">0:00 / 0:00</div>
+            </div>
+            
+            <!-- Passage & Questions -->
+            <div class="flex-grow overflow-y-auto pr-2">
+                <div id="passage-text" class="bg-slate-800/30 p-4 rounded-lg mb-4 whitespace-pre-wrap text-slate-300"></div>
+                <div id="questions-container"></div>
+            </div>
+
+            <!-- Notes & Navigation -->
+            <div class="mt-4 pt-4 border-t border-slate-700">
+                 <textarea id="clinician-notes" class="w-full bg-slate-800/50 rounded-lg p-2 text-sm placeholder-slate-500" placeholder="Clinician Notes..."></textarea>
+                 <div class="flex justify-end mt-4">
+                    <button id="next-submit-btn" class="bg-violet-600 hover:bg-violet-700 text-white font-bold py-2 px-6 rounded-lg transition">Next Passage</button>
+                 </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Report Modal -->
+    <div id="report-modal" class="hidden fixed inset-0 z-40 flex items-center justify-center p-4">
+        <div class="bg-slate-900 w-full max-w-4xl h-[90vh] max-h-[1000px] rounded-2xl border border-violet-700 shadow-2xl shadow-violet-500/20 flex flex-col p-6 relative">
+             <button id="close-report-btn" class="absolute top-4 right-4 text-white bg-slate-700 rounded-full h-8 w-8 flex items-center justify-center hover:bg-red-500 transition-colors z-10 text-2xl">&times;</button>
+            <h2 class="text-3xl font-bold text-center text-violet-400 mb-4">Assessment Report</h2>
+            <div id="report-content" class="flex-grow overflow-y-auto pr-2 text-slate-300"></div>
+        </div>
+    </div>
+
+    <!-- Confirmation Modal -->
+    <div id="confirm-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-filter backdrop-blur-sm">
+        <div class="bg-slate-800 rounded-lg p-6 text-center shadow-lg border border-violet-700">
+            <p class="text-white mb-4">Remind the student they can only hear this once.<br>The replay button is available if necessary.</p>
+            <button id="confirm-ok-btn" class="bg-violet-600 hover:bg-violet-700 text-white font-bold py-2 px-8 rounded-lg">OK</button>
+        </div>
+    </div>
+
+
+    <footer class="w-full max-w-3xl mx-auto mt-24 mb-8 text-center text-sm text-slate-500 p-6 border-t border-slate-800/50">
+        <p class="font-bold text-violet-400">&copy; 2025 Navacite | All Rights Reserved</p>
+    </footer>
+
+    <script>
+    document.addEventListener('DOMContentLoaded', async () => {
+        const audioBasePath = 'https://raw.githubusercontent.com/navasdo/navacite/refs/heads/main/templates/language-tools/cochlea-compass/audio/';
+        
+        const passageData = {
+            "0": [
+                {
+                    "audioId": "3ofVHAq6", "title": "The Sun", "text": "The sun is high in the sky. It is bright and warm. Children play outside in the sun. Flowers open in the sun. The sun gives light for the day.",
+                    "questions": [
+                        { "type": "Detail", "text": "What is high in the sky?", "answers": "sun, the sun" },
+                        { "type": "Detail", "text": "What do flowers do in the sun?", "answers": "open, open up" },
+                        { "type": "Inference", "text": "Why do children play outside?", "answers": "it is sunny, sun, warm, bright" },
+                        { "type": "Main Idea", "text": "What is the passage mostly about?", "answers": "sun, the sun" }
+                    ]
+                },
+                {
+                    "audioId": "EEpUMAAX", "title": "Little Cat", "text": "A little cat sits on a mat. The cat looks at a ball. The ball is red. The cat wants to play. It wags its tail and gets ready to pounce.",
+                    "questions": [
+                        { "type": "Detail", "text": "Where does the cat sit?", "answers": "on a mat, a mat, mat" },
+                        { "type": "Detail", "text": "What color is the ball?", "answers": "red" },
+                        { "type": "Inference", "text": "How does the cat feel?", "answers": "playful, wants to play" },
+                        { "type": "Main Idea", "text": "What is the passage about?", "answers": "a cat that wants to play, a little cat" }
+                    ]
+                }
+            ],
+            "1": [
+                {
+                    "audioId": "q1iHPZqJ", "title": "The Big Dog", "text": "There is a big dog in the yard. The dog has brown fur. It likes to run and bark. When the mailman comes, the dog wags its tail. It is a friendly dog.",
+                    "questions": [
+                        { "type": "Detail", "text": "Where is the dog?", "answers": "in the yard, the yard, yard" },
+                        { "type": "Detail", "text": "What does the dog do when the mailman comes?", "answers": "wags its tail, wags tail" },
+                        { "type": "Inference", "text": "Is the dog mean or nice?", "answers": "nice, friendly" },
+                        { "type": "Main Idea", "text": "What is the main idea?", "answers": "about a friendly dog, a big dog" }
+                    ]
+                },
+                {
+                    "audioId": "rK9Tj8g5", "title": "My School", "text": "I go to a big school. My teacher is Ms. Davis. We learn to read and write. We also play outside. I like my school because I see my friends.",
+                    "questions": [
+                        { "type": "Detail", "text": "What is the teacher's name?", "answers": "Ms. Davis" },
+                        { "type": "Detail", "text": "What do students learn?", "answers": "to read and write, read, write" },
+                        { "type": "Inference", "text": "Why does the child like school?", "answers": "to see friends, sees friends" },
+                        { "type": "Main Idea", "text": "What is this passage about?", "answers": "school, my school" }
+                    ]
+                }
+            ],
+            "2": [
+                {
+                    "audioId": "dG7sYpL2", "title": "A Rainy Day", "text": "Today it is raining. The sky is gray and cloudy. We cannot go outside to play. Instead, we will stay inside. We can read books and play games. It is cozy inside when it rains.",
+                    "questions": [
+                        { "type": "Detail", "text": "What is the weather like?", "answers": "raining, rainy" },
+                        { "type": "Detail", "text": "What color is the sky?", "answers": "gray, grey" },
+                        { "type": "Inference", "text": "Why can't they play outside?", "answers": "because it's raining" },
+                        { "type": "Main Idea", "text": "What is the story about?", "answers": "a rainy day, what to do on a rainy day" }
+                    ]
+                },
+                {
+                    "audioId": "xWc4zBvF", "title": "The Farm", "text": "A farm has many animals. A cow says moo. A pig says oink. A chicken lays eggs. The farmer works hard to take care of all the animals. The farm is a busy place.",
+                    "questions": [
+                        { "type": "Detail", "text": "What does a cow say?", "answers": "moo" },
+                        { "type": "Detail", "text": "What does a chicken do?", "answers": "lays eggs, lay eggs" },
+                        { "type": "Inference", "text": "Why is the farm a busy place?", "answers": "lots of animals, farmer works hard" },
+                        { "type": "Main Idea", "text": "What is the passage about?", "answers": "a farm, farm animals" }
+                    ]
+                }
+            ],
+            "3": [
+                {
+                    "audioId": "kLp8dFzH", "title": "The Park", "text": "The park is a fun place to go. There is a tall slide and a swing set. Children laugh and play on the playground. There are big trees for shade. People have picnics on the soft grass.",
+                    "questions": [
+                        { "type": "Detail", "text": "What is on the playground?", "answers": "slide, swing set, slide and swing set" },
+                        { "type": "Detail", "text": "What do people do on the grass?", "answers": "have picnics" },
+                        { "type": "Inference", "text": "Why are there trees in the park?", "answers": "for shade, to keep cool" },
+                        { "type": "Main Idea", "text": "What is the passage mainly about?", "answers": "the park, having fun at the park" }
+                    ]
+                },
+                {
+                    "audioId": "aBcR2sVj", "title": "My Room", "text": "My room is my favorite place. I have a soft bed with blue blankets. My toys are in a big red box. I have a small desk where I do my homework. It is a quiet and happy place for me.",
+                    "questions": [
+                        { "type": "Detail", "text": "What color are the blankets?", "answers": "blue" },
+                        { "type": "Detail", "text": "Where are the toys?", "answers": "in a red box, red box" },
+                        { "type": "Inference", "text": "Why does the child like their room?", "answers": "it's quiet, it's happy, it's their favorite place" },
+                        { "type": "Main Idea", "text": "What is the passage about?", "answers": "my room, a child's room" }
+                    ]
+                }
+            ],
+            "4": [
+                {
+                    "audioId": "zX9vNqWp", "title": "The Birthday Party", "text": "It was Sam's birthday party. He had a big cake with six candles. His friends came to his house. They played games and ate cake. Sam got many presents. He was very happy.",
+                    "questions": [
+                        { "type": "Detail", "text": "How many candles were on the cake?", "answers": "six" },
+                        { "type": "Detail", "text": "What did the children do at the party?", "answers": "played games and ate cake" },
+                        { "type": "Inference", "text": "How did Sam feel on his birthday?", "answers": "happy" },
+                        { "type": "Main Idea", "text": "What is this passage about?", "answers": "a birthday party" }
+                    ]
+                },
+                {
+                    "audioId": "mN6bKjH3", "title": "The Library", "text": "The library is a quiet place full of books. You can borrow books to take home. The librarian helps you find books you like. There are stories about animals, adventures, and real people. Reading is a great way to learn.",
+                    "questions": [
+                        { "type": "Detail", "text": "What does a librarian do?", "answers": "helps you find books" },
+                        { "type": "Detail", "text": "What kind of stories are there?", "answers": "animals, adventures, real people" },
+                        { "type": "Inference", "text": "Why must you be quiet in the library?", "answers": "so people can read, so you don't disturb others" },
+                        { "type": "Main Idea", "text": "What is the main idea of this passage?", "answers": "about the library, what a library is" }
+                    ]
+                }
+            ],
+            "5": [
+                {
+                    "audioId": "sD5fG2hY", "title": "Going to the Beach", "text": "The beach is a fun place. The sand is warm and the water is cool. You can build sandcastles and find seashells. The waves make a soft, rushing sound. It's important to wear sunscreen to protect your skin from the sun.",
+                    "questions": [
+                        { "type": "Detail", "text": "What can you build with sand?", "answers": "sandcastles" },
+                        { "type": "Detail", "text": "What makes a soft, rushing sound?", "answers": "the waves" },
+                        { "type": "Inference", "text": "Why do you need sunscreen at the beach?", "answers": "to protect your skin, so you don't get a sunburn" },
+                        { "type": "Main Idea", "text": "What is this passage about?", "answers": "the beach, going to the beach" }
+                    ]
+                },
+                {
+                    "audioId": "jK1lP4oT", "title": "Baking Cookies", "text": "We are baking cookies today. First, we mix flour, sugar, and eggs in a big bowl. Then, we roll the dough into little balls. We put them on a tray and bake them in the oven. The house smells so good when they are baking.",
+                    "questions": [
+                        { "type": "Detail", "text": "What do you mix in the bowl?", "answers": "flour, sugar, and eggs" },
+                        { "type": "Detail", "text": "What do you do after mixing the dough?", "answers": "roll it into balls" },
+                        { "type": "Inference", "text": "How can you tell the cookies are baking?", "answers": "the house smells good" },
+                        { "type": "Main Idea", "text": "What is the passage about?", "answers": "baking cookies" }
+                    ]
+                }
+            ],
+            "6": [
+                {
+                    "audioId": "yU8iO7wE", "title": "The Fire Station", "text": "A fire station is where firefighters work. They have a big red truck with a long ladder. When there is a fire, they drive fast to help people. Firefighters are very brave. They practice and train to be ready for emergencies.",
+                    "questions": [
+                        { "type": "Detail", "text": "What color is the fire truck?", "answers": "red" },
+                        { "type": "Detail", "text": "What do firefighters do?", "answers": "help people, put out fires" },
+                        { "type": "Inference", "text": "Why do firefighters have to be brave?", "answers": "fires are dangerous, their job is dangerous" },
+                        { "type": "Main Idea", "text": "What is the main idea of the passage?", "answers": "about fire stations, about firefighters" }
+                    ]
+                },
+                {
+                    "audioId": "eQ3rV1bN", "title": "A Visit to the Doctor", "text": "When you are sick, you go to the doctor. The doctor checks your heart with a stethoscope. They might give you medicine to help you feel better. Doctors and nurses help us stay healthy. It's important to listen to what they say.",
+                    "questions": [
+                        { "type": "Detail", "text": "What does the doctor use to check your heart?", "answers": "a stethoscope" },
+                        { "type": "Detail", "text": "What might a doctor give you to feel better?", "answers": "medicine" },
+                        { "type": "Inference", "text": "Why is it important to see a doctor when you're sick?", "answers": "to get better, to get healthy" },
+                        { "type": "Main Idea", "text": "What is the passage about?", "answers": "visiting the doctor, doctors" }
+                    ]
+                }
+            ],
+            "7": [
+                {
+                    "audioId": "oP6tY9zC", "title": "Planting a Garden", "text": "We are planting a garden. First, we dig small holes in the dirt. Then, we put seeds in the holes and cover them up. We give the seeds water and sunshine. Soon, little green plants will start to grow.",
+                    "questions": [
+                        { "type": "Detail", "text": "What do you do after digging holes?", "answers": "put seeds in them" },
+                        { "type": "Detail", "text": "What do seeds need to grow?", "answers": "water and sunshine" },
+                        { "type": "Inference", "text": "Why do you have to wait for plants to grow?", "answers": "they start as small seeds, they need time" },
+                        { "type": "Main Idea", "text": "What is the passage about?", "answers": "planting a garden" }
+                    ]
+                },
+                {
+                    "audioId": "iL0uN5xG", "title": "The Moon", "text": "At night, you can see the moon in the sky. The moon is not a star. It gets its light from the sun. Sometimes the moon looks like a big circle. Other times it looks like a sliver. The moon changes shape every night.",
+                    "questions": [
+                        { "type": "Detail", "text": "Where does the moon get its light?", "answers": "from the sun" },
+                        { "type": "Detail", "text": "What does the moon look like sometimes?", "answers": "a big circle, a sliver" },
+                        { "type": "Inference", "text": "Can you see the moon during the day?", "answers": "no, only at night" },
+                        { "type": "Main Idea", "text": "What is the main idea?", "answers": "about the moon" }
+                    ]
+                }
+            ],
+            "8": [
+                {
+                    "audioId": "gH4jF8vR", "title": "Our Solar System", "text": "Our solar system is made of the sun and eight planets. The planets go around the sun. Earth is the planet we live on. Some planets are big, like Jupiter, and some are small, like Mercury. Each planet is different and special.",
+                    "questions": [
+                        { "type": "Detail", "text": "How many planets are in our solar system?", "answers": "eight" },
+                        { "type": "Detail", "text": "What planet do we live on?", "answers": "Earth" },
+                        { "type": "Inference", "text": "What is the biggest thing in the solar system?", "answers": "the sun" },
+                        { "type": "Main Idea", "text": "What is the passage about?", "answers": "the solar system" }
+                    ]
+                },
+                {
+                    "audioId": "bC2kM7dS", "title": "The Seasons", "text": "There are four seasons in a year: spring, summer, fall, and winter. In spring, flowers bloom. In summer, it is hot. In fall, leaves change color. In winter, it is cold and might snow. Each season brings a different kind of weather.",
+                    "questions": [
+                        { "type": "Detail", "text": "Name the four seasons.", "answers": "spring, summer, fall, winter" },
+                        { "type": "Detail", "text": "What happens in the fall?", "answers": "leaves change color" },
+                        { "type": "Inference", "text": "What season would you go swimming in?", "answers": "summer" },
+                        { "type": "Main Idea", "text": "What is this passage about?", "answers": "the seasons" }
+                    ]
+                }
+            ],
+            "9": [
+                {
+                    "audioId": "uJ1oP9eW", "title": "The Life of a Butterfly", "text": "A butterfly starts its life as an egg. Then it becomes a caterpillar. The caterpillar eats many leaves and grows big. It builds a chrysalis and rests inside. After some time, it comes out as a beautiful butterfly with colorful wings.",
+                    "questions": [
+                        { "type": "Detail", "text": "What does a butterfly start as?", "answers": "an egg" },
+                        { "type": "Detail", "text": "What does a caterpillar build?", "answers": "a chrysalis" },
+                        { "type": "Inference", "text": "Why does the caterpillar eat so much?", "answers": "to grow big, to have energy to change" },
+                        { "type": "Main Idea", "text": "What is the passage about?", "answers": "the life of a butterfly, how a butterfly grows" }
+                    ]
+                },
+                {
+                    "audioId": "wE5tY3fQ", "title": "The Post Office", "text": "The post office is a place where you can mail letters and packages. A mail carrier picks them up and delivers them to people's homes. You can buy stamps at the post office. It is an important service that connects people who live far apart.",
+                    "questions": [
+                        { "type": "Detail", "text": "What can you buy at the post office?", "answers": "stamps" },
+                        { "type": "Detail", "text": "Who delivers the mail?", "answers": "a mail carrier" },
+                        { "type": "Inference", "text": "Why is the post office important?", "answers": "it connects people, helps people communicate" },
+                        { "type": "Main Idea", "text": "What is the main idea of this passage?", "answers": "about the post office" }
+                    ]
+                }
+            ],
+            "10": [
+                {
+                    "audioId": "aV4rG7jL", "title": "The Human Body", "text": "The human body is amazing. Your brain helps you think and learn. Your heart pumps blood all through your body. Your lungs help you breathe. Your stomach helps you digest food. All the parts work together to keep you alive and healthy.",
+                    "questions": [
+                        { "type": "Detail", "text": "What does your brain do?", "answers": "helps you think and learn" },
+                        { "type": "Detail", "text": "What pumps blood through your body?", "answers": "your heart" },
+                        { "type": "Inference", "text": "Why do you need to eat food?", "answers": "to give your stomach something to digest, for energy" },
+                        { "type": "Main Idea", "text": "What is the passage about?", "answers": "the human body" }
+                    ]
+                },
+                {
+                    "audioId": "fD8kS2wP", "title": "The Ocean", "text": "The ocean is a huge body of salt water. It is home to many animals, like fish, whales, and sharks. The ocean has waves that crash on the shore. Deep in the ocean, it is very dark. There is still much to discover about the ocean.",
+                    "questions": [
+                        { "type": "Detail", "text": "Name an animal that lives in the ocean.", "answers": "fish, whales, sharks (any one)" },
+                        { "type": "Detail", "text": "What is it like deep in the ocean?", "answers": "dark" },
+                        { "type": "Inference", "text": "Why is there much to discover about the ocean?", "answers": "it's huge, it's deep" },
+                        { "type": "Main Idea", "text": "What is the main idea of this passage?", "answers": "about the ocean" }
+                    ]
+                }
+            ],
+            "11": [
+                {
+                    "audioId": "nB7hT5rE", "title": "Recycling", "text": "Recycling is important for our planet. When we recycle, we turn old things into new things. We can recycle paper, plastic, and glass. This helps save resources and keeps trash out of landfills. Everyone can help by recycling at home and school.",
+                    "questions": [
+                        { "type": "Detail", "text": "What are three things we can recycle?", "answers": "paper, plastic, and glass" },
+                        { "type": "Detail", "text": "What does recycling save?", "answers": "resources" },
+                        { "type": "Inference", "text": "Why is it bad to have a lot of trash in landfills?", "answers": "it's bad for the planet, it takes up space" },
+                        { "type": "Main Idea", "text": "What is the passage about?", "answers": "recycling" }
+                    ]
+                },
+                {
+                    "audioId": "rK9lO3pA", "title": "The Five Senses", "text": "We have five senses that help us understand the world. We use our eyes to see and our ears to hear. We use our nose to smell and our tongue to taste. We use our skin to touch and feel things. Our senses give us important information.",
+                    "questions": [
+                        { "type": "Detail", "text": "Which sense do you use your nose for?", "answers": "smell" },
+                        { "type": "Detail", "text": "Which sense do you use your skin for?", "answers": "touch" },
+                        { "type": "Inference", "text": "How would your life be different if you couldn't see?", "answers": "it would be hard to get around, you couldn't read books" },
+                        { "type": "Main Idea", "text": "What is the main idea of this passage?", "answers": "the five senses" }
+                    ]
+                }
+            ],
+            "12": [
+                {
+                    "audioId": "tY6jC1vM", "title": "The Rainforest", "text": "A rainforest is a forest that gets a lot of rain. It is hot and humid. Many different kinds of plants and animals live there. You can find monkeys, toucans, and snakes in the rainforest. The trees are very tall and form a canopy at the top.",
+                    "questions": [
+                        { "type": "Detail", "text": "What is the weather like in a rainforest?", "answers": "hot and humid, gets a lot of rain" },
+                        { "type": "Detail", "text": "Name an animal that lives in the rainforest.", "answers": "monkeys, toucans, snakes (any one)" },
+                        { "type": "Inference", "text": "Why are the trees so tall?", "answers": "to get sunlight, because there's a lot of rain" },
+                        { "type": "Main Idea", "text": "What is the passage about?", "answers": "the rainforest" }
+                    ]
+                },
+                {
+                    "audioId": "qP0wE4sD", "title": "The Food Groups", "text": "It is important to eat foods from all the food groups. These are fruits, vegetables, grains, protein, and dairy. Fruits and vegetables give you vitamins. Grains give you energy. Protein helps you build strong muscles, and dairy helps you build strong bones. A balanced diet keeps you healthy.",
+                    "questions": [
+                        { "type": "Detail", "text": "What do grains give you?", "answers": "energy" },
+                        { "type": "Detail", "text": "What does dairy help you build?", "answers": "strong bones" },
+                        { "type": "Inference", "text": "What might happen if you only ate one food group?", "answers": "you wouldn't be healthy, you'd get sick" },
+                        { "type": "Main Idea", "text": "What is the main idea of this passage?", "answers": "the food groups, eating healthy" }
+                    ]
+                }
+            ],
+            "13": [
+                {
+                    "audioId": "vC5kL9zF", "title": "The Water Cycle", "text": "The water cycle describes how water moves on Earth. The sun heats up water in rivers and oceans, and it turns into vapor. This is called evaporation. The vapor rises and forms clouds. This is condensation. When the clouds get full, the water falls back to Earth as rain or snow. This is precipitation.",
+                    "questions": [
+                        { "type": "Detail", "text": "What is it called when water turns into vapor?", "answers": "evaporation" },
+                        { "type": "Detail", "text": "What is it called when water falls from the clouds?", "answers": "precipitation" },
+                        { "type": "Inference", "text": "Where does the energy for the water cycle come from?", "answers": "the sun" },
+                        { "type": "Main Idea", "text": "What is the passage about?", "answers": "the water cycle" }
+                    ]
+                },
+                {
+                    "audioId": "hJ8nB3rX", "title": "Martin Luther King Jr.", "text": "Martin Luther King Jr. was an important leader. He believed that all people should be treated fairly and equally. He worked for civil rights in a peaceful way. He gave a famous speech called \"I Have a Dream.\" We celebrate a holiday in his honor to remember his important work.",
+                    "questions": [
+                        { "type": "Detail", "text": "What did Martin Luther King Jr. believe?", "answers": "all people should be treated fairly and equally" },
+                        { "type": "Detail", "text": "What was the name of his famous speech?", "answers": "I Have a Dream" },
+                        { "type": "Inference", "text": "Why was his work so important?", "answers": "he helped change unfair laws, he fought for equality" },
+                        { "type": "Main Idea", "text": "What is the passage about?", "answers": "Martin Luther King Jr." }
+                    ]
+                }
+            ],
+            "14": [
+                {
+                    "audioId": "eQ3vN1bP", "title": "The American Revolution", "text": "The American Revolution was a war between Great Britain and the thirteen colonies in America. The colonies wanted to be their own country, free from British rule. The war lasted for eight years. After it was over, the colonies became the United States of America. George Washington was an important general in the war.",
+                    "questions": [
+                        { "type": "Detail", "text": "Who fought in the American Revolution?", "answers": "Great Britain and the thirteen colonies" },
+                        { "type": "Detail", "text": "What did the colonies want?", "answers": "to be their own country, to be free" },
+                        { "type": "Inference", "text": "Why was George Washington important?", "answers": "he was a leader, he helped them win" },
+                        { "type": "Main Idea", "text": "What is the passage about?", "answers": "the American Revolution" }
+                    ]
+                },
+                {
+                    "audioId": "uJ1oP9eW", "title": "Photosynthesis", "text": "Photosynthesis is how plants make their own food. They use sunlight, water, and a gas called carbon dioxide from the air. This process happens in the leaves of the plant. Photosynthesis creates sugar for the plant to eat and also releases oxygen into the air, which animals and people need to breathe.",
+                    "questions": [
+                        { "type": "Detail", "text": "What three things do plants use for photosynthesis?", "answers": "sunlight, water, and carbon dioxide" },
+                        { "type": "Detail", "text": "What does photosynthesis release into the air?", "answers": "oxygen" },
+                        { "type": "Inference", "text": "Why is photosynthesis important for people?", "answers": "it gives us oxygen to breathe" },
+                        { "type": "Main Idea", "text": "What is the passage about?", "answers": "photosynthesis, how plants make food" }
+                    ]
+                }
+            ],
+            "15": [
+                {
+                    "audioId": "kLp8dFzH", "title": "The Circulatory System", "text": "The circulatory system moves blood through your body. It is made of your heart, blood vessels, and blood. The heart is a pump that pushes blood through tubes called arteries and veins. Blood carries oxygen and nutrients to all parts of your body. It also carries away waste. This system is essential for life.",
+                    "questions": [
+                        { "type": "Detail", "text": "What are the three parts of the circulatory system?", "answers": "heart, blood vessels, and blood" },
+                        { "type": "Detail", "text": "What does blood carry to your body?", "answers": "oxygen and nutrients" },
+                        { "type": "Inference", "text": "What would happen if your heart stopped pumping?", "answers": "blood would stop moving, you would die" },
+                        { "type": "Main Idea", "text": "What is the main idea of this passage?", "answers": "the circulatory system" }
+                    ]
+                },
+                {
+                    "audioId": "bC2kM7dS", "title": "The Branches of Government", "text": "The United States government has three branches to share power. The legislative branch, called Congress, makes laws. The executive branch, led by the president, carries out the laws. The judicial branch, with the Supreme Court, interprets the laws. This separation of powers makes sure that no single branch becomes too powerful.",
+                    "questions": [
+                        { "type": "Detail", "text": "What are the three branches of government?", "answers": "legislative, executive, and judicial" },
+                        { "type": "Detail", "text": "What does the legislative branch do?", "answers": "makes laws" },
+                        { "type": "Inference", "text": "Why is it important to have three branches?", "answers": "to share power, so one branch isn't too powerful" },
+                        { "type": "Main Idea", "text": "What is the passage about?", "answers": "the branches of government" }
+                    ]
+                }
+            ]
+        };
+
+        const levelFiltersContainer = document.getElementById('level-filters');
+        const storySelectionContainer = document.getElementById('story-selection-container');
+        const beginAssessmentBtn = document.getElementById('begin-assessment-btn');
+        const assessmentModal = document.getElementById('assessment-modal');
+        const closeAssessmentBtn = document.getElementById('close-assessment-btn');
+        const reportModal = document.getElementById('report-modal');
+        const closeReportBtn = document.getElementById('close-report-btn');
+        const confirmModal = document.getElementById('confirm-modal');
+        const confirmOkBtn = document.getElementById('confirm-ok-btn');
+
+        let selectedLevels = [];
+        let selectedStories = [];
+        let currentAudio = null;
+        let currentAssessment = {
+            stories: [],
+            currentIndex: 0,
+            scores: {}
+        };
+        const MAX_LEVEL_SELECTIONS = 3;
+        const MAX_STORY_SELECTIONS = 5;
+
+        // --- Initialization ---
+        function init() {
+            // Create Level buttons
+            for (let i = 0; i <= 15; i++) {
+                const level = `Level ${i}`;
+                const id = `level-${i}`;
+                const checkboxHTML = `
+                    <div>
+                        <input type="checkbox" id="${id}" value="${i}" class="level-checkbox">
+                        <label for="${id}" class="filter-label block w-full text-center p-2 rounded-md border border-slate-700 bg-slate-800/60 text-slate-300 font-semibold text-sm">
+                            ${level}
+                        </label>
+                    </div>`;
+                levelFiltersContainer.innerHTML += checkboxHTML;
+            }
+            addEventListeners();
+        }
+
+        // --- Event Listeners ---
+        function addEventListeners() {
+            levelFiltersContainer.addEventListener('change', handleLevelSelection);
+            storySelectionContainer.addEventListener('click', handleStorySelection);
+            beginAssessmentBtn.addEventListener('click', startAssessment);
+            closeAssessmentBtn.addEventListener('click', () => {
+                if (currentAudio) {
+                    currentAudio.pause();
+                }
+                assessmentModal.classList.add('hidden');
+            });
+            closeReportBtn.addEventListener('click', () => reportModal.classList.add('hidden'));
+        }
+
+        // --- UI Update Functions ---
+        function handleLevelSelection(e) {
+            if (!e.target.matches('.level-checkbox')) return;
+            
+            selectedLevels = Array.from(levelFiltersContainer.querySelectorAll('.level-checkbox:checked')).map(cb => cb.value);
+
+            // Enforce max selections
+            const allCheckboxes = levelFiltersContainer.querySelectorAll('.level-checkbox');
+            if (selectedLevels.length >= MAX_LEVEL_SELECTIONS) {
+                allCheckboxes.forEach(cb => { if (!cb.checked) cb.disabled = true; });
+            } else {
+                allCheckboxes.forEach(cb => cb.disabled = false);
+            }
+            renderStoryButtons();
+        }
+
+        function renderStoryButtons() {
+            storySelectionContainer.innerHTML = '';
+            selectedLevels.forEach(level => {
+                const passages = passageData[level];
+                if (!passages) return;
+
+                let storyButtonsHTML = passages.map(passage => {
+                    const isSelected = selectedStories.some(s => s.title === passage.title);
+                    return `<button 
+                                class="story-btn p-2 rounded-md border border-slate-700 bg-slate-800/60 text-slate-300 ${isSelected ? 'selected' : ''}"
+                                data-level="${level}"
+                                data-title="${passage.title}">
+                                ${passage.title}
+                            </button>`;
+                }).join('');
+
+                storySelectionContainer.innerHTML += `
+                    <div class="mb-4">
+                        <h4 class="text-lg font-bold text-violet-400 mb-2 border-b border-violet-900/50 pb-1">Level ${level}</h4>
+                        <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2">
+                            ${storyButtonsHTML}
+                        </div>
+                    </div>`;
+            });
+             // Clear selected stories that are no longer visible
+            selectedStories = selectedStories.filter(story => selectedLevels.includes(story.level));
+            updateBeginButtonState();
+        }
+
+        function handleStorySelection(e) {
+            if (!e.target.matches('.story-btn')) return;
+            const btn = e.target;
+            const title = btn.dataset.title;
+            const level = btn.dataset.level;
+
+            const storyIndex = selectedStories.findIndex(s => s.title === title);
+
+            if (storyIndex > -1) {
+                // Deselect
+                selectedStories.splice(storyIndex, 1);
+                btn.classList.remove('selected');
+            } else {
+                // Select
+                if (selectedStories.length < MAX_STORY_SELECTIONS) {
+                    selectedStories.push({ title, level });
+                    btn.classList.add('selected');
+                }
+            }
+            updateBeginButtonState();
+        }
+
+        function updateBeginButtonState() {
+            beginAssessmentBtn.disabled = selectedStories.length === 0 || selectedStories.length > MAX_STORY_SELECTIONS;
+        }
+
+
+        // --- Assessment Logic ---
+        function startAssessment() {
+            if (selectedStories.length === 0) return;
+            currentAssessment.stories = selectedStories.map(s => {
+                const passage = passageData[s.level].find(p => p.title === s.title);
+                return {...passage, level: s.level}; // Add level to the story object
+            });
+            currentAssessment.currentIndex = 0;
+            currentAssessment.scores = {};
+            loadPassage(currentAssessment.currentIndex);
+            assessmentModal.classList.remove('hidden');
+        }
+
+        function loadPassage(index) {
+            const passage = currentAssessment.stories[index];
+            if (!passage) return;
+
+            document.getElementById('passage-title').textContent = `${passage.title} (Level ${passage.level})`;
+            document.getElementById('passage-text').textContent = passage.text;
+            
+            // Stop and clear previous audio
+            if (currentAudio) {
+                currentAudio.pause();
+                currentAudio.removeAttribute('src');
+                currentAudio = null;
+            }
+            
+            currentAudio = new Audio(audioBasePath + passage.audioId + '.wav');
+            const playBtn = document.getElementById('play-btn');
+            const pauseBtn = document.getElementById('pause-btn');
+            const replayBtn = document.getElementById('replay-btn');
+            const durationEl = document.getElementById('audio-duration');
+            
+            let firstPlay = true;
+            
+            const playAudio = () => {
+                currentAudio.play();
+            };
+
+            playBtn.onclick = () => {
+                if (firstPlay) {
+                    confirmModal.classList.remove('hidden');
+                } else {
+                    playAudio();
+                }
+            };
+
+            confirmOkBtn.onclick = () => {
+                confirmModal.classList.add('hidden');
+                firstPlay = false;
+                playAudio();
+            };
+
+            pauseBtn.onclick = () => {
+                currentAudio.pause();
+            };
+
+            replayBtn.onclick = () => {
+                currentAudio.currentTime = 0;
+                playAudio();
+            };
+
+            currentAudio.onplay = () => {
+                playBtn.classList.add('hidden');
+                pauseBtn.classList.remove('hidden');
+            };
+
+            currentAudio.onpause = () => {
+                playBtn.classList.remove('hidden');
+                pauseBtn.classList.add('hidden');
+            };
+            
+            currentAudio.onended = () => {
+                playBtn.classList.remove('hidden');
+                pauseBtn.classList.add('hidden');
+                firstPlay = true; // Allow confirm dialog on next play after finishing
+            };
+
+            currentAudio.onloadedmetadata = () => {
+                 durationEl.textContent = `0:00 / ${formatTime(currentAudio.duration)}`;
+            };
+             currentAudio.ontimeupdate = () => {
+                 durationEl.textContent = `${formatTime(currentAudio.currentTime)} / ${formatTime(currentAudio.duration)}`;
+             };
+
+            const questionsContainer = document.getElementById('questions-container');
+            questionsContainer.innerHTML = '';
+            passage.questions.forEach((q, qIndex) => {
+                questionsContainer.innerHTML += `
+                    <div class="mb-4 p-3 bg-slate-900/40 rounded-lg" data-q-index="${qIndex}">
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <p class="font-semibold text-slate-200">${q.text}</p>
+                                <p class="text-sm text-slate-400 mt-1"><em>Acceptable: ${q.answers}</em></p>
+                            </div>
+                            <div class="flex gap-2 ml-4">
+                                <button class="score-btn font-bold text-lg w-10 h-10 rounded-full border-2 border-green-500 text-green-500 hover:bg-green-500/20" data-score="1">1</button>
+                                <button class="score-btn font-bold text-lg w-10 h-10 rounded-full border-2 border-red-500 text-red-500 hover:bg-red-500/20" data-score="0">0</button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+            questionsContainer.onclick = handleScoreClick;
+            
+            document.getElementById('clinician-notes').value = currentAssessment.scores[passage.title]?.notes || '';
+
+            const nextBtn = document.getElementById('next-submit-btn');
+            if (index === currentAssessment.stories.length - 1) {
+                nextBtn.textContent = 'Submit';
+                nextBtn.onclick = submitAssessment;
+            } else {
+                nextBtn.textContent = 'Next Passage';
+                nextBtn.onclick = nextPassage;
+            }
+        }
+        
+        function handleScoreClick(e) {
+            if(!e.target.matches('.score-btn')) return;
+            const score = e.target.dataset.score;
+            const questionDiv = e.target.closest('div[data-q-index]');
+            
+            // remove selected from siblings
+            questionDiv.querySelectorAll('.score-btn').forEach(btn => btn.classList.remove('selected', 'bg-green-500', 'bg-red-500', 'text-white'));
+            
+            e.target.classList.add('selected', 'text-white');
+            if(score === '1') e.target.classList.add('bg-green-500');
+            if(score === '0') e.target.classList.add('bg-red-500');
+        }
+
+        function collectScoresForCurrentPassage() {
+             const passage = currentAssessment.stories[currentAssessment.currentIndex];
+             const scores = [];
+             document.querySelectorAll('#questions-container > div').forEach((qDiv, index) => {
+                 const selectedBtn = qDiv.querySelector('.score-btn.selected');
+                 scores[index] = selectedBtn ? parseInt(selectedBtn.dataset.score, 10) : null;
+             });
+             currentAssessment.scores[passage.title] = {
+                 scores: scores,
+                 notes: document.getElementById('clinician-notes').value,
+                 passage: passage
+             };
+        }
+
+        function nextPassage() {
+            if (currentAudio) currentAudio.pause();
+            collectScoresForCurrentPassage();
+            currentAssessment.currentIndex++;
+            loadPassage(currentAssessment.currentIndex);
+        }
+
+        function submitAssessment() {
+            if (currentAudio) currentAudio.pause();
+            collectScoresForCurrentPassage();
+            generateReport();
+            assessmentModal.classList.add('hidden');
+            reportModal.classList.remove('hidden');
+        }
+
+        // --- Report Generation ---
+        function generateReport() {
+            const reportContent = document.getElementById('report-content');
+            let reportHTML = '';
+            let totalCorrect = 0;
+            let totalQuestions = 0;
+
+            for (const title in currentAssessment.scores) {
+                const result = currentAssessment.scores[title];
+                const passageLevel = result.passage.level;
+                const passageCorrect = result.scores.filter(s => s === 1).length;
+                const passageTotal = result.scores.length;
+                totalCorrect += passageCorrect;
+                totalQuestions += passageTotal;
+
+                reportHTML += `<div class="p-4 bg-slate-800/50 rounded-lg mb-4">
+                    <h3 class="text-xl font-bold text-violet-400">${title} (Level ${passageLevel})</h3>
+                    <p class="font-semibold mt-2">Score: ${passageCorrect} / ${passageTotal}</p>`;
+                
+                if (result.notes) {
+                    reportHTML += `<p class="mt-2 text-sm text-slate-400"><strong>Notes:</strong> ${result.notes}</p>`;
+                }
+
+                reportHTML += `<div class="mt-3 space-y-2">`;
+                result.passage.questions.forEach((q, index) => {
+                    const score = result.scores[index];
+                    const scoreText = score === 1 ? 'Correct' : (score === 0 ? 'Incorrect' : 'Not Scored');
+                    const scoreColor = score === 1 ? 'text-green-400' : (score === 0 ? 'text-red-400' : 'text-slate-500');
+                    reportHTML += `
+                        <div class="text-sm flex justify-between">
+                            <span><strong>${q.type}:</strong> ${q.text}</span>
+                            <span class="font-bold ${scoreColor}">${scoreText}</span>
+                        </div>
+                    `;
+                });
+                reportHTML += `</div></div>`;
+            }
+            
+            const finalScore = totalQuestions > 0 ? ((totalCorrect / totalQuestions) * 100).toFixed(1) : 0;
+            const summaryHTML = `<div class="p-4 bg-slate-900/60 rounded-lg mb-6 text-center">
+                <h3 class="text-2xl font-bold text-white">Final Summative Score</h3>
+                <p class="text-4xl font-extrabold text-violet-400 my-2">${finalScore}%</p>
+                <p class="text-lg text-slate-300">(${totalCorrect} out of ${totalQuestions} questions correct)</p>
+            </div>`;
+
+            reportContent.innerHTML = summaryHTML + reportHTML;
+        }
+
+
+        // --- Utility ---
+        function formatTime(seconds) {
+            if (isNaN(seconds)) return "0:00";
+            const min = Math.floor(seconds / 60);
+            const sec = Math.floor(seconds % 60).toString().padStart(2, '0');
+            return `${min}:${sec}`;
+        }
+
+        init();
+    });
+    </script>
+</body>
+</html>
+
+
 
