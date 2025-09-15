@@ -76,7 +76,7 @@
             const preflightSystemPrompt = `You are a compliance-checking AI. Your task is to identify potential personally identifiable information (PII) or FERPA violations in a given text. Return a JSON object with a single key "violations" which is an array of strings. Each string in the array should be a word or phrase you've identified as a potential violation. Focus on names of people, specific non-school locations, or titles of works that could be misinterpreted as names. If there are no potential violations, return an empty array. Do not explain your reasoning, just return the JSON object.`;
             const preflightUserQuery = `Analyze the following text for potential PII and return the result as a JSON object: "${state.userInput}"`;
             
-            const GEMINI_API_KEY = ""; // API key is handled by the environment.
+            const apiKey = "GEMINI_API_KEY"; // API key is handled by the environment.
             const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${GEMINI_API_KEY}`;
 
             try {
@@ -130,7 +130,7 @@
             const systemPrompt = `You are a Speech-Language Pathologist’s assistant. Your only task is to take shorthand prompts (fragments, abbreviations, or incomplete sentences) and expand them into full, professional attendance notes for school-based therapy. Write in a clear, concise, professional tone appropriate for clinical documentation. Crucially, all notes must be de-identified. Always refer to individuals as "the student" or "the students" and use neutral pronouns (they/them/their) to ensure anonymity and FERPA compliance. Use the provided glossary to expand shorthand. For terms not in the glossary, expand them logically.`;
             const userQuery = `Using the following glossary, please expand the shorthand note below into a professional therapy note.\n\nGlossary:\n${JSON.stringify(shorthandGlossary, null, 2)}\n\nShorthand Note:\n"${state.userInput}"`;
             
-            const GEMINI_API_KEY = ""; // API key is handled by the environment.
+            const apiKey = "GEMINI_API_KEY"; // API key is handled by the environment.
             const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${GEMINI_API_KEY}`;
 
             try {
