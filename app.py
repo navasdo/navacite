@@ -192,11 +192,10 @@ def slp_page(slpTools_slug):
 # These catch old links and point them to the correct, clean URL.
 @app.route('/index.html')
 def index_html_redirect():
-    return redirect(url_for('index'), 301)
+    return redirect(url_for('library_page'), 301)
 
 @app.route('/apply.html')
 def apply_html_redirect():
-    return redirect(url_for('apply_page'), 301)
 
 
 # --- Error Handling ---
