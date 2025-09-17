@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Navacite Library - Welcome</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        html {
+            scroll-behavior: smooth;
+        }
+        /* Style for the modal backdrop to animate in */
+        .modal-enter {
+            opacity: 0;
+        }
+        .modal-enter-active {
+            opacity: 1;
+            transition: opacity 300ms;
+        }
+        /* Style for the modal content to animate in */
+        .modal-content-enter {
+            opacity: 0;
+            transform: scale(0.95);
+        }
+        .modal-content-enter-active {
+            opacity: 1;
+            transform: scale(1);
+            transition: opacity 300ms, transform 300ms;
+        }
+        /* Add a subtle glow effect for feature cards on hover */
+        .feature-card:hover {
+            box-shadow: 0 0 25px rgba(167, 139, 250, 0.2);
+            transform: translateY(-4px);
+        }
+    </style>
+</head>
+<body class="bg-[#0c0a18] min-h-screen font-sans text-slate-300 flex flex-col items-center justify-center p-4 sm:p-6 lg:p-8 relative overflow-x-hidden">
+
+    <!-- Terms and Disclaimer Modal (Preserved from original) -->
+    <div id="termsModal" class="hidden fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4 modal-enter" style="backdrop-filter: blur(8px);">
+        <div class="bg-slate-800 border border-violet-700/50 rounded-2xl shadow-2xl shadow-violet-500/10 p-6 sm:p-8 max-w-2xl w-full max-h-[90vh] overflow-y-auto modal-content-enter">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-3xl font-bold text-slate-100">Terms & Disclaimer</h2>
+                <button id="closeTermsModal" class="text-slate-400 hover:text-white transition-colors">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                </button>
+            </div>
+            <div class="space-y-6 text-slate-300 text-left text-sm">
+                 <div>
+                    <h3 class="text-xl font-semibold text-violet-400 mb-2">Disclaimer</h3>
+                    <p>Navacite tools are provided “as is” and are not intended to diagnose, prevent, or cure any speech-language disorder. They are designed as supplemental engagement supports to be used by qualified professionals. Navacite makes no warranties, expressed or implied, and hereby disclaims and negates all other warranties, including without limitation, implied warranties of merchantability, fitness for a particular purpose, and non-infringement of intellectual property or other rights. Navacite does not warrant or make any representations concerning the accuracy, likely results, or reliability of the materials on this site or on any sites linked to it.</p>
+                </div>
+                <div>
+                    <h3 class="text-xl font-semibold text-violet-400 mb-2">Professional Responsibility</h3>
+                    <p>The responsibility for all clinical decisions, interpretations, and applications of Navacite tools rests solely with the licensed professional using them. Navacite assumes no liability for misuse, misapplication, or outcomes resulting from the use of these materials.</p>
+                </div>
+                <div>
+                    <h3 class="text-xl font-semibold text-violet-400 mb-2">Revisions and Errata</h3>
+                    <p>The materials appearing on Navacite’s web site may include technical, typographical, or content errors. Navacite does not warrant that any of the materials are accurate, complete, or current. Navacite may make changes to the materials contained on its site at any time without notice, but makes no commitment to update them.</p>
+                </div>
+                <div>
+                    <h3 class="text-xl font-semibold text-violet-400 mb-2">Terms of Use Modifications</h3>
+                    <p>Navacite may revise these terms of use at any time without notice. By using this site you agree to be bound by the then-current version of these Terms & Disclaimer provisions.</p>
+                </div>
+                <div>
+                    <h3 class="text-xl font-semibold text-violet-400 mb-2">Conflict of Interest Disclaimer</h3>
+                    <p>Navacite is an independent project created in a personal capacity by its author. It is not a product of, nor is it affiliated with, endorsed by, or representative of any school district, university, or employer. All intellectual property, design, and code on this site were developed as an independent effort, outside the scope of employment. Use of Navacite does not imply involvement, approval, or responsibility by any employer, past or present.</p>
+                </div>
+                <div>
+                    <h3 class="text-xl font-semibold text-violet-400 mb-2">Limitation of Liability</h3>
+                    <p>In no event shall Navacite or its creator be liable for any damages (including, without limitation, damages for loss of data, income, or clinical outcomes) arising out of the use or inability to use the materials on this site, even if Navacite has been notified of the possibility of such damages.</p>
+                </div>
+                <div>
+                    <h3 class="text-xl font-semibold text-violet-400 mb-2">Governing Law</h3>
+                    <p>Any claim relating to Navacite’s web site shall be governed by the laws of the State of Nebraska (USA), without regard to its conflict of law provisions.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="w-full max-w-5xl mx-auto">
+        <!-- Header Navigation -->
+        <header class="w-full flex justify-between items-center py-4 mb-12">
+            <a href="#" class="flex items-center gap-3">
+                <img src="https://raw.githubusercontent.com/navasdo/navacite/refs/heads/main/templates/static/navacite-images/Navacite-Main.png" alt="Navacite Logo" class="w-10 h-10 [filter:drop-shadow(0_0_10px_rgba(255,255,255,0.2))]" onerror="this.onerror=null; this.src='https://placehold.co/40x40/0c0a18/a78bfa?text=N';">
+                <span class="text-xl font-bold text-slate-200 hidden sm:block">Navacite Library</span>
+            </a>
+            <div class="flex items-center gap-3">
+                <a href="login.html" class="px-5 py-2 text-sm font-semibold text-slate-300 hover:text-white bg-slate-800/60 border border-slate-700 rounded-lg transition-all">Login</a>
+                <a href="apply.html" class="px-5 py-2 text-sm font-bold text-white bg-violet-600 hover:bg-violet-700 rounded-lg transition-colors shadow-lg shadow-violet-500/20">Apply for Account</a>
+            </div>
+        </header>
+
+        <!-- Hero Section -->
+        <main class="text-center">
+             <img src="https://raw.githubusercontent.com/navasdo/navacite/refs/heads/main/templates/static/navacite-images/Navacite-Main.png" alt="Navacite Main Visual" class="w-48 mx-auto mb-4 [filter:drop-shadow(0_0_15px_rgba(255,255,255,0.3))]" onerror="this.onerror=null; this.src='https://placehold.co/192x108/0c0a18/a78bfa?text=Navacite-Main';">
+            <h1 class="text-5xl md:text-6xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-violet-400 to-fuchsia-500">
+              Welcome to Navacite
+            </h1>
+            <p class="mt-4 text-md md:text-lg text-slate-400 italic max-w-3xl mx-auto">
+                A repository of web-based tools designed by a Speech-Language Pathologist, for Speech-Language Pathologists. Navacite provides engaging, no-prep digital materials to support therapy for a wide range of communication goals.
+            </p>
+        </main>
+
+        <!-- App Showcase Section -->
+        <div class="mt-20 space-y-24">
+            
+            <!-- Language Section -->
+            <section id="language">
+                <h2 class="text-3xl font-bold text-center mb-4 text-slate-100">Language Tools</h2>
+                <p class="text-slate-400 text-center max-w-3xl mx-auto mb-12">Target core language skills with interactive apps that focus on everything from syntax and grammar to reading comprehension and social language.</p>
+                <div class="grid md:grid-cols-2 gap-8 items-center feature-card bg-slate-900/40 border border-violet-900/80 rounded-2xl p-8 transition-all duration-300">
+                    <div class="order-2 md:order-1">
+                        <h3 class="text-xl font-bold text-violet-400 mb-2">Grammar Grid</h3>
+                        <p class="text-slate-400 mb-4">Form sentences by rearranging and editing jumbled words. By working with word order and structure, students engage with the kinds of language tasks often used in writing, class discussion, and content area learning.</p>
+                         <ul class="text-sm text-slate-400 list-disc list-inside space-y-1">
+                            <li>Syntax & Grammar</li>
+                            <li>Written Expression</li>
+                        </ul>
+                    </div>
+                    <div class="order-1 md:order-2">
+                        <img src="https://placehold.co/600x400/1e1b30/a78bfa?text=Grammar+Grid+App" alt="Grammar Grid App Screenshot" class="rounded-lg shadow-lg">
+                    </div>
+                </div>
+                 <div class="grid md:grid-cols-2 gap-8 items-center mt-8 feature-card bg-slate-900/40 border border-violet-900/80 rounded-2xl p-8 transition-all duration-300">
+                    <div class="order-1">
+                         <img src="https://placehold.co/600x400/1e1b30/a78bfa?text=Cochlea+Compass+App" alt="Cochlea Compass App Screenshot" class="rounded-lg shadow-lg">
+                    </div>
+                    <div class="order-2">
+                        <h3 class="text-xl font-bold text-violet-400 mb-2">Cochlea Compass</h3>
+                        <p class="text-slate-400 mb-4">Provide insight into how well students understand what they hear. It checks their ability to focus on spoken passages, remember key details, and grasp the main idea through questions targeting memory, sequencing, and inferencing.</p>
+                        <ul class="text-sm text-slate-400 list-disc list-inside space-y-1">
+                            <li>Listening Comprehension</li>
+                            <li>Receptive Language</li>
+                             <li>Executive Functioning</li>
+                        </ul>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Fluency Section -->
+            <section id="fluency">
+                <h2 class="text-3xl font-bold text-center mb-4 text-slate-100">Fluency Resources</h2>
+                <p class="text-slate-400 text-center max-w-3xl mx-auto mb-12">Support students who stutter with tools and hierarchies designed for avoidance reduction therapy, fluency shaping, and building confident communication.</p>
+                <div class="grid md:grid-cols-2 gap-8 items-center feature-card bg-slate-900/40 border border-violet-900/80 rounded-2xl p-8 transition-all duration-300">
+                    <div class="order-2 md:order-1">
+                        <h3 class="text-xl font-bold text-violet-400 mb-2">Stuttering Modification Tools</h3>
+                        <p class="text-slate-400 mb-4">Engage students with interactive materials that help them explore and understand the mechanics of speech, identify moments of disfluency without fear, and practice techniques in a supportive environment.</p>
+                    </div>
+                    <div class="order-1 md:order-2">
+                        <img src="https://placehold.co/600x400/1e1b30/a78bfa?text=Fluency+Tools" alt="Fluency Tools Screenshot" class="rounded-lg shadow-lg">
+                    </div>
+                </div>
+            </section>
+
+            <!-- Articulation Section -->
+             <section id="articulation">
+                <h2 class="text-3xl font-bold text-center mb-4 text-slate-100">Articulation Card Decks</h2>
+                <p class="text-slate-400 text-center max-w-3xl mx-auto mb-12">Access a comprehensive library of digital flashcards for every phoneme in the English language, perfect for drill-based practice and generalization.</p>
+                <div class="grid md:grid-cols-2 gap-8 items-center feature-card bg-slate-900/40 border border-violet-900/80 rounded-2xl p-8 transition-all duration-300">
+                     <div class="order-1">
+                         <img src="https://placehold.co/600x400/1e1b30/a78bfa?text=Articulation+Decks" alt="Articulation Decks Screenshot" class="rounded-lg shadow-lg">
+                    </div>
+                    <div class="order-2">
+                        <h3 class="text-xl font-bold text-violet-400 mb-2">Comprehensive Phoneme Library</h3>
+                        <p class="text-slate-400 mb-4">Each phoneme features extensive stimulus lists, from single words across all positions and syllable structures to complex phrases, sentences, and reading passages. This structured approach supports motor learning from isolation to conversation.</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- SLP Tools Section -->
+             <section id="slp-tools">
+                <h2 class="text-3xl font-bold text-center mb-4 text-slate-100">SLP Clerical Tools</h2>
+                <p class="text-slate-400 text-center max-w-3xl mx-auto mb-12">Streamline your workflow with utilities built to handle the administrative tasks of a practicing clinician, saving you time for what matters most.</p>
+                <div class="grid md:grid-cols-2 gap-8 items-center feature-card bg-slate-900/40 border border-violet-900/80 rounded-2xl p-8 transition-all duration-300">
+                    <div class="order-2 md:order-1">
+                        <h3 class="text-xl font-bold text-violet-400 mb-2">Session Scribe</h3>
+                        <p class="text-slate-400 mb-4">Transform your shorthand therapy notes into professional, compliant documentation. This tool helps you quickly generate structured notes that are ready for inclusion in official records, ensuring consistency and accuracy.</p>
+                    </div>
+                    <div class="order-1 md:order-2 overflow-hidden rounded-lg shadow-lg">
+                        <video autoplay loop muted playsinline class="w-full h-full object-cover">
+                            <source src="https://raw.githubusercontent.com/navasdo/navacite/refs/heads/main/templates/static/video/Session-Scribe.mp4" type="video/mp4">
+                            Your browser does not support the video tag.
+                        </video>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </div>
+
+    <!-- Footer (Preserved from original) -->
+    <footer class="w-full max-w-3xl mx-auto mt-24 text-center text-sm text-slate-500 p-6 border-t border-slate-800/50">
+        <p class="font-bold text-violet-400">
+            &copy; 2025 Navacite | All Rights Reserved
+        </p>
+        <p class="mt-4 text-xs text-slate-500">
+            Navacite tools are provided ‘as is’ and are not intended to diagnose. Use requires professional judgment. <br><br>
+            <a href="#" id="openTermsModal" class="underline hover:text-violet-400 transition-colors">Terms & Disclaimer</a>
+        </p>
+   </footer>
+
+   <script>
+    document.addEventListener('DOMContentLoaded', () => {
+        // --- Terms & Disclaimer Modal Logic ---
+        const termsModal = document.getElementById('termsModal');
+        const openTermsLink = document.getElementById('openTermsModal');
+        const closeTermsButton = document.getElementById('closeTermsModal');
+
+        function showTermsModal(event) {
+            event.preventDefault(); 
+            termsModal.classList.remove('hidden');
+            setTimeout(() => {
+                termsModal.classList.add('modal-enter-active');
+                termsModal.querySelector('.modal-content-enter').classList.add('modal-content-enter-active');
+            }, 10);
+        }
+
+        function hideTermsModal() {
+            termsModal.classList.remove('hidden');
+            termsModal.classList.remove('modal-enter-active');
+            termsModal.querySelector('.modal-content-enter').classList.remove('modal-content-enter-active');
+        }
+
+        if (openTermsLink) {
+            openTermsLink.addEventListener('click', showTermsModal);
+        }
+        if (closeTermsButton) {
+            closeTermsButton.addEventListener('click', hideTermsModal);
+        }
+        if (termsModal) {
+            termsModal.addEventListener('click', (event) => {
+                if (event.target === termsModal) {
+                    hideTermsModal();
+                }
+            });
+        }
+    });
+   </script>
+</body>
+</html>
+
