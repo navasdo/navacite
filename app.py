@@ -74,11 +74,17 @@ def apply_page():
     app.logger.info("Request received for /apply route.")
     return render_template('apply.html')
 
-# The main route is now the protected homepage.
+# The NEW main route is now the public landing page.
 @app.route('/')
+def landing_page():
+    app.logger.info("Request received for public / route. Serving landing.html.")
+    return render_template('landing.html')
+
+# The OLD main route is moved to /library and remains protected.
+@app.route('/library')
 @token_required
-def index():
-    app.logger.info("Request received for protected / route. Serving index.html.")
+def library_page():
+    app.logger.info("Request received for protected /library route. Serving index.html.")
     try:
         return render_template('index.html')
     except Exception as e:
@@ -196,6 +202,7 @@ def index_html_redirect():
 
 @app.route('/apply.html')
 def apply_html_redirect():
+    return redirect(url_for('apply_page'), 301)
 
 
 # --- Error Handling ---
