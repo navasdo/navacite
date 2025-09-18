@@ -1,7 +1,605 @@
-<html>
-  <head>
-    <body>
-      <b>Hello!</b>
-    </body>
-  </head>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <link rel="icon" type="image/x-icon" href="https://raw.githubusercontent.com/navasdo/navacite/main/images/navacite.ico">
+     <a href="https://navacite.com" class="absolute top-4 right-4 z-10 p-1 rounded-full bg-gray-700/50 hover:bg-gray-600/50 transition" title="Back to Homepage"><img src="https://raw.githubusercontent.com/navasdo/oliver/main/navacite/gems/Navacite-Main.png" alt="Navacite Homepage" class="w-10 h-10 rounded-full"/></a>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Grammar Grid</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <style>
+        /* Modal Animation & Backdrop */
+        .modal {
+            transition: opacity 300ms ease-in-out;
+        }
+        .modal-content {
+            transition: opacity 300ms ease-in-out, transform 300ms ease-in-out;
+        }
+        .modal.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+        .modal:not(.hidden) {
+            opacity: 1;
+        }
+        .modal.hidden .modal-content {
+            opacity: 0;
+            transform: scale(0.95);
+        }
+        .modal:not(.hidden) .modal-content {
+            opacity: 1;
+            transform: scale(1);
+        }
+        /* Custom scrollbar for modals */
+        .modal-scroll::-webkit-scrollbar {
+            width: 8px;
+        }
+        .modal-scroll::-webkit-scrollbar-track {
+            background: #1e293b; /* slate-800 */
+        }
+        .modal-scroll::-webkit-scrollbar-thumb {
+            background-color: #4c1d95; /* violet-800 */
+            border-radius: 10px;
+            border: 2px solid #1e293b;
+        }
+
+        /* Shake Animation for incorrect answers */
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            50% { transform: translateX(5px); }
+            75% { transform: translateX(-5px); }
+            100% { transform: translateX(0); }
+        }
+        .shake {
+            animation: shake 0.5s cubic-bezier(.36,.07,.19,.97) both;
+        }
+        
+        /* Glow effect for correct answers/completed questions */
+        .glow {
+             box-shadow: 0 0 15px rgba(167, 139, 250, 0.5), 0 0 30px rgba(167, 139, 250, 0.3);
+             border-color: #a78bfa;
+        }
+        
+        /* Temporary Glow for Duplicate Submissions */
+        @keyframes temporary-glow-green {
+            0%, 100% { box-shadow: none; background-color: transparent; }
+            50% { box-shadow: 0 0 15px rgba(74, 222, 128, 0.7); background-color: rgba(74, 222, 128, 0.1); }
+        }
+        .glow-green-temp {
+            animation: temporary-glow-green 1s ease-in-out;
+        }
+
+        @keyframes temporary-glow-red {
+            0%, 100% { box-shadow: none; background-color: transparent; }
+            50% { box-shadow: 0 0 15px rgba(248, 113, 113, 0.7); background-color: rgba(248, 113, 113, 0.1); }
+        }
+        .glow-red-temp {
+            animation: temporary-glow-red 1s ease-in-out;
+        }
+
+        /* Dialogue Box Animation */
+        @keyframes fade-in-up {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .animate-fade-in-up {
+            animation: fade-in-up 0.3s ease-out forwards;
+        }
+    </style>
+</head>
+<body class="bg-[#0c0a18] text-slate-300 font-sans">
+    <div id="root"></div>
+
+    <!-- Question Data Block -->
+    <script id="question-data" type="application/json">
+[
+    {
+        "grade": "K",
+        "id": 1,
+        "words": [
+            "the dog",
+            "ran"
+        ],
+        "correct": [
+            "The dog ran."
+        ],
+        "types": [],
+        "required": 1
+    },
+    {
+        "grade": "1",
+        "id": 2,
+        "words": [ "she", "likes", "to play" ],
+        "correct": [ "She likes to play." ],
+        "types": [],
+        "required": 1
+    }
+]
+</script>
+{% raw %}
+    <script type="text/babel">
+        const { useState, useEffect, useRef, useMemo, useCallback } = React;
+
+        // --- Data & Audio ---
+        const allQuestions = JSON.parse(document.getElementById('question-data').textContent);
+        const correctSound = new Audio('https://raw.githubusercontent.com/navasdo/navacite/refs/heads/main/templates/static/audio/grammar-grid/2_out_of_2.wav');
+        const incorrectSound = new Audio('https://raw.githubusercontent.com/navasdo/navacite/refs/heads/main/templates/static/audio/grammar-grid/incorrect.wav');
+
+
+        // --- Utility Functions ---
+        const shuffleArray = (array) => {
+            let currentIndex = array.length, randomIndex;
+            while (currentIndex !== 0) {
+                randomIndex = Math.floor(Math.random() * currentIndex);
+                currentIndex--;
+                [array[currentIndex], array[randomIndex]] = [array[randomIndex], array[currentIndex]];
+            }
+            return array;
+        };
+
+        // --- Icon Components ---
+        const IconCheck = () => ( <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg> );
+        const IconReset = () => ( <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21.5 2v6h-6"/><path d="M2.5 22v-6h6"/><path d="M22 11.5A10 10 0 0 0 12.5 3a9.99 9.99 0 0 0-6.2 2.3L2.5 9"/><path d="M2 12.5A10 10 0 0 0 11.5 21a9.99 9.99 0 0 0 6.2-2.3L21.5 15"/></svg> );
+        const IconExport = () => ( <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></svg> );
+        const IconInfo = () => (<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>);
+
+        // --- Main App Component ---
+        function App() {
+          const [screen, setScreen] = useState('assessmentSetup');
+          const [error, setError] = useState(null);
+          const [showTermsModal, setShowTermsModal] = useState(false);
+          const [assessmentSettings, setAssessmentSettings] = useState(null);
+          const [resultsData, setResultsData] = useState(null);
+          
+          useEffect(() => {
+            if (error) {
+                const timeoutId = setTimeout(() => setError(null), 5000);
+                return () => clearTimeout(timeoutId);
+            }
+          }, [error]);
+          
+          const handleStart = (settings) => { 
+            setAssessmentSettings(settings); 
+            if (settings.runTutorial) {
+                setScreen('tutorial');
+            } else {
+                setScreen('app'); 
+            }
+          };
+          const handleSubmit = (results) => { setResultsData(results); setScreen('results'); };
+          const handleRestart = () => { setAssessmentSettings(null); setResultsData(null); setScreen('assessmentSetup'); };
+
+          const renderScreen = () => {
+            switch (screen) {
+              case 'tutorial': return <TutorialScreen onComplete={() => setScreen('app')} />;
+              case 'app': return <MainAppScreen onSubmit={handleSubmit} settings={assessmentSettings} />;
+              case 'results': return <ResultsScreen onRestart={handleRestart} results={resultsData} />;
+              case 'assessmentSetup': default: return <AssessmentSetupScreen onStartAssessment={handleStart} setError={setError} />;
+            }
+          };
+
+          return (
+            <div className="min-h-screen flex flex-col">
+              <div className="container mx-auto p-4 sm:p-6 lg:p-8 max-w-5xl flex-grow">
+                <header className="text-center mb-10">
+                  <img src="https://raw.githubusercontent.com/navasdo/navacite/refs/heads/main/templates/static/navacite-images/navacite-gg-2.png" alt="App Gem" className="w-48 mx-auto mb-4" style={{filter: 'drop-shadow(0 0 15px rgba(255,255,255,0.3))'}} />
+                  <h1 className="text-5xl md:text-6xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-violet-400 to-fuchsia-500">Grammar Grid</h1>
+                  <p className="text-slate-400 italic mt-2">Grammar Grid gives students practice with building sentences by rearranging and transforming word groups. In doing so, they strengthen their ability to create grammatically correct and meaningful sentences, a skill that supports classroom discussion, written expression, and everyday communication. The activity highlights how word order and structure shape meaning, offering insight into a student’s flexibility with language. These same skills connect to broader literacy growth, including reading comprehension, revising text, and adapting ideas across subject areas.</p>
+                </header>
+                {error && <div className="border border-red-500 bg-red-900/40 text-red-400 p-3 rounded-lg text-center my-4 max-w-5xl mx-auto">{error}</div>}
+                <main className="bg-slate-900/40 p-6 sm:p-8 rounded-2xl shadow-lg border border-violet-900/80"> {renderScreen()} </main>
+              </div>
+              <footer className="w-full text-center text-sm text-slate-400 p-6">
+                <p className="font-bold">&copy; {new Date().getFullYear()} Navacite | All Rights Reserved</p>
+                <p className="mt-4 text-xs text-slate-500">Navacite tools are provided ‘as is’ and are not intended to diagnose. Use requires professional judgment. <br /> <a href="#" onClick={(e) => { e.preventDefault(); setShowTermsModal(true); }} className="underline hover:text-violet-400 transition-colors">Terms & Disclaimer</a></p>
+              </footer>
+              <TermsModal show={showTermsModal} onClose={() => setShowTermsModal(false)} />
+            </div>
+          );
+        }
+
+        // --- Modal Components ---
+        const BaseModal = ({ show, onClose, children, maxWidth = 'max-w-2xl' }) => {
+            if (!show) return null;
+            return ReactDOM.createPortal(
+                <div className={`modal ${show ? '' : 'hidden'} fixed inset-0 bg-black bg-opacity-75 backdrop-filter backdrop-blur-sm flex items-center justify-center z-50 p-4`} onClick={onClose}>
+                    <div className={`modal-content bg-slate-800 border border-violet-700/50 rounded-2xl shadow-2xl shadow-violet-500/10 w-full ${maxWidth} max-h-[90vh] overflow-y-auto modal-scroll`} onClick={e => e.stopPropagation()}>
+                        {children}
+                    </div>
+                </div>,
+                document.body
+            );
+        };
+
+        const TermsModal = ({ show, onClose }) => (
+            <BaseModal show={show} onClose={onClose}>
+                <div className="p-6 sm:p-8">
+                    <div className="flex justify-between items-center mb-6">
+                        <h2 className="text-3xl font-bold text-slate-100">Terms & Disclaimer</h2>
+                        <button onClick={onClose} className="text-slate-400 hover:text-white transition-colors">
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
+                        </button>
+                    </div>
+                    <div className="space-y-6 text-slate-300 text-left text-sm">
+                         <div><h3 className="text-xl font-semibold text-violet-400 mb-2">Disclaimer</h3><p>Navacite tools are provided “as is” and are not intended to diagnose, prevent, or cure any speech-language disorder. They are designed as supplemental engagement supports to be used by qualified professionals. Navacite makes no warranties, expressed or implied, and hereby disclaims and negates all other warranties, including without limitation, implied warranties of merchantability, fitness for a particular purpose, and non-infringement of intellectual property or other rights. Navacite does not warrant or make any representations concerning the accuracy, likely results, or reliability of the materials on this site or on any sites linked to it.</p></div>
+                         <div><h3 className="text-xl font-semibold text-violet-400 mb-2">Professional Responsibility</h3><p>The responsibility for all clinical decisions, interpretations, and applications of Navacite tools rests solely with the licensed professional using them. Navacite assumes no liability for misuse, misapplication, or outcomes resulting from the use of these materials.</p></div>
+                         <div><h3 className="text-xl font-semibold text-violet-400 mb-2">Revisions and Errata</h3><p>The materials appearing on Navacite’s web site may include technical, typographical, or content errors. Navacite does not warrant that any of the materials are accurate, complete, or current. Navacite may make changes to the materials contained on its site at any time without notice, but makes no commitment to update them.</p></div>
+                         <div><h3 className="text-xl font-semibold text-violet-400 mb-2">Terms of Use Modifications</h3><p>Navacite may revise these terms of use at any time without notice. By using this site you agree to be bound by the then-current version of these Terms & Disclaimer provisions.</p></div>
+                         <div><h3 className="text-xl font-semibold text-violet-400 mb-2">Conflict of Interest Disclaimer</h3><p>Navacite is an independent project created in a personal capacity by its author. It is not a product of, nor is it affiliated with, endorsed by, or representative of any school district, university, or employer. All intellectual property, design, and code on this site were developed as an independent effort, outside the scope of employment. Use of Navacite does not imply involvement, approval, or responsibility by any employer, past or present.</p></div>
+                         <div><h3 className="text-xl font-semibold text-violet-400 mb-2">Limitation of Liability</h3><p>In no event shall Navacite or its creator be liable for any damages (including, without limitation, damages for loss of data, income, or clinical outcomes) arising out of the use or inability to use the materials on this site, even if Navacite has been notified of the possibility of such damages.</p></div>
+                         <div><h3 className="text-xl font-semibold text-violet-400 mb-2">Governing Law</h3><p>Any claim relating to Navacite’s web site shall be governed by the laws of the State of Nebraska (USA), without regard to its conflict of law provisions.</p></div>
+                    </div>
+                </div>
+            </BaseModal>
+        );
+
+        const PrivacyModal = ({ show, onClose }) => (
+            <BaseModal show={show} onClose={onClose}>
+                 <div className="p-6 sm:p-8">
+                    <div className="flex justify-between items-center mb-6">
+                        <h2 className="text-3xl font-bold text-slate-100">Student Data Privacy</h2>
+                        <button onClick={onClose} className="text-slate-400 hover:text-white transition-colors">
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
+                        </button>
+                    </div>
+                    <div className="space-y-4 text-slate-300 text-left text-sm">
+                        <p>This application is designed to support language assessment activities without collecting or maintaining student data.</p>
+                        <p><strong className="text-violet-400 block mb-1">Student Information Use:</strong> Student names may be entered by the examiner for the sole purpose of personalizing a printable PDF report. This information is not transmitted, stored, or retained by the application or its hosting service.</p>
+                        <p><strong className="text-violet-400 block mb-1">Data Retention:</strong> Once the examiner completes an assessment, the entered name is cleared from the page. No student information is written to logs, databases, or external servers.</p>
+                        <p><strong className="text-violet-400 block mb-1">Ownership of Records:</strong> The only lasting record generated is the PDF report saved or printed by the examiner. As such, all student records remain under the direct custody and control of the examiner and their institution, in compliance with FERPA.</p>
+                        <p><strong className="text-violet-400 block mb-1">Compliance Alignment:</strong> Because the application does not maintain education records or personally identifiable information, it functions as a local instructional tool rather than a record-keeping system.</p>
+                    </div>
+                </div>
+            </BaseModal>
+        );
+        
+        const DialogueBox = ({ characterName, characterImage, text, onClose }) => {
+            if (!text) return null;
+            return (
+                <div className="fixed bottom-0 left-0 right-0 z-50 p-4 animate-fade-in-up">
+                    <div className="max-w-3xl mx-auto bg-slate-900/90 backdrop-blur-sm border-2 border-violet-700 rounded-2xl shadow-lg flex items-end gap-2 sm:gap-4 p-4">
+                        <img src={characterImage} alt={characterName} className="w-24 h-24 sm:w-32 sm:h-32 object-contain flex-shrink-0 -mb-4" />
+                        <div className="flex-1 min-w-0">
+                            <div className="bg-slate-800/70 inline-block px-4 py-1 rounded-t-lg border-t border-l border-r border-violet-800 -mb-px">
+                                <p className="font-bold text-lg text-white">{characterName}</p>
+                            </div>
+                            <div className="p-4 bg-slate-800/50 rounded-lg rounded-tl-none border border-violet-800">
+                                <p className="text-slate-300 text-sm sm:text-base" dangerouslySetInnerHTML={{ __html: text }}></p>
+                                <div className="text-right mt-2">
+                                    <button onClick={onClose} className="bg-violet-600 hover:bg-violet-700 text-white font-bold py-1 px-4 rounded-lg text-sm">Next ▸</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            );
+        };
+
+
+        // --- Tutorial Screen ---
+        const TutorialScreen = ({ onComplete }) => {
+          const [words, setWords] = useState([ { id: 1, text: "tasty", inSentence: false }, { id: 2, text: "the ice cream", inSentence: false }, { id: 3, text: "is", inSentence: false } ]);
+          const [sentence, setSentence] = useState([]);
+          const [completedSentences, setCompletedSentences] = useState([]);
+          const [incorrectSentences, setIncorrectSentences] = useState([]);
+          const [shake, setShake] = useState(false);
+          const [glowingSentence, setGlowingSentence] = useState(null);
+          const [dialogue, setDialogue] = useState({
+            show: true,
+            step: 'intro',
+            name: 'Oliver',
+            image: 'https://raw.githubusercontent.com/navasdo/navacite/refs/heads/main/templates/static/oliver/oliver_teach.png',
+            text: "Welcome to the Grammar Grid! You're going to see some sentences broken up into blocks and scrambled up. It's your job to unscramble them - try it with these words!"
+          });
+          const correctAnswers = [ "the ice cream is tasty", "is the ice cream tasty" ];
+          
+          const normalize = (str) => str.toLowerCase().replace(/[^\w\s]|_/g, "").replace(/\s+/g, " ").trim();
+          const handleReset = () => { setSentence([]); setWords(words.map(w => ({ ...w, inSentence: false }))); };
+          
+          const handleDialogueClose = () => {
+            if (dialogue.step === 'outro') {
+                onComplete();
+            } else {
+                setDialogue({ ...dialogue, show: false });
+            }
+          };
+
+          const handleCheck = () => {
+              if (sentence.length === 0 || dialogue.show) return;
+              const userSentenceText = sentence.map(w => w.text).join(' ');
+              const normalizedUserSentence = normalize(userSentenceText);
+
+              if (completedSentences.includes(userSentenceText)) {
+                  setGlowingSentence({ text: userSentenceText, type: 'correct' });
+                  setTimeout(() => setGlowingSentence(null), 1000);
+                  handleReset();
+                  return;
+              }
+              if (incorrectSentences.some(s => s.text === userSentenceText)) {
+                  incorrectSound.play();
+                  setGlowingSentence({ text: userSentenceText, type: 'incorrect' });
+                  setTimeout(() => setGlowingSentence(null), 1000);
+                  handleReset();
+                  return;
+              }
+
+              const isCorrect = correctAnswers.includes(normalizedUserSentence);
+
+              if (isCorrect) {
+                  correctSound.play();
+                  const newCompleted = [...completedSentences, userSentenceText];
+                  setCompletedSentences(newCompleted);
+
+                  if (newCompleted.length === 1) {
+                      const isTelling = normalize(userSentenceText) === "the ice cream is tasty";
+                      setDialogue({
+                          show: true, step: 'mid', name: 'Oliver',
+                          image: 'https://raw.githubusercontent.com/navasdo/navacite/refs/heads/main/templates/static/oliver/oliver_think.png',
+                          text: isTelling ? "You're right! 'The ice cream is tasty.' is a sentence that <b><i>tells</b></i> me something. Can you try making a sentence that <b><i>asks</b></i> me something?" : "You're right! 'Is the ice cream tasty?' is a sentence that <b><i>asks</b></i> me something. Can you try making a sentence that <b><i>tells</b></i> me something?"
+                      });
+                  } else if (newCompleted.length === correctAnswers.length) {
+                      setDialogue({
+                          show: true, step: 'outro', name: 'Oliver',
+                          image: 'https://raw.githubusercontent.com/navasdo/navacite/refs/heads/main/templates/static/oliver/oliver_happy.png',
+                          text: "Good job! From here on you will see new blocks, and have to make one or two sentences with those blocks. Remember, you won't see any question marks (?), periods (.), or commas (,) in any of the blocks! <br/><br/>Oh- and check that your sentences sound right when you read them out loud, too! Good luck!"
+                      });
+                  }
+                  handleReset();
+
+              } else {
+                  incorrectSound.play();
+                  setShake(true);
+                  setIncorrectSentences(prev => [...prev, { text: userSentenceText, id: Date.now() }]);
+                  setTimeout(() => { setShake(false); handleReset(); }, 500);
+              }
+          };
+          
+          const handleWordClick = (wordId) => { if(dialogue.show) return; const word = words.find(w => w.id === wordId); if (word && !word.inSentence) { setSentence(prev => [...prev, word]); setWords(prev => prev.map(w => w.id === wordId ? { ...w, inSentence: true } : w)); } };
+          const sentencesNeeded = correctAnswers.length - completedSentences.length;
+
+          return ( <div className="space-y-6"> <div className="grid grid-cols-2 gap-4 -mb-2"><div className="p-3 bg-slate-800/40 rounded-lg min-h-[6rem]"> <h4 className="text-sm font-bold text-green-400 mb-2 text-center">Correct Sentences</h4> <ul className="space-y-1">{completedSentences.map((s, i) => <li key={i} className={`text-xs text-slate-300 p-1 rounded transition-all ${glowingSentence?.text === s && glowingSentence?.type === 'correct' ? 'glow-green-temp' : ''}`}>{s}</li>)}</ul></div><div className="p-3 bg-slate-800/40 rounded-lg min-h-[6rem]"><h4 className="text-sm font-bold text-red-400 mb-2 text-center">Incorrect Attempts</h4><ul className="space-y-1">{incorrectSentences.map(s => <li key={s.id} className={`text-xs text-slate-400 line-through p-1 rounded transition-all ${glowingSentence?.text === s.text && glowingSentence?.type === 'incorrect' ? 'glow-red-temp' : ''}`}>{s.text}</li>)}</ul></div></div><div className="text-center"><h3 className="text-xl font-bold text-violet-400">Tutorial</h3><p className="text-slate-400">Make {correctAnswers.length} correct sentences. You still need {sentencesNeeded} more.</p>{correctAnswers.length > 1 && <p className="text-xs text-slate-500 mt-1 italic">Remember! Your sentences can TELL something or ASK something. You'll have to imagine punctuation like periods, commas, and question marks.</p>}</div><div className={`p-4 min-h-[6rem] border-2 border-dashed border-slate-700 rounded-lg flex flex-wrap items-center justify-center gap-2 transition-all duration-300 ${shake ? 'shake' : ''}`}>{sentence.length > 0 ? sentence.map((word, i) => <span key={i} className="px-3 py-2 bg-slate-700/50 text-slate-300 rounded-lg shadow-sm font-semibold">{word.text}</span>) : <span className="text-sm text-slate-400 italic">Click words below to build your sentence...</span>}</div><div className={`p-4 rounded-lg flex flex-wrap justify-center gap-2 bg-slate-800/60 transition-opacity ${dialogue.show ? 'opacity-50' : 'opacity-100'}`}>{words.filter(w => !w.inSentence).map(word => ( <button key={word.id} onClick={() => handleWordClick(word.id)} disabled={dialogue.show} className="p-2 rounded-md border border-slate-700 bg-slate-800/60 hover:bg-[#3e2e6b] text-slate-300 transition-all px-4 py-2 font-semibold disabled:opacity-50 disabled:cursor-not-allowed">{word.text}</button> ))}</div><div className={`flex items-center justify-center space-x-4 mt-8 transition-opacity ${dialogue.show ? 'opacity-50' : 'opacity-100'}`}><button onClick={handleCheck} disabled={dialogue.show} className="flex items-center justify-center gap-2 bg-violet-600 hover:bg-violet-700 text-white font-bold py-3 px-8 rounded-lg transition disabled:opacity-50 disabled:cursor-not-allowed"><IconCheck /><span>Check Sentence</span></button><button onClick={handleReset} disabled={dialogue.show} className="p-2 rounded-md border border-slate-700 bg-slate-800/60 hover:bg-[#3e2e6b] flex items-center justify-center gap-2 text-slate-300 font-bold py-3 px-8 transition-all disabled:opacity-50 disabled:cursor-not-allowed"><IconReset /><span>Reset Blocks</span></button></div><DialogueBox characterName={dialogue.name} characterImage={dialogue.image} text={dialogue.show ? dialogue.text : null} onClose={handleDialogueClose} /></div> );
+        };
+        
+        // --- Assessment Setup Screen ---
+        const AssessmentSetupScreen = ({ onStartAssessment, setError }) => {
+            const [examinerName, setExaminerName] = useState('');
+            const [studentName, setStudentName] = useState('');
+            const [showPrivacyModal, setShowPrivacyModal] = useState(false);
+            const [isMultiGrade, setIsMultiGrade] = useState(false);
+            const [runTutorial, setRunTutorial] = useState(false);
+            const [gradeSettings, setGradeSettings] = useState([{ grade: 'K', questions: 10 }]);
+
+            const totalQuestions = useMemo(() => gradeSettings.reduce((sum, s) => sum + (s.questions || 0), 0), [gradeSettings]);
+            const gradeOptions = useMemo(() => [ {value: 'K', label: 'Kindergarten'}, ...[...Array(12)].map((_, i) => ({ value: (i + 1).toString(), label: `Grade ${i + 1}`})) ], []);
+
+            const handleGradeChange = (index, newGrade) => {
+                const newSettings = [...gradeSettings];
+                newSettings[index].grade = newGrade;
+                setGradeSettings(newSettings);
+            };
+
+            const handleQuestionsChange = (index, newQuestions) => {
+                const num = Math.max(0, parseInt(newQuestions, 10) || 0);
+                const newSettings = [...gradeSettings];
+                newSettings[index].questions = num;
+                setGradeSettings(newSettings);
+            };
+            
+            const addGrade = () => {
+                if (gradeSettings.length < 3) {
+                    const availableGrades = gradeOptions.filter(opt => !gradeSettings.some(s => s.grade === opt.value));
+                    setGradeSettings([...gradeSettings, { grade: availableGrades[0]?.value || '1', questions: 0 }]);
+                }
+            };
+            
+            const removeGrade = (index) => {
+                setGradeSettings(gradeSettings.filter((_, i) => i !== index));
+            };
+
+            const handleStart = () => {
+                if (totalQuestions > 10 || totalQuestions < 1) {
+                    setError("Total number of questions must be between 1 and 10.");
+                    return;
+                }
+                const nonEmptyGrades = gradeSettings.filter(g => g.questions > 0);
+                if (nonEmptyGrades.length === 0) {
+                    setError("Please assign at least one question.");
+                    return;
+                }
+                onStartAssessment({ examinerName, studentName, grades: nonEmptyGrades, numQuestions: totalQuestions, isMultiGrade, runTutorial });
+            };
+
+            return (
+                <div className="space-y-8">
+                    <h3 className="text-xl font-bold text-violet-400 text-center">Assessment Setup</h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div><label htmlFor="examiner" className="text-slate-400">Examiner Name</label><input id="examiner" type="text" value={examinerName} onChange={(e) => setExaminerName(e.target.value)} className="w-full mt-2 p-3 rounded-md bg-slate-800/60 text-slate-300 border border-slate-700 focus:outline-none focus:ring-2 focus:ring-violet-500" placeholder="Enter examiner's name" /></div>
+                        <div><label htmlFor="student" className="text-slate-400 flex items-center gap-2">Student Name <button onClick={() => setShowPrivacyModal(true)} title="Privacy Information" className="text-slate-500 hover:text-violet-400 transition-colors"><IconInfo /></button></label><input id="student" type="text" value={studentName} onChange={(e) => setStudentName(e.target.value)} className="w-full mt-2 p-3 rounded-md bg-slate-800/60 text-slate-300 border border-slate-700 focus:outline-none focus:ring-2 focus:ring-violet-500" placeholder="For printable report only" /></div>
+                    </div>
+                    
+                    <div className="p-4 border border-slate-700 rounded-lg space-y-4">
+                        <div className="flex items-center justify-between">
+                            <h4 className="text-lg font-semibold text-violet-400">Question Selection</h4>
+                            <label className="flex items-center gap-2 cursor-pointer text-slate-400"><input type="checkbox" checked={isMultiGrade} onChange={() => { setIsMultiGrade(!isMultiGrade); setGradeSettings([{ grade: 'K', questions: 10 }]); }} className="w-4 h-4 rounded text-violet-600 bg-slate-700 border-slate-600 focus:ring-violet-500"/> Enable Multi-Grade</label>
+                        </div>
+                        
+                        {!isMultiGrade ? (
+                            <div className="grid grid-cols-2 gap-4">
+                                <div><label htmlFor="grade-level" className="text-slate-400 text-sm">Grade Level</label><select id="grade-level" value={gradeSettings[0].grade} onChange={(e) => handleGradeChange(0, e.target.value)} className="w-full mt-1 p-3 rounded-md bg-slate-800/60 text-slate-300 border border-slate-700 focus:outline-none focus:ring-2 focus:ring-violet-500 appearance-none bg-no-repeat bg-right pr-8" style={{backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%239ca3af' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e")`, backgroundPosition: 'right 0.5rem center', backgroundSize: '1.5em 1.5em'}}>{gradeOptions.map(opt => <option key={opt.value} value={opt.value}>{opt.label}</option>)}</select></div>
+                                <div><label htmlFor="num-questions" className="text-slate-400 text-sm">Number of Questions</label><input id="num-questions" type="number" value={gradeSettings[0].questions} onChange={(e) => handleQuestionsChange(0, e.target.value)} min="1" max="10" className="w-full mt-1 p-3 rounded-md bg-slate-800/60 text-slate-300 border border-slate-700"/></div>
+                            </div>
+                        ) : (
+                            <div className="space-y-3">
+                                {gradeSettings.map((setting, index) => (
+                                    <div key={index} className="grid grid-cols-3 gap-3 items-center">
+                                        <select value={setting.grade} onChange={(e) => handleGradeChange(index, e.target.value)} className="col-span-2 p-2 rounded-md bg-slate-700/80 text-slate-300 border border-slate-600 appearance-none bg-no-repeat bg-right pr-8" style={{backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%239ca3af' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e")`, backgroundPosition: 'right 0.5rem center', backgroundSize: '1.5em 1.5em'}}>{gradeOptions.map(opt => <option key={opt.value} value={opt.value} disabled={gradeSettings.some((s, i) => i !== index && s.grade === opt.value)}>{opt.label}</option>)}</select>
+                                        <input type="number" value={setting.questions} onChange={(e) => handleQuestionsChange(index, e.target.value)} min="0" max="10" className="p-2 rounded-md bg-slate-700/80 text-slate-300 border border-slate-600"/>
+                                        {gradeSettings.length > 1 && <button onClick={() => removeGrade(index)} className="text-red-500 hover:text-red-400">&times;</button>}
+                                    </div>
+                                ))}
+                                <div className="flex justify-between items-center pt-2">
+                                    <button onClick={addGrade} disabled={gradeSettings.length >= 3} className="text-sm text-violet-400 hover:text-violet-300 disabled:opacity-50 disabled:cursor-not-allowed">Add Grade</button>
+                                    <p className={`text-sm font-semibold ${totalQuestions > 10 ? 'text-red-500' : 'text-slate-400'}`}>Total Questions: {totalQuestions} / 10</p>
+                                </div>
+                            </div>
+                        )}
+                    </div>
+                     <div className="pt-2">
+                        <label className="flex items-center gap-3 cursor-pointer text-slate-400">
+                            <input type="checkbox" checked={runTutorial} onChange={(e) => setRunTutorial(e.target.checked)} className="w-5 h-5 rounded text-violet-600 bg-slate-700 border-slate-600 focus:ring-violet-500"/>
+                             <span>Begin with tutorial?</span>
+                        </label>
+                        <p className="text-xs text-slate-500 mt-1 pl-8">This will provide the student with a trial question to get them used to the activity.</p>
+                    </div>
+                    <button onClick={handleStart} disabled={!examinerName || totalQuestions > 10 || totalQuestions < 1} className="w-full bg-violet-600 hover:bg-violet-700 text-white font-bold py-3 px-8 rounded-lg transition disabled:bg-slate-600 disabled:cursor-not-allowed disabled:opacity-50">Start Assessment</button>
+                    <PrivacyModal show={showPrivacyModal} onClose={() => setShowPrivacyModal(false)} />
+                </div>
+            );
+        };
+
+        // --- Main Assessment Screen ---
+        const MainAppScreen = ({ onSubmit, settings }) => {
+            const [questions, setQuestions] = useState([]);
+            const [currentQIndex, setCurrentQIndex] = useState(0);
+            const [currentSentence, setCurrentSentence] = useState([]);
+            const [shuffledWords, setShuffledWords] = useState([]);
+            const [completedSentences, setCompletedSentences] = useState([]);
+            const [incorrectSentences, setIncorrectSentences] = useState([]);
+            const [shake, setShake] = useState(false);
+            const [isGlow, setIsGlow] = useState(false);
+            const [glowingSentence, setGlowingSentence] = useState(null);
+            const [score, setScore] = useState(0);
+            const [totalPossibleScore, setTotalPossibleScore] = useState(0);
+            
+            const normalize = (str) => str.toLowerCase().replace(/[^\w\s]|_/g, "").replace(/\s+/g, " ").trim();
+            const getShuffledWords = (words, correctAnswers) => {
+                const correctOrders = correctAnswers.map(ans => normalize(ans));
+                let shuffled;
+                do { shuffled = shuffleArray([...words]); } while (correctOrders.some(ans => ans.startsWith(normalize(shuffled.join(' ')))));
+                return shuffled;
+            };
+
+            useEffect(() => {
+                let finalQuestions = [];
+                settings.grades.forEach(gradeSetting => {
+                    const gradeQuestions = allQuestions.filter(q => q.grade === gradeSetting.grade);
+                    const selectedQuestions = shuffleArray(gradeQuestions).slice(0, gradeSetting.questions);
+                    finalQuestions.push(...selectedQuestions);
+                });
+                const shuffledFinal = shuffleArray(finalQuestions);
+                setQuestions(shuffledFinal);
+                setTotalPossibleScore(shuffledFinal.reduce((acc, q) => acc + q.required, 0));
+            }, [settings]);
+
+            const currentQuestion = questions[currentQIndex];
+
+            useEffect(() => {
+                if (currentQuestion) {
+                    setShuffledWords(getShuffledWords(currentQuestion.words, currentQuestion.correct));
+                    setCurrentSentence([]);
+                    setCompletedSentences([]);
+                    setIncorrectSentences([]);
+                }
+            }, [currentQIndex, questions]);
+
+            const handleNextQuestion = useCallback(() => {
+                if (currentQIndex < questions.length - 1) {
+                    setCurrentQIndex(prev => prev + 1);
+                } else {
+                    onSubmit({ settings, finalScore: score, totalPossible: totalPossibleScore });
+                }
+            }, [currentQIndex, questions, score, totalPossibleScore, settings, onSubmit]);
+
+            useEffect(() => {
+                if (currentQuestion && completedSentences.length > 0 && completedSentences.length === currentQuestion.required) {
+                    setIsGlow(true);
+                    const timer = setTimeout(() => { setIsGlow(false); handleNextQuestion(); }, 2000);
+                    return () => clearTimeout(timer);
+                }
+            }, [completedSentences, currentQuestion, handleNextQuestion]);
+
+            const handleWordClick = useCallback((word) => {
+                setCurrentSentence(prev => [...prev, word]);
+                setShuffledWords(prev => prev.filter(w => w !== word));
+            }, []);
+            
+            const handleReset = useCallback(() => {
+                setCurrentSentence([]);
+                if (currentQuestion) setShuffledWords(getShuffledWords(currentQuestion.words, currentQuestion.correct));
+            }, [currentQuestion]);
+
+            const handleCheck = useCallback(() => {
+                if (currentSentence.length === 0) return;
+                const sentenceText = currentSentence.join(' ');
+                const normalizedUserSentence = normalize(sentenceText);
+                
+                if (completedSentences.includes(sentenceText)) {
+                    setGlowingSentence({ text: sentenceText, type: 'correct' });
+                    setTimeout(() => setGlowingSentence(null), 1000);
+                    handleReset();
+                    return;
+                }
+                if (incorrectSentences.some(s => s.text === sentenceText)) {
+                    incorrectSound.play();
+                    setGlowingSentence({ text: sentenceText, type: 'incorrect' });
+                    setTimeout(() => setGlowingSentence(null), 1000);
+                    handleReset();
+                    return;
+                }
+
+                const isCorrect = currentQuestion.correct.some(correctAnswer => normalize(correctAnswer) === normalizedUserSentence);
+                
+                if (isCorrect) {
+                    correctSound.play();
+                    setScore(s => s + 1);
+                    setCompletedSentences(prev => [...prev, sentenceText]);
+                } else {
+                    incorrectSound.play();
+                    setShake(true);
+                    setIncorrectSentences(prev => [...prev, { text: sentenceText, id: Date.now() }]);
+                    setTimeout(() => setShake(false), 500);
+                }
+                handleReset();
+            }, [currentSentence, currentQuestion, completedSentences, incorrectSentences, handleReset]);
+            
+            if (!currentQuestion) return <div>Loading...</div>;
+            const sentencesNeeded = currentQuestion.required - completedSentences.length;
+
+            return ( <div className="space-y-6"><div className="text-center p-3 bg-slate-800/60 rounded-lg flex justify-between items-center text-slate-400"><p className="font-semibold">Question {currentQIndex + 1} of {questions.length}</p><p className="font-bold text-lg">Score: {score}</p></div><div className="grid grid-cols-2 gap-4 -mb-2"><div className="p-3 bg-slate-800/40 rounded-lg min-h-[6rem]"><h4 className="text-sm font-bold text-green-400 mb-2 text-center">Correct Sentences</h4><ul className="space-y-1">{completedSentences.map((s, i) => <li key={i} className={`text-xs text-slate-300 p-1 rounded transition-all ${glowingSentence?.text === s && glowingSentence?.type === 'correct' ? 'glow-green-temp' : ''}`}>{s}</li>)}</ul></div><div className="p-3 bg-slate-800/40 rounded-lg min-h-[6rem]"><h4 className="text-sm font-bold text-red-400 mb-2 text-center">Incorrect Attempts</h4><ul className="space-y-1">{incorrectSentences.map(s => <li key={s.id} className={`text-xs text-slate-400 line-through p-1 rounded transition-all ${glowingSentence?.text === s.text && glowingSentence?.type === 'incorrect' ? 'glow-red-temp' : ''}`}>{s.text}</li>)}</ul></div></div><div><h3 className="text-xl font-bold text-violet-400 text-center"> Make {currentQuestion.required} correct sentence{currentQuestion.required > 1 ? 's' : ''}. </h3>{sentencesNeeded > 0 ? <p className="text-center text-slate-400">You still need {sentencesNeeded} more.</p> : <p className="text-center text-green-400 font-bold">Great! All sentences formed!</p>}{currentQuestion.required > 1 && <p className="text-xs text-slate-500 mt-1 italic text-center">Remember! Your sentences can TELL something or ASK something. You'll have to imagine punctuation like periods, commas, and question marks.</p>}</div><div className={`p-4 min-h-[6rem] border-2 border-dashed border-slate-700 rounded-lg flex flex-wrap items-center justify-center gap-2 transition-all duration-300 ${shake ? 'shake' : ''} ${isGlow ? 'glow' : ''}`}>{currentSentence.map((word, i) => <span key={i} className="px-3 py-2 bg-slate-700/50 text-slate-300 rounded-lg font-semibold">{word}</span>)}</div><div className="p-4 rounded-lg flex flex-wrap justify-center gap-4 bg-slate-800/60 min-h-[6rem]">{shuffledWords.map((word, i) => ( <button key={i} onClick={() => handleWordClick(word)} className="p-2 rounded-md border border-slate-700 bg-slate-800/60 hover:bg-[#3e2e6b] text-slate-300 font-semibold transition-all px-4 py-2"> {word} </button> ))}</div><div className="flex items-start justify-center space-x-4 mt-6"><button onClick={handleCheck} className="flex items-center justify-center gap-2 bg-violet-600 hover:bg-violet-700 text-white font-bold py-3 px-8 rounded-lg transition"> <IconCheck /> <span>Check</span> </button><button onClick={handleReset} className="p-2 rounded-md border border-slate-700 bg-slate-800/60 hover:bg-[#3e2e6b] flex items-center justify-center gap-2 text-slate-300 font-bold py-3 px-8 transition-all"> <IconReset /> <span>Reset</span> </button></div></div> );
+        };
+        
+        // --- Results Screen ---
+        const ResultsScreen = ({ onRestart, results }) => {
+            if (!results) return <div>Loading results...</div>;
+
+            const { settings, finalScore, totalPossible } = results;
+            const scorePercentage = totalPossible > 0 ? ((finalScore / totalPossible) * 100).toFixed(0) : 0;
+
+            return (
+                <div className="space-y-6 text-center">
+                    <h3 className="text-xl font-bold text-violet-400">Assessment Complete</h3>
+                    <div className="p-6 bg-slate-800/60 rounded-lg text-left max-w-md mx-auto space-y-2">
+                        <p><strong className="text-slate-400">Examiner:</strong> {settings.examinerName}</p>
+                        <p><strong className="text-slate-400">Student:</strong> {settings.studentName || 'N/A'}</p>
+                        <p><strong className="text-slate-400">Final Score:</strong> <span className="font-bold text-2xl text-violet-400">{finalScore}/{totalPossible}</span> ({scorePercentage}%)</p>
+                    </div>
+                    <div className="flex justify-center items-center space-x-4">
+                        <button onClick={() => alert("Export functionality coming soon!")} className="flex items-center space-x-2 bg-violet-600 hover:bg-violet-700 text-white font-bold py-3 px-8 rounded-lg transition"> <IconExport /> <span>Export Report</span> </button>
+                        <button onClick={onRestart} className="p-2 rounded-md border border-slate-700 bg-slate-800/60 hover:bg-[#3e2e6b] text-slate-300 font-bold py-3 px-8 transition-all"> New Assessment </button>
+                    </div>
+                </div>
+            );
+        };
+
+        const container = document.getElementById('root');
+        const root = ReactDOM.createRoot(container);
+        root.render(<App />);
+    </script>
+{% endraw %}
+</body>
 </html>
+
