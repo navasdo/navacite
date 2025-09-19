@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <link rel="icon" type="image/x-icon" href="https://raw.githubusercontent.com/navasdo/navacite/main/images/navacite.ico">
-     <a href="https://navacite.com/library" class="absolute top-4 right-4 z-10 p-1 rounded-full bg-gray-700/50 hover:bg-gray-600/50 transition" title="Back to Homepage"><img src="https://raw.githubusercontent.com/navasdo/oliver/main/navacite/gems/Navacite-Main.png" alt="Navacite Homepage" class="w-10 h-10 rounded-full"/></a>
+     <a href="https://navacite.com" class="absolute top-4 right-4 z-10 p-1 rounded-full bg-gray-700/50 hover:bg-gray-600/50 transition" title="Back to Homepage"><img src="https://raw.githubusercontent.com/navasdo/oliver/main/navacite/gems/Navacite-Main.png" alt="Navacite Homepage" class="w-10 h-10 rounded-full"/></a>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Grammar Grid</title>
@@ -109,7 +109,16 @@
         ],
         "types": [],
         "required": 1
-    }, 
+    },
+    {
+        "grade": "1",
+        "id": 2,
+        "words": [ "she", "likes", "to play" ],
+        "correct": [ "She likes to play." ],
+        "types": [],
+        "required": 1
+    },
+    
     {
         "grade": "K",
         "id": 2,
@@ -985,14 +994,6 @@
         "correct": [
             "The cat sleeps in its bed."
         ],
-        "types": [],
-        "required": 1
-    },
-        {
-        "grade": "1",
-        "id": 2,
-        "words": [ "she", "likes", "to play" ],
-        "correct": [ "She likes to play." ],
         "types": [],
         "required": 1
     },
@@ -4310,7 +4311,7 @@
                          <div><h3 className="text-xl font-semibold text-violet-400 mb-2">Revisions and Errata</h3><p>The materials appearing on Navacite’s web site may include technical, typographical, or content errors. Navacite does not warrant that any of the materials are accurate, complete, or current. Navacite may make changes to the materials contained on its site at any time without notice, but makes no commitment to update them.</p></div>
                          <div><h3 className="text-xl font-semibold text-violet-400 mb-2">Terms of Use Modifications</h3><p>Navacite may revise these terms of use at any time without notice. By using this site you agree to be bound by the then-current version of these Terms & Disclaimer provisions.</p></div>
                          <div><h3 className="text-xl font-semibold text-violet-400 mb-2">Conflict of Interest Disclaimer</h3><p>Navacite is an independent project created in a personal capacity by its author. It is not a product of, nor is it affiliated with, endorsed by, or representative of any school district, university, or employer. All intellectual property, design, and code on this site were developed as an independent effort, outside the scope of employment. Use of Navacite does not imply involvement, approval, or responsibility by any employer, past or present.</p></div>
-                         <div><h3 className="text-xl font-semibold text-violet-400 mb-2">Limitation of Liability</h3><p>In no event shall Navacite or its creator be liable for any damages (including, without limitation, damages for loss of data, income, or clinical outcomes) arising out of the use or inability to use the materials on this site, even if Navacacite has been notified of the possibility of such damages.</p></div>
+                         <div><h3 className="text-xl font-semibold text-violet-400 mb-2">Limitation of Liability</h3><p>In no event shall Navacite or its creator be liable for any damages (including, without limitation, damages for loss of data, income, or clinical outcomes) arising out of the use or inability to use the materials on this site, even if Navacite has been notified of the possibility of such damages.</p></div>
                          <div><h3 className="text-xl font-semibold text-violet-400 mb-2">Governing Law</h3><p>Any claim relating to Navacite’s web site shall be governed by the laws of the State of Nebraska (USA), without regard to its conflict of law provisions.</p></div>
                     </div>
                 </div>
@@ -4554,6 +4555,7 @@
             const [glowingSentence, setGlowingSentence] = useState(null);
             const [score, setScore] = useState(0);
             const [totalPossibleScore, setTotalPossibleScore] = useState(0);
+            const [assessmentLog, setAssessmentLog] = useState([]);
             
             const normalize = (str) => str.toLowerCase().replace(/[^\w\s]|_/g, "").replace(/\s+/g, " ").trim();
             const getShuffledWords = (words, correctAnswers) => {
@@ -4586,21 +4588,30 @@
                 }
             }, [currentQIndex, questions]);
 
-            const handleNextQuestion = useCallback(() => {
+            const logAndProceed = useCallback(() => {
+                const logEntry = {
+                    question: currentQuestion,
+                    correctlyFormed: completedSentences,
+                    incorrectAttempts: incorrectSentences.map(s => s.text),
+                    score: completedSentences.length,
+                };
+                const newLog = [...assessmentLog, logEntry];
+                setAssessmentLog(newLog);
+
                 if (currentQIndex < questions.length - 1) {
                     setCurrentQIndex(prev => prev + 1);
                 } else {
-                    onSubmit({ settings, finalScore: score, totalPossible: totalPossibleScore });
+                    onSubmit({ settings, finalScore: score, totalPossible: totalPossibleScore, log: newLog });
                 }
-            }, [currentQIndex, questions, score, totalPossibleScore, settings, onSubmit]);
+            }, [currentQIndex, questions, score, totalPossibleScore, settings, onSubmit, assessmentLog, currentQuestion, completedSentences, incorrectSentences]);
 
             useEffect(() => {
                 if (currentQuestion && completedSentences.length > 0 && completedSentences.length === currentQuestion.required) {
                     setIsGlow(true);
-                    const timer = setTimeout(() => { setIsGlow(false); handleNextQuestion(); }, 2000);
+                    const timer = setTimeout(() => { setIsGlow(false); logAndProceed(); }, 2000);
                     return () => clearTimeout(timer);
                 }
-            }, [completedSentences, currentQuestion, handleNextQuestion]);
+            }, [completedSentences, currentQuestion, logAndProceed]);
 
             const handleWordClick = useCallback((word) => {
                 setCurrentSentence(prev => [...prev, word]);
@@ -4613,8 +4624,8 @@
             }, [currentQuestion]);
 
             const handlePass = useCallback(() => {
-                handleNextQuestion();
-            }, [handleNextQuestion]);
+                logAndProceed();
+            }, [logAndProceed]);
 
             const handleCheck = useCallback(() => {
                 if (currentSentence.length === 0) return;
@@ -4660,8 +4671,69 @@
         const ResultsScreen = ({ onRestart, results }) => {
             if (!results) return <div>Loading results...</div>;
 
-            const { settings, finalScore, totalPossible } = results;
+            const { settings, finalScore, totalPossible, log } = results;
             const scorePercentage = totalPossible > 0 ? ((finalScore / totalPossible) * 100).toFixed(0) : 0;
+            
+            const handleExport = () => {
+                const date = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+                const reportHTML = `
+                    <!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><title>Grammar Grid Report</title>
+                    <style>
+                        body { font-family: sans-serif; background-color: #0c0a18; color: #cbd5e1; line-height: 1.6; margin: 0; padding: 20px; }
+                        .container { max-width: 800px; margin: auto; padding: 20px; background-color: #1e293b; border-radius: 12px; border: 1px solid #334155; }
+                        header { text-align: center; border-bottom: 1px solid #334155; padding-bottom: 15px; margin-bottom: 25px; }
+                        header img { max-width: 120px; margin-bottom: 10px; filter: drop-shadow(0 0 10px rgba(255,255,255,0.3)); }
+                        h1 { color: #a78bfa; margin: 0; font-size: 2.25rem; } h2 { color: #c4b5fd; border-bottom: 1px solid #334155; padding-bottom: 8px; margin-top: 25px; }
+                        .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; background-color: #0f172a; padding: 15px; border-radius: 8px; }
+                        .info-grid p { margin: 0; } .info-grid strong { color: #a78bfa; }
+                        table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+                        th, td { text-align: left; padding: 10px; border-bottom: 1px solid #334155; }
+                        th { background-color: #0f172a; }
+                        .total-row { font-weight: bold; color: #a78bfa; font-size: 1.1rem; }
+                        .question-block { margin-top: 15px; padding: 15px; background-color: #0f172a; border-radius: 8px; border-left: 4px solid #4f46e5; }
+                        .word-bank { font-style: italic; color: #94a3b8; }
+                        .user-answer { margin-left: 20px; }
+                        .correct { color: #4ade80; } .incorrect { color: #f87171; text-decoration: line-through; }
+                        ul { padding-left: 20px; margin-top: 5px; }
+                    </style></head><body>
+                    <div class="container">
+                        <header>
+                            <img src="https://raw.githubusercontent.com/navasdo/navacite/refs/heads/main/templates/static/navacite-images/navacite-gg-2.png" alt="Grammar Grid Navacite">
+                            <h1>Assessment Report</h1>
+                        </header>
+                        <section>
+                            <h2>Summary</h2>
+                            <div class="info-grid">
+                                <p><strong>Student Name:</strong> ${settings.studentName || '_______________________'}</p>
+                                <p><strong>Examiner:</strong> ${settings.examinerName}</p>
+                                <p><strong>Date:</strong> ${date}</p>
+                                <p><strong>Total Score:</strong> <span class="total-row">${finalScore}/${totalPossible} (${scorePercentage}%)</span></p>
+                            </div>
+                        </section>
+                        <section>
+                            <h2>Details</h2>
+                            ${log.map((entry, index) => `
+                                <div class="question-block">
+                                    <p><strong>Question ${index + 1}:</strong> Make ${entry.question.required} sentence(s).</p>
+                                    <p class="word-bank">Word Bank: ${entry.question.words.join(', ')}</p>
+                                    
+                                    <p><strong>Student's Correct Sentences (${entry.score}/${entry.question.required}):</strong></p>
+                                    ${entry.correctlyFormed.length > 0 ? `<ul>${entry.correctlyFormed.map(s => `<li class="correct">${s}</li>`).join('')}</ul>` : '<ul><li>None</li></ul>'}
+                                    
+                                    ${entry.incorrectAttempts.length > 0 ? `<p><strong>Incorrect Attempts:</strong></p><ul>${entry.incorrectAttempts.map(s => `<li class="incorrect">${s}</li>`).join('')}</ul>` : ''}
+                                </div>
+                            `).join('')}
+                        </section>
+                    </div></body></html>
+                `;
+                const blob = new Blob([reportHTML], { type: 'text/html' });
+                const link = document.createElement('a');
+                link.href = URL.createObjectURL(blob);
+                link.download = `Grammar-Grid-Report_${settings.studentName || 'Student'}_${new Date().toISOString().split('T')[0]}.html`;
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+            };
 
             return (
                 <div className="space-y-6 text-center">
@@ -4672,7 +4744,7 @@
                         <p><strong className="text-slate-400">Final Score:</strong> <span className="font-bold text-2xl text-violet-400">{finalScore}/{totalPossible}</span> ({scorePercentage}%)</p>
                     </div>
                     <div className="flex justify-center items-center space-x-4">
-                        <button onClick={() => alert("Export functionality coming soon!")} className="flex items-center space-x-2 bg-violet-600 hover:bg-violet-700 text-white font-bold py-3 px-8 rounded-lg transition"> <IconExport /> <span>Export Report</span> </button>
+                        <button onClick={handleExport} className="flex items-center space-x-2 bg-violet-600 hover:bg-violet-700 text-white font-bold py-3 px-8 rounded-lg transition"> <IconExport /> <span>Export Report</span> </button>
                         <button onClick={onRestart} className="p-2 rounded-md border border-slate-700 bg-slate-800/60 hover:bg-[#3e2e6b] text-slate-300 font-bold py-3 px-8 transition-all"> New Assessment </button>
                     </div>
                 </div>
