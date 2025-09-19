@@ -109,16 +109,7 @@
         ],
         "types": [],
         "required": 1
-    },
-    {
-        "grade": "1",
-        "id": 2,
-        "words": [ "she", "likes", "to play" ],
-        "correct": [ "She likes to play." ],
-        "types": [],
-        "required": 1
-    },
-    
+    }, 
     {
         "grade": "K",
         "id": 2,
@@ -994,6 +985,14 @@
         "correct": [
             "The cat sleeps in its bed."
         ],
+        "types": [],
+        "required": 1
+    },
+        {
+        "grade": "1",
+        "id": 2,
+        "words": [ "she", "likes", "to play" ],
+        "correct": [ "She likes to play." ],
         "types": [],
         "required": 1
     },
@@ -4226,6 +4225,7 @@
         const IconReset = () => ( <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21.5 2v6h-6"/><path d="M2.5 22v-6h6"/><path d="M22 11.5A10 10 0 0 0 12.5 3a9.99 9.99 0 0 0-6.2 2.3L2.5 9"/><path d="M2 12.5A10 10 0 0 0 11.5 21a9.99 9.99 0 0 0 6.2-2.3L21.5 15"/></svg> );
         const IconExport = () => ( <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></svg> );
         const IconInfo = () => (<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>);
+        const IconPass = () => ( <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="13 19 22 12 13 5 13 19"></polygon><polygon points="2 19 11 12 2 5 2 19"></polygon></svg> );
 
         // --- Main App Component ---
         function App() {
@@ -4310,7 +4310,7 @@
                          <div><h3 className="text-xl font-semibold text-violet-400 mb-2">Revisions and Errata</h3><p>The materials appearing on Navacite’s web site may include technical, typographical, or content errors. Navacite does not warrant that any of the materials are accurate, complete, or current. Navacite may make changes to the materials contained on its site at any time without notice, but makes no commitment to update them.</p></div>
                          <div><h3 className="text-xl font-semibold text-violet-400 mb-2">Terms of Use Modifications</h3><p>Navacite may revise these terms of use at any time without notice. By using this site you agree to be bound by the then-current version of these Terms & Disclaimer provisions.</p></div>
                          <div><h3 className="text-xl font-semibold text-violet-400 mb-2">Conflict of Interest Disclaimer</h3><p>Navacite is an independent project created in a personal capacity by its author. It is not a product of, nor is it affiliated with, endorsed by, or representative of any school district, university, or employer. All intellectual property, design, and code on this site were developed as an independent effort, outside the scope of employment. Use of Navacite does not imply involvement, approval, or responsibility by any employer, past or present.</p></div>
-                         <div><h3 className="text-xl font-semibold text-violet-400 mb-2">Limitation of Liability</h3><p>In no event shall Navacite or its creator be liable for any damages (including, without limitation, damages for loss of data, income, or clinical outcomes) arising out of the use or inability to use the materials on this site, even if Navacite has been notified of the possibility of such damages.</p></div>
+                         <div><h3 className="text-xl font-semibold text-violet-400 mb-2">Limitation of Liability</h3><p>In no event shall Navacite or its creator be liable for any damages (including, without limitation, damages for loss of data, income, or clinical outcomes) arising out of the use or inability to use the materials on this site, even if Navacacite has been notified of the possibility of such damages.</p></div>
                          <div><h3 className="text-xl font-semibold text-violet-400 mb-2">Governing Law</h3><p>Any claim relating to Navacite’s web site shall be governed by the laws of the State of Nebraska (USA), without regard to its conflict of law provisions.</p></div>
                     </div>
                 </div>
@@ -4612,6 +4612,10 @@
                 if (currentQuestion) setShuffledWords(getShuffledWords(currentQuestion.words, currentQuestion.correct));
             }, [currentQuestion]);
 
+            const handlePass = useCallback(() => {
+                handleNextQuestion();
+            }, [handleNextQuestion]);
+
             const handleCheck = useCallback(() => {
                 if (currentSentence.length === 0) return;
                 const sentenceText = currentSentence.join(' ');
@@ -4649,7 +4653,7 @@
             if (!currentQuestion) return <div>Loading...</div>;
             const sentencesNeeded = currentQuestion.required - completedSentences.length;
 
-            return ( <div className="space-y-6"><div className="text-center p-3 bg-slate-800/60 rounded-lg flex justify-between items-center text-slate-400"><p className="font-semibold">Question {currentQIndex + 1} of {questions.length}</p><p className="font-bold text-lg">Score: {score}</p></div><div className="grid grid-cols-2 gap-4 -mb-2"><div className="p-3 bg-slate-800/40 rounded-lg min-h-[6rem]"><h4 className="text-sm font-bold text-green-400 mb-2 text-center">Correct Sentences</h4><ul className="space-y-1">{completedSentences.map((s, i) => <li key={i} className={`text-xs text-slate-300 p-1 rounded transition-all ${glowingSentence?.text === s && glowingSentence?.type === 'correct' ? 'glow-green-temp' : ''}`}>{s}</li>)}</ul></div><div className="p-3 bg-slate-800/40 rounded-lg min-h-[6rem]"><h4 className="text-sm font-bold text-red-400 mb-2 text-center">Incorrect Attempts</h4><ul className="space-y-1">{incorrectSentences.map(s => <li key={s.id} className={`text-xs text-slate-400 line-through p-1 rounded transition-all ${glowingSentence?.text === s.text && glowingSentence?.type === 'incorrect' ? 'glow-red-temp' : ''}`}>{s.text}</li>)}</ul></div></div><div><h3 className="text-xl font-bold text-violet-400 text-center"> Make {currentQuestion.required} correct sentence{currentQuestion.required > 1 ? 's' : ''}. </h3>{sentencesNeeded > 0 ? <p className="text-center text-slate-400">You still need {sentencesNeeded} more.</p> : <p className="text-center text-green-400 font-bold">Great! All sentences formed!</p>}{currentQuestion.required > 1 && <p className="text-xs text-slate-500 mt-1 italic text-center">Remember! Your sentences can TELL something or ASK something. You'll have to imagine punctuation like periods, commas, and question marks.</p>}</div><div className={`p-4 min-h-[6rem] border-2 border-dashed border-slate-700 rounded-lg flex flex-wrap items-center justify-center gap-2 transition-all duration-300 ${shake ? 'shake' : ''} ${isGlow ? 'glow' : ''}`}>{currentSentence.map((word, i) => <span key={i} className="px-3 py-2 bg-slate-700/50 text-slate-300 rounded-lg font-semibold">{word}</span>)}</div><div className="p-4 rounded-lg flex flex-wrap justify-center gap-4 bg-slate-800/60 min-h-[6rem]">{shuffledWords.map((word, i) => ( <button key={i} onClick={() => handleWordClick(word)} className="p-2 rounded-md border border-slate-700 bg-slate-800/60 hover:bg-[#3e2e6b] text-slate-300 font-semibold transition-all px-4 py-2"> {word} </button> ))}</div><div className="flex items-start justify-center space-x-4 mt-6"><button onClick={handleCheck} className="flex items-center justify-center gap-2 bg-violet-600 hover:bg-violet-700 text-white font-bold py-3 px-8 rounded-lg transition"> <IconCheck /> <span>Check</span> </button><button onClick={handleReset} className="p-2 rounded-md border border-slate-700 bg-slate-800/60 hover:bg-[#3e2e6b] flex items-center justify-center gap-2 text-slate-300 font-bold py-3 px-8 transition-all"> <IconReset /> <span>Reset</span> </button></div></div> );
+            return ( <div className="space-y-6"><div className="text-center p-3 bg-slate-800/60 rounded-lg flex justify-between items-center text-slate-400"><p className="font-semibold">Question {currentQIndex + 1} of {questions.length}</p><p className="font-bold text-lg">Score: {score}</p></div><div className="grid grid-cols-2 gap-4 -mb-2"><div className="p-3 bg-slate-800/40 rounded-lg min-h-[6rem]"><h4 className="text-sm font-bold text-green-400 mb-2 text-center">Correct Sentences</h4><ul className="space-y-1">{completedSentences.map((s, i) => <li key={i} className={`text-xs text-slate-300 p-1 rounded transition-all ${glowingSentence?.text === s && glowingSentence?.type === 'correct' ? 'glow-green-temp' : ''}`}>{s}</li>)}</ul></div><div className="p-3 bg-slate-800/40 rounded-lg min-h-[6rem]"><h4 className="text-sm font-bold text-red-400 mb-2 text-center">Incorrect Attempts</h4><ul className="space-y-1">{incorrectSentences.map(s => <li key={s.id} className={`text-xs text-slate-400 line-through p-1 rounded transition-all ${glowingSentence?.text === s.text && glowingSentence?.type === 'incorrect' ? 'glow-red-temp' : ''}`}>{s.text}</li>)}</ul></div></div><div><h3 className="text-xl font-bold text-violet-400 text-center"> Make {currentQuestion.required} correct sentence{currentQuestion.required > 1 ? 's' : ''}. </h3>{sentencesNeeded > 0 ? <p className="text-center text-slate-400">You still need {sentencesNeeded} more.</p> : <p className="text-center text-green-400 font-bold">Great! All sentences formed!</p>}{currentQuestion.required > 1 && <p className="text-xs text-slate-500 mt-1 italic text-center">Remember! Your sentences can TELL something or ASK something. You'll have to imagine punctuation like periods, commas, and question marks.</p>}</div><div className={`p-4 min-h-[6rem] border-2 border-dashed border-slate-700 rounded-lg flex flex-wrap items-center justify-center gap-2 transition-all duration-300 ${shake ? 'shake' : ''} ${isGlow ? 'glow' : ''}`}>{currentSentence.map((word, i) => <span key={i} className="px-3 py-2 bg-slate-700/50 text-slate-300 rounded-lg font-semibold">{word}</span>)}</div><div className="p-4 rounded-lg flex flex-wrap justify-center gap-4 bg-slate-800/60 min-h-[6rem]">{shuffledWords.map((word, i) => ( <button key={i} onClick={() => handleWordClick(word)} className="p-2 rounded-md border border-slate-700 bg-slate-800/60 hover:bg-[#3e2e6b] text-slate-300 font-semibold transition-all px-4 py-2"> {word} </button> ))}</div><div className="flex items-start justify-center space-x-2 mt-6"><button onClick={handleCheck} className="flex items-center justify-center gap-2 bg-violet-600 hover:bg-violet-700 text-white font-bold py-3 px-6 rounded-lg transition"> <IconCheck /> <span>Check</span> </button><button onClick={handleReset} className="p-2 rounded-md border border-slate-700 bg-slate-800/60 hover:bg-[#3e2e6b] flex items-center justify-center gap-2 text-slate-300 font-bold py-3 px-6 transition-all"> <IconReset /> <span>Reset</span> </button><button onClick={handlePass} className="p-2 rounded-md border border-slate-700 bg-slate-800/60 hover:bg-[#3e2e6b] flex items-center justify-center gap-2 text-slate-300 font-bold py-3 px-6 transition-all"> <IconPass /> <span>Pass</span> </button></div></div> );
         };
         
         // --- Results Screen ---
