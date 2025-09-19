@@ -77,8 +77,24 @@ def apply_page():
 # The NEW main route is now the public landing page.
 @app.route('/')
 def landing_page():
-    app.logger.info("Request received for public / route. Serving landing.html.")
+    token = request.cookies.get('token')
+    app.logger.info("Request received for public / route.")
+    if token:
+        try:
+            # Check if the token is valid without protecting the page
+            jwt.decode(token, app.config['SECRET_KEY'], algorithms=["HS256"])
+            app.logger.info("Valid token found. Redirecting to /library.")
+            # If token is valid, redirect to the library
+            return redirect(url_for('library_page'))
+        except Exception as e:
+            # If token is invalid (e.g., expired), just log it and show the landing page
+            app.logger.warning(f"Invalid token found on landing page access: {e}. Serving landing page.")
+            # Fall through to render the landing page
+    
+    # If no token or invalid token, show the public landing page
+    app.logger.info("No valid token. Serving landing.html.")
     return render_template('landing.html')
+
 
 # The OLD main route is moved to /library and remains protected.
 @app.route('/library')
@@ -213,4 +229,3 @@ def page_not_found(e):
 
 if __name__ == '__main__':
     app.run(debug=True)
-
