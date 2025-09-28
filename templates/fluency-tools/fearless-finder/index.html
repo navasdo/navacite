@@ -109,7 +109,7 @@
 <body class="bg-[#0c0a18] min-h-screen font-sans text-slate-300 flex flex-col items-center p-4 sm:p-6 lg:p-8 overflow-x-hidden">
 
     <!-- Hidden element for capturing signature -->
-    <div id="signature-capture" class="absolute -left-full text-black p-2">
+    <div id="signature-capture" class="absolute -left-full text-black p-2 bg-white">
         <span style="font-family: 'Rock Salt', cursive; font-size: 22px;">Dennis</span>
     </div>
 
@@ -847,7 +847,7 @@
             
             // --- Add Sign-off Section ---
             const badgeImgUrl = 'https://raw.githubusercontent.com/navasdo/navacite/refs/heads/main/templates/fluency-tools/fearless-finder/static/visual/images/courage_badge.png';
-            doc.addImage(badgeImgUrl, 'PNG', doc.internal.pageSize.getWidth() - 180, doc.internal.pageSize.getHeight() - 180, 150, 150);
+            doc.addImage(badgeImgUrl, 'PNG', doc.internal.pageSize.getWidth() - 250, doc.internal.pageSize.getHeight() - 250, 225, 225);
             
             const sigCanvas = await html2canvas(document.getElementById('signature-capture'), { backgroundColor: null });
             const sigImageData = sigCanvas.toDataURL('image/png', 1.0);
@@ -863,13 +863,14 @@
             doc.setFontSize(10);
 
             // SLP Signature
-            const slpSignY = doc.internal.pageSize.getHeight() - 55;
+            const slpSignY = doc.internal.pageSize.getHeight() - 60;
             doc.line(30, slpSignY, 230, slpSignY);
             doc.text("SLP Signature", 30, slpSignY + 10);
 
             // Dennis Signature
-            const dennisSignY = doc.internal.pageSize.getHeight() - 25;
-            doc.addImage(sigImageData, 'PNG', 35, dennisSignY - 20, sigCanvas.width * 0.5, sigCanvas.height * 0.5);
+            const dennisSignY = doc.internal.pageSize.getHeight() - 30;
+            const sigHeight = sigCanvas.height * 0.5;
+            doc.addImage(sigImageData, 'PNG', 35, dennisSignY - sigHeight, sigCanvas.width * 0.5, sigHeight);
             doc.line(30, dennisSignY, 230, dennisSignY);
             doc.text("Dennis, Master Detective", 30, dennisSignY + 10);
             
