@@ -1,1 +1,912 @@
+<!DOCTYPE html>
+<html lang="en">
+     <link rel="icon" type="image/x-icon" href="https://raw.githubusercontent.com/navasdo/navacite/templates/static/ico/navacite.ico">
+     <a href" class="absolute top-4 right-4 z-10 p-1 rounded-full bg-gray-700/50 hover:bg-gray-600/50 transition" title="Back to Homepage"><img src="https://raw.githubusercontent.com/navasdo/oliver/main/navacite/gems/Navacite-Main.png" alt="Navacite Homepage" class="w-10 h-10 rounded-full"/></a>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fearless Finder</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&display=swap" rel="stylesheet">
+    <style>
+        html { scroll-behavior: smooth; }
+        body { font-family: 'Inter', sans-serif; }
+
+        /* App Suite Style Guide Requirements */
+        .map-location {
+            transition: transform 0.2s ease-in-out; /* Keep transform transition on group */
+            cursor: pointer;
+        }
+        .map-location rect {
+            fill: rgba(124, 58, 237, 0.4); /* Base fill color */
+            transition: fill 0.2s ease-in-out; /* Transition for fill on the rect */
+            stroke: #a78bfa; /* violet-400 */
+            stroke-width: 2;
+        }
+        .map-location:hover {
+            transform: scale(1.03);
+        }
+        .map-location:hover rect {
+             fill: rgba(167, 139, 250, 0.6); /* Hover fill color */
+        }
+        .trick-btn {
+            transition: all 0.2s ease-in-out;
+        }
+        .trick-btn:hover {
+            background-color: #3e2e6b;
+            transform: scale(1.05);
+        }
+
+        /* Modal Animation Styles */
+        .modal-enter { opacity: 0; }
+        .modal-enter-active { opacity: 1; transition: opacity 300ms; }
+        .modal-content-enter { opacity: 0; transform: scale(0.95); }
+        .modal-content-enter-active { opacity: 1; transform: scale(1); transition: opacity 300ms, transform 300ms; }
+        
+        /* New Exit Animation Styles */
+        .modal-exit { opacity: 0; transition: opacity 300ms; }
+        .modal-content-exit { opacity: 0; transform: scale(0.95); transition: opacity 300ms, transform 300ms; }
+
+        /* Challenge Map Pin Styling */
+        .challenge-pin {
+            position: absolute;
+            transform: translate(-50%, -100%);
+            cursor: pointer;
+            transition: transform 0.2s ease-in-out;
+        }
+        .challenge-pin:hover {
+            transform: translate(-50%, -100%) scale(1.1);
+        }
+        
+        /* Tutorial Styles */
+        @keyframes glow {
+            0%, 100% { box-shadow: 0 0 5px #a78bfa; }
+            50% { box-shadow: 0 0 20px #a78bfa, 0 0 30px #a78bfa; }
+        }
+        .glow-effect {
+            animation: glow 1.5s ease-in-out 2;
+            border-radius: 10px; /* Match SVG's rounded corners */
+        }
+
+        @keyframes slide-up {
+            from { transform: translateY(100%); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+        .animate-slide-up {
+            animation: slide-up 0.5s ease-out forwards;
+        }
+
+
+        /* Print-specific styles for exporting the challenge map */
+        @media print {
+            body * {
+                visibility: hidden;
+            }
+            #printable-map-area, #printable-map-area *,
+            #printable-certificate, #printable-certificate * {
+                visibility: visible;
+            }
+            #printable-map-area, #printable-certificate {
+                position: absolute;
+                left: 0;
+                top: 0;
+                width: 100%;
+                height: 100%;
+                padding: 2rem;
+            }
+             #printable-certificate {
+                 border: 2px solid black;
+             }
+            .no-print {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body class="bg-[#0c0a18] min-h-screen font-sans text-slate-300 flex flex-col items-center p-4 sm:p-6 lg:p-8 overflow-x-hidden">
+
+    <!-- Terms & Disclaimer Modal -->
+    <div id="termsModal" class="hidden fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-[70] p-4 modal-enter">
+        <div class="bg-slate-800 border border-violet-700/50 rounded-2xl shadow-2xl shadow-violet-500/10 p-6 sm:p-8 max-w-2xl w-full max-h-[90vh] overflow-y-auto modal-content-enter">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-3xl font-bold text-slate-100">Terms & Disclaimer</h2>
+                <button id="closeTermsModal" class="text-slate-400 hover:text-white transition-colors">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                </button>
+            </div>
+            <div class="space-y-6 text-slate-300 text-left text-sm">
+                 <div>
+                    <h3 class="text-xl font-semibold text-violet-400 mb-2">Disclaimer</h3>
+                    <p>Navacite tools are provided “as is” and are not intended to diagnose, prevent, or cure any speech-language disorder. They are designed as supplemental engagement supports to be used by qualified professionals. Navacite makes no warranties, expressed or implied, and hereby disclaims and negates all other warranties, including without limitation, implied warranties of merchantability, fitness for a particular purpose, and non-infringement of intellectual property or other rights. Navacite does not warrant or make any representations concerning the accuracy, likely results, or reliability of the materials on this site or on any sites linked to it.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Privacy Modal -->
+    <div id="privacyModal" class="hidden fixed inset-0 bg-black bg-opacity-75 backdrop-filter backdrop-blur-sm flex items-center justify-center z-[70] p-4 modal-enter">
+        <div class="bg-slate-800 border border-violet-700/50 rounded-2xl shadow-2xl shadow-violet-500/10 p-6 sm:p-8 max-w-2xl w-full max-h-[90vh] overflow-y-auto modal-content-enter">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-3xl font-bold text-slate-100">Student Data Privacy</h2>
+                <button id="closePrivacyModal" class="text-slate-400 hover:text-white transition-colors">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"></path></svg>
+                </button>
+            </div>
+            <div class="space-y-4 text-slate-300 text-left text-sm">
+                <p>This application is designed to support student engagement by exploring characteristics of speech without collecting or maintaining student data.</p>
+                <p><strong class="text-violet-400 block mb-1">Student Information Use:</strong> Student names may be entered by the examiner for the sole purpose of personalizing a printable PDF report or certificate. This information is not transmitted, stored, or retained by the application or its hosting service.</p>
+                <p><strong class="text-violet-400 block mb-1">Data Retention:</strong> Once the examiner completes an assessment, the entered name is cleared from the page. No student information is written to logs, databases, or external servers.</p>
+                <p><strong class="text-violet-400 block mb-1">Ownership of Records:</strong> The only lasting record generated is a PDF report or certificate saved or printed by the examiner. As such, all student records remain under the direct custody and control of the examiner and their institution, in compliance with FERPA.</p>
+                <p><strong class="text-violet-400 block mb-1">Compliance Alignment:</strong> Because the application does not maintain education records or personally identifiable information, it functions as a local instructional tool rather than a record-keeping system.</p>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Custom Alert Modal -->
+    <div id="alert-modal" class="hidden fixed inset-0 z-[80] flex items-center justify-center p-4 bg-black/60 backdrop-filter backdrop-blur-sm modal-enter">
+        <div class="bg-slate-800 rounded-lg p-6 text-center shadow-lg border border-violet-700 modal-content-enter w-full max-w-sm">
+            <p id="alert-message" class="text-white mb-4">This is an alert message.</p>
+            <button id="alert-ok-btn" class="bg-violet-600 hover:bg-violet-700 text-white font-bold py-2 px-8 rounded-lg">OK</button>
+        </div>
+    </div>
+    
+    <!-- Challenge Map Unlocked Modal -->
+    <div id="challenge-overlay" class="hidden fixed inset-0 z-50 bg-slate-900/80 backdrop-blur-sm flex items-center justify-center modal-enter">
+        <div class="text-center modal-content-enter">
+            <div class="text-5xl mb-4">🎉</div>
+            <h3 class="text-2xl font-bold text-violet-400">Challenge Map Unlocked!</h3>
+            <p class="text-slate-300 mt-2">Great job, Detective! Now create your challenges.</p>
+            <button id="start-challenge-btn" class="mt-6 bg-violet-600 hover:bg-violet-700 text-white font-bold py-2 px-6 rounded-lg transition">Let's Go!</button>
+        </div>
+    </div>
+
+
+    <!-- Main App Container -->
+    <div class="w-full max-w-5xl mx-auto flex-grow">
+        <header class="w-full mx-auto my-8 text-center">
+            <img src="https://raw.githubusercontent.com/navasdo/navacite/refs/heads/main/templates/static/navacite-images/navacite_fearless_finder.png" alt="Fearless Finder Gem" class="w-48 mx-auto mb-4" style="filter: drop-shadow(0 0 15px rgba(255,255,255,0.3))">
+            <h1 class="text-5xl md:text-6xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-violet-400 to-fuchsia-500">
+                Fearless Finder
+            </h1>
+            <p class="text-md md:text-lg text-slate-400 italic max-w-3xl mx-auto mt-2">
+                Fearless Finder introduces young students to stuttering therapy concepts in a playful, non-threatening way. By becoming a 'Speech Detective,' children learn to identify common avoidance behaviors—or 'speech tricks'—in others, which externalizes the concept and reduces feelings of shame. The app then empowers them to take on small, real-world speaking challenges through a 'Challenge Map,' building confidence and promoting carryover. This gamified approach transforms therapy into a mission, encouraging participation, self-awareness, and the brave use of their voice in everyday situations.
+            </p>
+        </header>
+
+        <main class="space-y-12">
+            <!-- Setup Section -->
+            <section id="setup-section" class="p-6 bg-slate-900/40 rounded-2xl border border-violet-900/80">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div>
+                        <label for="date" class="text-slate-400">Date</label>
+                        <input id="date" type="text" readonly class="w-full mt-2 p-3 rounded-md bg-slate-800/60 text-slate-300 border border-slate-700">
+                    </div>
+                    <div>
+                        <label for="clinician" class="text-slate-400">Clinician Name</label>
+                        <input id="clinician" type="text" class="w-full mt-2 p-3 rounded-md bg-slate-800/60 text-slate-300 border border-slate-700 focus:outline-none focus:ring-2 focus:ring-violet-500" placeholder="Enter your name...">
+                    </div>
+                    <div>
+                        <label for="student" class="text-slate-400 flex items-center gap-2">
+                            Student Name 
+                            <button id="openPrivacyModal" title="Privacy Information" class="text-slate-500 hover:text-violet-400 transition-colors">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
+                            </button>
+                        </label>
+                        <input id="student" type="text" class="w-full mt-2 p-3 rounded-md bg-slate-800/60 text-slate-300 border border-slate-700 focus:outline-none focus:ring-2 focus:ring-violet-500" placeholder="For printable report only">
+                    </div>
+                </div>
+                 <div class="mt-6 flex flex-col sm:flex-row items-center justify-center gap-4 border-t border-violet-900/50 pt-6">
+                    <div class="flex items-center">
+                        <input id="tutorial-checkbox" type="checkbox" checked class="h-4 w-4 rounded border-gray-300 text-violet-600 focus:ring-violet-500 bg-slate-700">
+                        <label for="tutorial-checkbox" class="ml-2 block text-sm text-slate-400">Begin with Tutorial</label>
+                    </div>
+                    <button id="begin-btn" class="bg-violet-600 hover:bg-violet-700 text-white font-bold py-3 px-8 rounded-lg transition-all duration-300">
+                        Begin Investigation
+                    </button>
+                </div>
+            </section>
+
+            <!-- Speech Detective Module -->
+            <section id="detective-module" class="p-6 bg-slate-900/40 rounded-2xl border border-violet-900/80">
+                <h3 class="text-2xl font-bold text-violet-400 mb-4 text-center">Part 1: Speech Detective</h3>
+                <p class="text-center text-slate-400 mb-2">Click a location on the school map to watch a video. Identify the "speech trick" you see!</p>
+                <p class="text-center text-slate-400 mb-6 font-bold">Tricks Found: <span id="tricks-found-counter">0</span> / 5</p>
+                <div class="w-full bg-slate-700 rounded-full h-4 mb-8">
+                    <div id="progress-bar" class="bg-violet-600 h-4 rounded-full transition-all duration-500" style="width: 0%"></div>
+                </div>
+                <div id="school-map-container" class="bg-slate-800/50 p-4 rounded-lg">
+                    <svg viewBox="0 0 800 400" class="w-full h-auto">
+                        <rect width="800" height="400" fill="#2E3A4D" rx="10"/>
+                        <text x="400" y="30" font-size="20" fill="#a78bfa" text-anchor="middle" font-weight="bold">Detective Academy</text>
+                        <g class="map-location" data-location="Gym">
+                            <rect x="50" y="50" width="200" height="120" rx="10"/>
+                            <text x="150" y="115" font-size="20" fill="white" text-anchor="middle" class="pointer-events-none">Gym</text>
+                        </g>
+                        <g class="map-location" data-location="Theatre">
+                             <rect x="300" y="50" width="200" height="120" rx="10"/>
+                             <text x="400" y="115" font-size="20" fill="white" text-anchor="middle" class="pointer-events-none">Theatre</text>
+                        </g>
+                        <g class="map-location" data-location="Playground">
+                             <rect x="550" y="50" width="200" height="120" rx="10"/>
+                             <text x="650" y="115" font-size="20" fill="white" text-anchor="middle" class="pointer-events-none">Playground</text>
+                        </g>
+                        <g class="map-location" data-location="Cafeteria">
+                             <rect x="50" y="230" width="325" height="120" rx="10"/>
+                             <text x="212.5" y="295" font-size="20" fill="white" text-anchor="middle" class="pointer-events-none">Cafeteria</text>
+                        </g>
+                        <g class="map-location" data-location="Library">
+                             <rect x="425" y="230" width="325" height="120" rx="10"/>
+                             <text x="587.5" y="295" font-size="20" fill="white" text-anchor="middle" class="pointer-events-none">Library</text>
+                        </g>
+                    </svg>
+                </div>
+            </section>
+
+            <!-- Challenge Map Module -->
+            <section id="challenge-module" class="relative p-6 bg-slate-900/40 rounded-2xl border border-violet-900/80 transition-opacity duration-500 opacity-40 pointer-events-none">
+                 <h3 class="text-2xl font-bold text-violet-400 mb-4 text-center">Part 2: Challenge Map</h3>
+                 <p class="text-center text-slate-400 mb-6">Click on the map to place 2 "challenge pins" for your real-world speaking missions this week!</p>
+                 <div id="challenge-map-container" class="relative bg-slate-800/50 p-4 rounded-lg cursor-crosshair overflow-hidden">
+                    <img src="https://raw.githubusercontent.com/navasdo/navacite/refs/heads/main/templates/fluency-tools/fearless-finder/static/visual/map/map.png" alt="Challenge Map" class="w-full h-auto rounded">
+                    <div id="pins-container"></div>
+                 </div>
+                 <div class="text-center mt-8">
+                     <button id="export-map-btn" disabled class="bg-violet-600 hover:bg-violet-700 text-white font-bold py-3 px-8 rounded-lg transition-all duration-300 disabled:bg-slate-600 disabled:cursor-not-allowed disabled:opacity-50">
+                         Export My Challenge Map
+                     </button>
+                 </div>
+            </section>
+
+            <!-- Gamification Section -->
+            <section id="gamification-section" class="p-6 bg-slate-900/40 rounded-2xl border border-violet-900/80">
+                <h3 class="text-2xl font-bold text-violet-400 mb-6 text-center">Your Detective Career</h3>
+                <div class="flex flex-col md:flex-row justify-around items-center gap-8">
+                    <div class="text-center">
+                        <h4 class="text-xl font-semibold text-slate-300 mb-3">Courage Badges</h4>
+                        <div id="badge-display" class="flex gap-2 justify-center text-4xl">
+                           <!-- Badges will be added here -->
+                        </div>
+                    </div>
+                    <div class="text-center">
+                        <h4 class="text-xl font-semibold text-slate-300 mb-3">Detective Ranks</h4>
+                        <ul id="rank-list" class="text-slate-400 space-y-1">
+                            <li data-rank="0" class="opacity-50">Rookie Detective (5 badges)</li>
+                            <li data-rank="1" class="opacity-50">Junior Detective (10 badges)</li>
+                            <li data-rank="2" class="opacity-50">Senior Detective (15 badges)</li>
+                            <li data-rank="3" class="opacity-50">Master Detective (20 badges)</li>
+                        </ul>
+                    </div>
+                </div>
+            </section>
+
+        </main>
+    </div>
+
+    <!-- Video Modal -->
+    <div id="video-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-filter backdrop-blur-sm modal-enter">
+        <div class="bg-slate-900 w-full max-w-4xl rounded-2xl border border-violet-700 shadow-2xl shadow-violet-500/20 flex flex-col p-6 relative modal-content-enter">
+            <button id="close-video-modal" class="absolute top-4 right-4 text-slate-400 hover:text-white transition-colors z-10">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+            </button>
+            <h3 id="video-modal-question" class="text-2xl font-bold text-center text-violet-400 mb-4">What Speech Trick do you see?</h3>
+            <div class="aspect-video bg-black rounded-lg mb-4">
+                <video id="trick-video" class="w-full h-full rounded-lg" controls>
+                     <source src="" type="video/mp4">
+                     Your browser does not support the video tag.
+                </video>
+            </div>
+            <div id="trick-selection" class="grid grid-cols-2 md:grid-cols-3 gap-3">
+                <!-- Trick buttons will be inserted here -->
+            </div>
+            <div id="feedback-message" class="text-center font-bold text-xl mt-4 h-6"></div>
+        </div>
+    </div>
+
+    <!-- Pin Modal -->
+    <div id="pin-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-filter backdrop-blur-sm modal-enter">
+         <div class="bg-slate-900 w-full max-w-md rounded-2xl border border-violet-700 shadow-2xl shadow-violet-500/20 p-6 relative modal-content-enter">
+            <h3 class="text-2xl font-bold text-center text-violet-400 mb-4">New Speaking Challenge</h3>
+            <div class="space-y-4">
+                <div>
+                    <label for="challenge-location" class="text-slate-400">Location</label>
+                    <input id="challenge-location" type="text" class="w-full mt-2 p-3 rounded-md bg-slate-800/60 text-slate-300 border border-slate-700 focus:outline-none focus:ring-2 focus:ring-violet-500" placeholder="e.g., School Cafeteria">
+                </div>
+                <div>
+                    <label for="challenge-mission" class="text-slate-400">Challenge Mission</label>
+                    <textarea id="challenge-mission" rows="3" class="w-full mt-2 p-3 rounded-md bg-slate-800/60 text-slate-300 border border-slate-700 focus:outline-none focus:ring-2 focus:ring-violet-500" placeholder="e.g., Ask for a napkin"></textarea>
+                </div>
+            </div>
+            <div class="flex justify-end gap-4 mt-6">
+                <button id="cancel-pin-btn" class="bg-slate-600 hover:bg-slate-700 text-white font-bold py-2 px-6 rounded-lg transition">Cancel</button>
+                <button id="save-pin-btn" class="bg-violet-600 hover:bg-violet-700 text-white font-bold py-2 px-6 rounded-lg transition">Save Pin</button>
+            </div>
+         </div>
+    </div>
+    
+    <!-- Certificate Modal -->
+    <div id="certificate-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-filter backdrop-blur-sm modal-enter">
+        <div id="printable-certificate" class="bg-slate-800 w-full max-w-2xl rounded-2xl border-4 border-violet-500 shadow-2xl shadow-violet-500/40 p-8 relative modal-content-enter text-center">
+            <h2 class="text-4xl font-bold text-violet-400">CERTIFICATE OF ACHIEVEMENT</h2>
+            <p class="text-slate-300 mt-4 text-lg">This certifies that</p>
+            <p id="cert-student-name" class="text-3xl font-bold text-white my-4 border-b-2 border-slate-600 pb-2"></p>
+            <p class="text-slate-300 mt-4 text-lg">has earned the rank of</p>
+            <p id="cert-rank-name" class="text-3xl font-bold text-fuchsia-400 my-4"></p>
+            <p class="text-slate-400 mt-6">for exceptional bravery and detective skills in facing speaking challenges.</p>
+            <div class="flex justify-between items-center mt-10">
+                <div>
+                    <p id="cert-date" class="border-t-2 border-slate-600 pt-2 text-sm"></p>
+                    <p class="text-slate-500 text-xs">Date</p>
+                </div>
+                <div>
+                    <p id="cert-clinician-name" class="border-t-2 border-slate-600 pt-2 text-sm"></p>
+                    <p class="text-slate-500 text-xs">Clinician</p>
+                </div>
+            </div>
+            <div class="mt-8 no-print">
+                <button onclick="window.print()" class="bg-violet-600 hover:bg-violet-700 text-white font-bold py-2 px-6 rounded-lg transition">Print Certificate</button>
+                <button id="close-cert-btn" class="ml-4 bg-slate-600 hover:bg-slate-700 text-white font-bold py-2 px-6 rounded-lg transition">Close</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Tutorial Overlay -->
+    <div id="tutorial-overlay" class="hidden fixed inset-0 z-[60] bg-black/70 flex items-end justify-center p-4 sm:p-8 no-print">
+        <div class="bg-slate-800 border-2 border-violet-700/50 rounded-2xl shadow-2xl shadow-violet-500/10 w-full max-w-4xl p-4 flex gap-4 relative animate-slide-up">
+            <img id="tutorial-char-img" src="https://raw.githubusercontent.com/navasdo/navacite/main/templates/fluency-tools/fearless-finder/static/visual/dennis/dennis.png" alt="Detective Dennis" class="w-24 h-24 sm:w-32 sm:h-32 object-cover rounded-lg border-2 border-slate-600 flex-shrink-0">
+            <div class="flex-1 min-w-0">
+                <h4 id="tutorial-char-name" class="text-xl font-bold text-violet-400"></h4>
+                <div id="tutorial-text" class="text-slate-300 mt-2 text-sm sm:text-base pr-24"></div>
+            </div>
+            <button id="tutorial-next-btn" class="absolute bottom-4 right-4 bg-violet-600 hover:bg-violet-700 text-white font-bold py-2 px-6 rounded-lg transition disabled:bg-slate-600 disabled:cursor-not-allowed disabled:opacity-50" disabled>Next</button>
+        </div>
+    </div>
+    <audio id="tutorial-audio"></audio>
+
+    <!-- Printable Map Area (hidden) -->
+    <div id="printable-map-area" class="hidden"></div>
+
+
+    <footer class="w-full max-w-3xl mx-auto mt-24 text-center text-sm text-slate-500 p-6 border-t border-slate-800/50 no-print">
+        <p class="font-bold text-violet-400">&copy; 2025 Navacite | All Rights Reserved</p>
+        <p class="mt-4 text-xs text-slate-500">
+            Navacite tools are provided ‘as is’ and are not intended to diagnose. Use requires professional judgment. <br><br>
+            <a href="#" id="openTermsModal" class="underline hover:text-violet-400 transition-colors">Terms & Disclaimer</a>
+        </p>
+    </footer>
+
+    <script>
+    document.addEventListener('DOMContentLoaded', () => {
+        // --- State Management ---
+        let tricksFound = 0;
+        let badgesEarned = 0;
+        let pins = [];
+        let currentCorrectTrick = '';
+        let temporaryPinCoords = null;
+        let currentTutorialStep = 0;
+        let currentTutorialPart = 'part1';
+        let availableVideos = [];
+        
+        const TRICKS_TO_FIND = 5;
+        const PINS_TO_PLACE = 2;
+        const BADGES_FOR_ROOKIE = 5;
+        const VIDEO_BASE_URL = 'https://raw.githubusercontent.com/navasdo/navacite/main/templates/fluency-tools/fearless-finder/static/visual/';
+
+        // --- Video Data Block ---
+        const videoData = [
+            {
+                videoId: "cYzF014hQ26",
+                question: {
+                    text: "What type of Speech Trick did you see?",
+                    choices: ["Body Trick", "Hand Trick", "Sound Trick", "Word Trick", "Face Trick", "Eye Trick"],
+                },
+                correctAnswer: "Face Trick"
+            },
+            {
+                videoId: "z3cyyK9P2CD",
+                question: {
+                    text: "Watch closely! What kind of trick was that?",
+                    choices: ["Body Trick", "Hand Trick", "Sound Trick", "Word Trick", "Face Trick", "Eye Trick"],
+                },
+                correctAnswer: "Face Trick"
+            },
+            {
+                videoId: "OxCLC8U30Q6",
+                question: {
+                    text: "Did you spot the Speech Trick?",
+                    choices: ["Body Trick", "Hand Trick", "Sound Trick", "Word Trick", "Face Trick", "Eye Trick"],
+                },
+                correctAnswer: "Face Trick"
+            },
+            {
+                videoId: "RcjisepZ6yv",
+                question: {
+                    text: "A good detective finds every clue. What did you see?",
+                    choices: ["Body Trick", "Hand Trick", "Sound Trick", "Word Trick", "Face Trick", "Eye Trick"],
+                },
+                correctAnswer: "Face Trick"
+            },
+            {
+                videoId: "VffVYcqOH3I",
+                question: {
+                    text: "Time to solve the case! What was the trick?",
+                    choices: ["Body Trick", "Hand Trick", "Sound Trick", "Word Trick", "Face Trick", "Eye Trick"],
+                },
+                correctAnswer: "Face Trick"
+            }
+        ];
+
+        // --- DOM Element References ---
+        const dateInput = document.getElementById('date');
+        const tricksCounter = document.getElementById('tricks-found-counter');
+        const progressBar = document.getElementById('progress-bar');
+        const mapLocations = document.querySelectorAll('.map-location');
+        const videoModal = document.getElementById('video-modal');
+        const videoModalQuestion = document.getElementById('video-modal-question');
+        const trickVideo = document.getElementById('trick-video');
+        const trickSelectionContainer = document.getElementById('trick-selection');
+        const feedbackMessage = document.getElementById('feedback-message');
+        const challengeModule = document.getElementById('challenge-module');
+        const challengeOverlay = document.getElementById('challenge-overlay');
+        const startChallengeBtn = document.getElementById('start-challenge-btn');
+        const challengeMapContainer = document.getElementById('challenge-map-container');
+        const pinsContainer = document.getElementById('pins-container');
+        const pinModal = document.getElementById('pin-modal');
+        const challengeLocationInput = document.getElementById('challenge-location');
+        const challengeMissionInput = document.getElementById('challenge-mission');
+        const cancelPinBtn = document.getElementById('cancel-pin-btn');
+        const savePinBtn = document.getElementById('save-pin-btn');
+        const exportMapBtn = document.getElementById('export-map-btn');
+        const badgeDisplay = document.getElementById('badge-display');
+        const rankList = document.getElementById('rank-list');
+        const certificateModal = document.getElementById('certificate-modal');
+        const closeCertBtn = document.getElementById('close-cert-btn');
+        const beginBtn = document.getElementById('begin-btn');
+        const tutorialCheckbox = document.getElementById('tutorial-checkbox');
+        const detectiveModule = document.getElementById('detective-module');
+        const tutorialOverlay = document.getElementById('tutorial-overlay');
+        const tutorialCharImg = document.getElementById('tutorial-char-img');
+        const tutorialCharName = document.getElementById('tutorial-char-name');
+        const tutorialText = document.getElementById('tutorial-text');
+        const tutorialNextBtn = document.getElementById('tutorial-next-btn');
+        const tutorialAudio = document.getElementById('tutorial-audio');
+        const schoolMapContainer = document.getElementById('school-map-container');
+        const alertModal = document.getElementById('alert-modal');
+        const alertMessage = document.getElementById('alert-message');
+        const alertOkBtn = document.getElementById('alert-ok-btn');
+        const closeVideoModalBtn = document.getElementById('close-video-modal');
+        const openTermsBtn = document.getElementById('openTermsModal');
+        const closeTermsBtn = document.getElementById('closeTermsModal');
+        const termsModal = document.getElementById('termsModal');
+        const openPrivacyBtn = document.getElementById('openPrivacyModal');
+        const closePrivacyBtn = document.getElementById('closePrivacyModal');
+        const privacyModal = document.getElementById('privacyModal');
+
+        // --- Tutorial Data ---
+        const tutorialSteps = {
+            part1: [
+                {
+                    name: "Detective Dennis",
+                    image: "https://raw.githubusercontent.com/navasdo/navacite/main/templates/fluency-tools/fearless-finder/static/visual/dennis/dennis.png",
+                    audio: "https://raw.githubusercontent.com/navasdo/navacite/refs/heads/main/templates/fluency-tools/fearless-finder/static/audio/greeting.wav",
+                    text: "Well hello there, Rookie! The name's Dennis, Master Detective Dennis. I've been waiting for you. <br><br>Welcome to the Fearless Finder Detective Academy! Around here, our job is to solve the toughest cases involving tricky talk and brave words. Your first mission, should you choose to accept it, is to become a top-notch <b>Speech Detective</b>. Ready to get started?",
+                },
+                {
+                    name: "Detective Dennis",
+                    image: "https://raw.githubusercontent.com/navasdo/navacite/main/templates/fluency-tools/fearless-finder/static/visual/dennis/dennis.png",
+                    audio: "https://raw.githubusercontent.com/navasdo/navacite/refs/heads/main/templates/fluency-tools/fearless-finder/static/audio/briefing_part1_1.wav",
+                    text: "Every detective needs to learn how to spot clues. Our first case is all about finding secret <i>'Speech Tricks.'</i><br>Sometimes, when people feel a little nervous about talking, they might use a trick to try and hide a bumpy word or a stutter. They might <b>look away, blink their eyes a lot, use extra words like 'um' or 'uh,' or even tap their hand without realizing it!</b>",
+                },
+                {
+                    name: "Detective Dennis",
+                    image: "https://raw.githubusercontent.com/navasdo/navacite/main/templates/fluency-tools/fearless-finder/static/visual/dennis/dennis.png",
+                    audio: "https://raw.githubusercontent.com/navasdo/navacite/refs/heads/main/templates/fluency-tools/fearless-finder/static/audio/briefing_part1_2.wav",
+                    text: "Your job is to be a super spotter! Here’s how you’ll do it:<br><br><b>1. Pick a Place:</b> Click on a location on the school map, like the Gym or the Playground.<br><b>2. Watch the Clue:</b> A short video will pop up. Watch the person in the video very carefully.<br><b>3. Solve the Case:</b> After the video, choose which Speech Trick you saw them use.<br><br>Find all five tricks to prove your skills and unlock the next part of your mission. You can do it, Rookie!",
+                    action: () => {
+                        schoolMapContainer.classList.add('glow-effect');
+                        setTimeout(() => schoolMapContainer.classList.remove('glow-effect'), 3000); // Glow lasts 3s
+                    }
+                }
+            ],
+            part2: [
+                {
+                    name: "Detective Dennis",
+                    image: "https://raw.githubusercontent.com/navasdo/navacite/main/templates/fluency-tools/fearless-finder/static/visual/dennis/dennis.png",
+                    audio: "https://raw.githubusercontent.com/navasdo/navacite/refs/heads/main/templates/fluency-tools/fearless-finder/static/audio/briefing_part2_1.wav",
+                    text: "Great work, Rookie! You've got a sharp eye for spotting tricks. Now it's time to take your skills into the real world with the <b>Challenge Map!</b><br><br>This is where you get to be extra brave. You and your lead detective <i>(that’s your speech therapist!)</i> will create your very own speaking missions.",
+                },
+                {
+                    name: "Detective Dennis",
+                    image: "https://raw.githubusercontent.com/navasdo/navacite/main/templates/fluency-tools/fearless-finder/static/visual/dennis/dennis.png",
+                    audio: "https://raw.githubusercontent.com/navasdo/navacite/refs/heads/main/templates/fluency-tools/fearless-finder/static/audio/briefing_part2_2.wav",
+                    text: `It's simple:<br><br><b>1. Think of a Mission:</b> Talk with your detective partner and come up with a small, real-world speaking challenge. It could be something like, <i>"Ask the lunch monitor for a napkin"</i> or <i>"Say 'hi' to the bus driver."</i><br><b>2. Place Your Pins:</b> Click on the map to place a special "Challenge Pin" for your mission. You'll get to place two of them!<br><br>These missions are your secret assignments to practice being a fearless finder of your own brave voice. Now get out there and crack the case!`,
+                }
+            ]
+        };
+        
+        // --- Custom Alert ---
+        function showCustomAlert(message) {
+            alertMessage.textContent = message;
+            openModal(alertModal);
+        }
+
+        // --- Initial Setup ---
+        function initialize() {
+            const today = new Date();
+            dateInput.value = today.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+            addEventListeners();
+            updateGamificationUI();
+            resetSession(); // Prepare videos on page load
+        }
+
+        function resetSession() {
+            tricksFound = 0;
+            availableVideos = JSON.parse(JSON.stringify(videoData)); 
+            updateProgress();
+        }
+
+        // --- Event Listeners ---
+        function addEventListeners() {
+            // Main Actions
+            beginBtn.addEventListener('click', handleBeginInvestigation);
+            mapLocations.forEach(loc => loc.addEventListener('click', handleLocationClick));
+            
+            // Speech Detective Modal
+            trickSelectionContainer.addEventListener('click', handleTrickSelection);
+            closeVideoModalBtn.addEventListener('click', closeVideoModal);
+            videoModal.addEventListener('click', (event) => {
+                 if (event.target === videoModal) closeVideoModal();
+            });
+
+            // Challenge Map
+            startChallengeBtn.addEventListener('click', () => {
+                closeModal(challengeOverlay);
+                challengeModule.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            });
+            challengeMapContainer.addEventListener('click', handleChallengeMapClick);
+            exportMapBtn.addEventListener('click', exportMap);
+
+            // Pin Modal
+            cancelPinBtn.addEventListener('click', closePinModal);
+            savePinBtn.addEventListener('click', savePin);
+
+            // Tutorial
+            tutorialNextBtn.addEventListener('click', handleTutorialNext);
+            tutorialAudio.addEventListener('ended', () => {
+                tutorialNextBtn.disabled = false;
+            });
+
+            // Generic Modals
+            alertOkBtn.addEventListener('click', () => closeModal(alertModal));
+            closeCertBtn.addEventListener('click', () => closeModal(certificateModal));
+
+            // Terms & Privacy Modals
+            openTermsBtn.addEventListener('click', (e) => { e.preventDefault(); openModal(termsModal); });
+            closeTermsBtn.addEventListener('click', () => closeModal(termsModal));
+            termsModal.addEventListener('click', (e) => { if(e.target === termsModal) closeModal(termsModal); });
+
+            openPrivacyBtn.addEventListener('click', (e) => { e.preventDefault(); openModal(privacyModal); });
+            closePrivacyBtn.addEventListener('click', () => closeModal(privacyModal));
+            privacyModal.addEventListener('click', (e) => { if(e.target === privacyModal) closeModal(privacyModal); });
+        }
+        
+        // --- Tutorial Logic ---
+        function handleBeginInvestigation() {
+            resetSession();
+            detectiveModule.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            if (tutorialCheckbox.checked) {
+                setTimeout(() => startTutorial('part1'), 500); // Wait for scroll to finish
+            }
+        }
+
+        function startTutorial(part) {
+            currentTutorialPart = part;
+            currentTutorialStep = 0;
+            openModal(tutorialOverlay);
+            showTutorialStep();
+        }
+
+        function showTutorialStep() {
+            const steps = tutorialSteps[currentTutorialPart];
+            const step = steps[currentTutorialStep];
+
+            if (!step) {
+                endTutorial();
+                return;
+            }
+
+            tutorialCharImg.src = step.image;
+            tutorialCharName.textContent = step.name;
+            tutorialText.innerHTML = step.text;
+            tutorialNextBtn.disabled = true;
+
+            if (step.audio) {
+                tutorialAudio.src = step.audio;
+                tutorialAudio.play().catch(e => {
+                    console.error("Audio play failed:", e);
+                    tutorialNextBtn.disabled = false; // Enable button if audio fails
+                });
+            } else {
+                tutorialNextBtn.disabled = false;
+            }
+
+            if (step.action && typeof step.action === 'function') {
+                step.action();
+            }
+        }
+
+        function handleTutorialNext() {
+            currentTutorialStep++;
+            showTutorialStep();
+        }
+
+        function endTutorial() {
+            closeModal(tutorialOverlay);
+            tutorialAudio.pause();
+            tutorialAudio.src = '';
+            if (currentTutorialPart === 'part2') {
+                 challengeModule.classList.remove('opacity-40', 'pointer-events-none');
+                 openModal(challengeOverlay);
+            }
+        }
+        
+        // --- Speech Detective Logic ---
+        function handleLocationClick() {
+            if (tricksFound >= TRICKS_TO_FIND) {
+                showCustomAlert("You've already found all the tricks! Time for the Challenge Map.");
+                return;
+            }
+            openVideoModal();
+        }
+        
+        function openVideoModal() {
+            if (availableVideos.length === 0) {
+                showCustomAlert("Great work, Detective! You've seen all the available clues. Click 'Begin Investigation' to start a new round.");
+                return;
+            }
+
+            const randomIndex = Math.floor(Math.random() * availableVideos.length);
+            const videoInfo = availableVideos[randomIndex];
+            
+            availableVideos.splice(randomIndex, 1);
+            
+            currentCorrectTrick = videoInfo.correctAnswer;
+            
+            trickVideo.querySelector('source').src = VIDEO_BASE_URL + videoInfo.videoId + '.mp4';
+            trickVideo.load();
+            
+            trickSelectionContainer.innerHTML = '';
+            videoInfo.question.choices.forEach(choice => {
+                const button = document.createElement('button');
+                button.className = 'trick-btn p-4 rounded-md border border-slate-700 bg-slate-800/60 text-slate-300 font-semibold';
+                button.textContent = choice;
+                button.dataset.trick = choice;
+                trickSelectionContainer.appendChild(button);
+            });
+            
+            videoModalQuestion.textContent = videoInfo.question.text;
+            feedbackMessage.textContent = '';
+            
+            openModal(videoModal);
+        }
+        
+        function closeVideoModal() {
+            trickVideo.pause();
+            trickVideo.querySelector('source').src = ""; // Forcefully stop loading
+            closeModal(videoModal);
+        }
+
+
+        function handleTrickSelection(e) {
+            if (!e.target.matches('.trick-btn')) return;
+            const selectedTrick = e.target.dataset.trick;
+            
+            if (selectedTrick === currentCorrectTrick) {
+                feedbackMessage.textContent = 'Correct! Great job!';
+                feedbackMessage.className = 'text-center font-bold text-xl mt-4 h-6 text-green-400';
+                
+                if (tricksFound < TRICKS_TO_FIND) {
+                   tricksFound++;
+                   updateProgress();
+                }
+
+                setTimeout(() => {
+                    closeVideoModal();
+                    if (tricksFound === TRICKS_TO_FIND) {
+                         challengeModule.classList.remove('opacity-40', 'pointer-events-none');
+                         if(tutorialCheckbox.checked) {
+                            startTutorial('part2');
+                         } else {
+                            openModal(challengeOverlay);
+                         }
+                    }
+                }, 1500);
+            } else {
+                feedbackMessage.textContent = 'Not quite, try again!';
+                feedbackMessage.className = 'text-center font-bold text-xl mt-4 h-6 text-red-400';
+            }
+        }
+
+        function updateProgress() {
+            tricksCounter.textContent = tricksFound;
+            const percentage = (tricksFound / TRICKS_TO_FIND) * 100;
+            progressBar.style.width = `${percentage}%`;
+        }
+
+        // --- Challenge Map Logic ---
+        function handleChallengeMapClick(e) {
+             if (pins.length >= PINS_TO_PLACE) {
+                showCustomAlert(`You can only place ${PINS_TO_PLACE} pins.`);
+                return;
+            }
+            if (!e.target.closest('#pins-container')) {
+                const rect = challengeMapContainer.getBoundingClientRect();
+                const x = ((e.clientX - rect.left) / rect.width) * 100;
+                const y = ((e.clientY - rect.top) / rect.height) * 100;
+                temporaryPinCoords = { x, y };
+                openPinModal();
+            }
+        }
+
+        function openPinModal() {
+            challengeLocationInput.value = '';
+            challengeMissionInput.value = '';
+            openModal(pinModal);
+            challengeLocationInput.focus();
+        }
+
+        function closePinModal() {
+            closeModal(pinModal);
+            temporaryPinCoords = null;
+        }
+
+        function savePin() {
+            const location = challengeLocationInput.value.trim();
+            const mission = challengeMissionInput.value.trim();
+            if (!location || !mission) {
+                showCustomAlert('Please fill out both Location and Challenge Mission.');
+                return;
+            }
+            pins.push({
+                id: Date.now(),
+                location: location,
+                mission: mission,
+                coords: temporaryPinCoords
+            });
+            renderPins();
+            closePinModal();
+             if (pins.length === PINS_TO_PLACE) {
+                exportMapBtn.disabled = false;
+            }
+        }
+        
+        function renderPins() {
+            pinsContainer.innerHTML = '';
+            pins.forEach(pin => {
+                const pinEl = document.createElement('div');
+                pinEl.className = 'challenge-pin';
+                pinEl.style.left = `${pin.coords.x}%`;
+                pinEl.style.top = `${pin.coords.y}%`;
+                pinEl.title = `Location: ${pin.location}\nMission: ${pin.mission}`;
+                pinEl.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="#f472b6" stroke="white" stroke-width="1.5"><path d="M12 2C7.58172 2 4 5.58172 4 10C4 12.1033 4.887 14.1287 6.43828 15.6582L12 22L17.5617 15.6582C19.113 14.1287 20 12.1033 20 10C20 5.58172 16.4183 2 12 2Z"/></svg>`;
+                pinsContainer.appendChild(pinEl);
+            });
+        }
+
+        // --- Export & Gamification Logic ---
+        function exportMap() {
+            badgesEarned++;
+            updateGamificationUI();
+
+            const studentName = document.getElementById('student').value || 'The Detective';
+            const challengesHTML = pins.map((pin, i) => `
+                <div style="margin-bottom: 2rem; page-break-inside: avoid;">
+                    <h3 style="font-size: 1.25rem; font-weight: bold; color: #7c3aed;">Challenge ${i + 1}: ${pin.location}</h3>
+                    <p style="font-size: 1rem; margin-top: 0.5rem; border: 1px solid #ccc; padding: 1rem; border-radius: 8px;">${pin.mission}</p>
+                    <div style="margin-top: 1.5rem; border-top: 1px solid #999; padding-top: 0.5rem; height: 3rem;">
+                        <p style="font-style: italic;">Signature of person you talked to:</p>
+                    </div>
+                </div>
+            `).join('');
+            
+            const printableContent = `
+                <div style="font-family: sans-serif; padding: 2rem;">
+                    <h1 style="text-align: center; color: #5b21b6; font-size: 2.5rem;">Fearless Finder Challenge Map</h1>
+                    <h2 style="text-align: center; font-size: 1.5rem; color: #333; margin-top: 0.5rem;">Mission for: ${studentName}</h2>
+                    <div style="margin-top: 3rem;">${challengesHTML}</div>
+                    <p style="margin-top: 3rem; text-align: center; font-weight: bold;">Great job facing your challenges, Fearless Finder!</p>
+                </div>
+            `;
+            
+            document.getElementById('printable-map-area').innerHTML = printableContent;
+            window.print();
+
+            // Reset pins for the next round
+            pins = [];
+            renderPins();
+            exportMapBtn.disabled = true;
+        }
+
+        function updateGamificationUI() {
+            badgeDisplay.innerHTML = '';
+            for (let i = 0; i < badgesEarned; i++) {
+                badgeDisplay.innerHTML += `<span title="Courage Badge #${i+1}">🏆</span>`;
+            }
+            if (badgesEarned === 0) {
+                 badgeDisplay.innerHTML = `<span class="text-slate-500 text-base">None yet!</span>`;
+            }
+            
+            const ranks = Array.from(rankList.children);
+            let rankAchieved = false;
+            if (badgesEarned >= BADGES_FOR_ROOKIE && badgesEarned < 10) {
+                updateRank(ranks[0], "Rookie Detective");
+                rankAchieved = true;
+            } // Add else-if for other ranks
+            
+            if (rankAchieved) {
+                 ranks.forEach((r, i) => {
+                     if (i > 0) r.classList.add('opacity-50');
+                 });
+            }
+        }
+        
+        function updateRank(rankElement, rankName) {
+            if(!rankElement.classList.contains('text-violet-400')) {
+                 rankElement.classList.remove('opacity-50');
+                 rankElement.classList.add('font-bold', 'text-violet-400');
+                 showCertificate(rankName);
+            }
+        }
+        
+        function showCertificate(rankName) {
+            document.getElementById('cert-student-name').textContent = document.getElementById('student').value || 'A Brave Detective';
+            document.getElementById('cert-clinician-name').textContent = document.getElementById('clinician').value || 'Lead Detective';
+            document.getElementById('cert-date').textContent = dateInput.value;
+            document.getElementById('cert-rank-name').textContent = rankName.toUpperCase();
+            openModal(certificateModal);
+        }
+
+        // --- Generic Modal Logic ---
+        function openModal(modal) {
+            if (!modal) return;
+            // Clean up any lingering exit classes before opening
+            modal.classList.remove('modal-exit');
+            const content = modal.querySelector('.modal-content-enter, .animate-slide-up');
+            if (content) content.classList.remove('modal-content-exit');
+
+            modal.classList.remove('hidden');
+            setTimeout(() => {
+                modal.classList.add('modal-enter-active');
+                if (content) content.classList.add('modal-content-enter-active');
+            }, 10);
+        }
+
+        function closeModal(modal) {
+            if (!modal) return;
+            // Add exit animation classes
+            modal.classList.add('modal-exit');
+            const content = modal.querySelector('.modal-content-enter, .animate-slide-up');
+            if (content) content.classList.add('modal-content-exit');
+
+            // Wait for animation to finish before truly hiding
+            setTimeout(() => {
+                modal.classList.add('hidden');
+                // Clean up all animation classes for the next time it opens
+                modal.classList.remove('modal-exit', 'modal-enter-active');
+                if (content) content.classList.remove('modal-content-exit', 'modal-content-enter-active');
+            }, 300); // This duration must match the CSS transition duration
+        }
+        
+        // --- Run on Load ---
+        initialize();
+    });
+    </script>
+</body>
+</html>
+
 
