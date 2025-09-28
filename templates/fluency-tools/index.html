@@ -105,7 +105,7 @@
     <header class="w-full max-w-5xl mx-auto my-8">
         <div class="text-center pt-8">
             <img src="https://raw.githubusercontent.com/navasdo/navacite/refs/heads/main/templates/static/navacite-images/navacite-fluency.png"
-                 alt="SLP Tools Visual"
+                 alt="Fluency Tools Visual"
                  class="w-48 mx-auto mb-4 [filter:drop-shadow(0_0_15px_rgba(255,255,255,0.3))]"
                  onerror="this.onerror=null; this.src='https://placehold.co/192x108/0c0a18/a78bfa?text=Navacite-Main';"
             />
@@ -189,7 +189,7 @@
             const createToolButton = (tool) => {
                 const button = document.createElement('a');
                 // You will need a new dynamic route in Flask for '/slp-tools/<slug>'
-                button.href = `/slp-tools/${tool.slug}`; 
+                button.href = `/fluency-tools/${tool.slug}`; 
                 button.className = "group relative flex flex-col items-center justify-center p-6 text-center bg-slate-900/40 rounded-2xl border border-violet-900/80 transition-all duration-300 ease-in-out hover:border-violet-600/80 hover:scale-105 hover:shadow-[0_0_25px_-5px_rgba(167,139,250,0.4)]";
                 
                 // Add tags to a data attribute for filtering
