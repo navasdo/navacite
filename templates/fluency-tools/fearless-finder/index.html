@@ -7,6 +7,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Fearless Finder</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&display=swap" rel="stylesheet">
@@ -79,26 +81,23 @@
         }
 
 
-        /* Print-specific styles for exporting the challenge map */
+        /* Print-specific styles for exporting certificates */
         @media print {
             body * {
                 visibility: hidden;
             }
-            #printable-map-area, #printable-map-area *,
             #printable-certificate, #printable-certificate * {
                 visibility: visible;
             }
-            #printable-map-area, #printable-certificate {
+            #printable-certificate {
                 position: absolute;
                 left: 0;
                 top: 0;
                 width: 100%;
                 height: 100%;
                 padding: 2rem;
+                border: 2px solid black;
             }
-             #printable-certificate {
-                 border: 2px solid black;
-             }
             .no-print {
                 display: none;
             }
@@ -267,7 +266,7 @@
                 <div class="flex flex-col md:flex-row justify-around items-center gap-8">
                     <div class="text-center">
                         <h4 class="text-xl font-semibold text-slate-300 mb-3">Courage Badges</h4>
-                        <div id="badge-display" class="flex gap-2 justify-center text-4xl">
+                        <div id="badge-display" class="flex gap-2 justify-center items-center h-12">
                            <!-- Badges will be added here -->
                         </div>
                     </div>
@@ -368,10 +367,6 @@
     </div>
     <audio id="tutorial-audio"></audio>
 
-    <!-- Printable Map Area (hidden) -->
-    <div id="printable-map-area" class="hidden"></div>
-
-
     <footer class="w-full max-w-3xl mx-auto mt-24 text-center text-sm text-slate-500 p-6 border-t border-slate-800/50 no-print">
         <p class="font-bold text-violet-400">&copy; 2025 Navacite | All Rights Reserved</p>
         <p class="mt-4 text-xs text-slate-500">
@@ -413,7 +408,7 @@
                     text: "Watch closely! What kind of trick was that?",
                     choices: ["Body Trick", "Hand Trick", "Sound Trick", "Word Trick", "Face Trick", "Eye Trick"],
                 },
-                correctAnswer: "Face Trick"
+                correctAnswer: "Eye Trick"
             },
             {
                 videoId: "OxCLC8U30Q6",
@@ -421,7 +416,7 @@
                     text: "Did you spot the Speech Trick?",
                     choices: ["Body Trick", "Hand Trick", "Sound Trick", "Word Trick", "Face Trick", "Eye Trick"],
                 },
-                correctAnswer: "Face Trick"
+                correctAnswer: "Body Trick"
             },
             {
                 videoId: "RcjisepZ6yv",
@@ -429,7 +424,7 @@
                     text: "A good detective finds every clue. What did you see?",
                     choices: ["Body Trick", "Hand Trick", "Sound Trick", "Word Trick", "Face Trick", "Eye Trick"],
                 },
-                correctAnswer: "Face Trick"
+                correctAnswer: "Hand Trick"
             },
             {
                 videoId: "VffVYcqOH3I",
@@ -437,7 +432,7 @@
                     text: "Time to solve the case! What was the trick?",
                     choices: ["Body Trick", "Hand Trick", "Sound Trick", "Word Trick", "Face Trick", "Eye Trick"],
                 },
-                correctAnswer: "Face Trick"
+                correctAnswer: "Sound Trick"
             }
         ];
 
@@ -799,32 +794,66 @@
         }
 
         // --- Export & Gamification Logic ---
-        function exportMap() {
+        async function exportMap() {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF({ orientation: 'landscape', unit: 'px' });
+            
+            const studentName = document.getElementById('student').value || 'The Detective';
+            const clinicianName = document.getElementById('clinician').value || 'Lead Detective';
+            const date = dateInput.value;
+
+            // --- Add Header ---
+            doc.setTextColor('#5b21b6');
+            doc.setFontSize(24);
+            doc.text("Fearless Finder: Challenge Missions", doc.internal.pageSize.getWidth() / 2, 40, { align: 'center' });
+            
+            doc.setTextColor('#333333');
+            doc.setFontSize(10);
+            doc.text(`Student: ${studentName}`, 30, 65);
+            doc.text(`Clinician: ${clinicianName}`, doc.internal.pageSize.getWidth() / 2, 65, { align: 'center' });
+            doc.text(`Date: ${date}`, doc.internal.pageSize.getWidth() - 30, 65, { align: 'right' });
+
+            // --- Capture Map with Pins ---
+            const canvas = await html2canvas(challengeMapContainer);
+            const mapImageData = canvas.toDataURL('image/png');
+            const mapWidth = 300;
+            const mapHeight = (canvas.height / canvas.width) * mapWidth;
+            doc.addImage(mapImageData, 'PNG', 30, 85, mapWidth, mapHeight);
+
+            // --- Add Challenge Details ---
+            let yPos = 85;
+            pins.forEach((pin, index) => {
+                doc.setFontSize(12);
+                doc.setTextColor('#7c3aed');
+                doc.text(`Challenge ${index + 1}: ${pin.location}`, 350, yPos);
+                
+                doc.setFontSize(10);
+                doc.setTextColor('#333333');
+                const missionText = doc.splitTextToSize(pin.mission, 250); // wrap text
+                doc.text(missionText, 350, yPos + 15);
+                
+                yPos += doc.getTextDimensions(missionText).h + 35;
+            });
+            
+            // --- Add Sign-off Section ---
+            const badgeImg = 'https://raw.githubusercontent.com/navasdo/navacite/refs/heads/main/templates/fluency-tools/fearless-finder/static/visual/images/courage_badge.png';
+            doc.addImage(badgeImg, 'PNG', doc.internal.pageSize.getWidth() - 100, doc.internal.pageSize.getHeight() - 100, 60, 60);
+
+            doc.setDrawColor('#999999');
+            // SLP Signature
+            doc.line(30, doc.internal.pageSize.getHeight() - 50, 230, doc.internal.pageSize.getHeight() - 50);
+            doc.text("SLP Signature", 30, doc.internal.pageSize.getHeight() - 40);
+
+            // Dennis Signature
+            doc.line(30, doc.internal.pageSize.getHeight() - 20, 230, doc.internal.pageSize.getHeight() - 20);
+            doc.text("Dennis, Master Detective", 30, doc.internal.pageSize.getHeight() - 10);
+            
+            // --- Save PDF ---
+            doc.save(`Fearless-Finder-Map-${studentName.replace(/\s/g, '_')}.pdf`);
+
+            // --- Update Gamification ---
             badgesEarned++;
             updateGamificationUI();
-
-            const studentName = document.getElementById('student').value || 'The Detective';
-            const challengesHTML = pins.map((pin, i) => `
-                <div style="margin-bottom: 2rem; page-break-inside: avoid;">
-                    <h3 style="font-size: 1.25rem; font-weight: bold; color: #7c3aed;">Challenge ${i + 1}: ${pin.location}</h3>
-                    <p style="font-size: 1rem; margin-top: 0.5rem; border: 1px solid #ccc; padding: 1rem; border-radius: 8px;">${pin.mission}</p>
-                    <div style="margin-top: 1.5rem; border-top: 1px solid #999; padding-top: 0.5rem; height: 3rem;">
-                        <p style="font-style: italic;">Signature of person you talked to:</p>
-                    </div>
-                </div>
-            `).join('');
-            
-            const printableContent = `
-                <div style="font-family: sans-serif; padding: 2rem;">
-                    <h1 style="text-align: center; color: #5b21b6; font-size: 2.5rem;">Fearless Finder Challenge Map</h1>
-                    <h2 style="text-align: center; font-size: 1.5rem; color: #333; margin-top: 0.5rem;">Mission for: ${studentName}</h2>
-                    <div style="margin-top: 3rem;">${challengesHTML}</div>
-                    <p style="margin-top: 3rem; text-align: center; font-weight: bold;">Great job facing your challenges, Fearless Finder!</p>
-                </div>
-            `;
-            
-            document.getElementById('printable-map-area').innerHTML = printableContent;
-            window.print();
 
             // Reset pins for the next round
             pins = [];
@@ -835,7 +864,7 @@
         function updateGamificationUI() {
             badgeDisplay.innerHTML = '';
             for (let i = 0; i < badgesEarned; i++) {
-                badgeDisplay.innerHTML += `<span title="Courage Badge #${i+1}">🏆</span>`;
+                badgeDisplay.innerHTML += `<img src="https://raw.githubusercontent.com/navasdo/navacite/refs/heads/main/templates/fluency-tools/fearless-finder/static/visual/images/courage_badge.png" alt="Courage Badge" class="w-10 h-10" title="Courage Badge #${i+1}">`;
             }
             if (badgesEarned === 0) {
                  badgeDisplay.innerHTML = `<span class="text-slate-500 text-base">None yet!</span>`;
@@ -908,5 +937,4 @@
     </script>
 </body>
 </html>
-
 
