@@ -863,14 +863,14 @@
             doc.setFontSize(10);
 
             // SLP Signature
-            const slpSignY = doc.internal.pageSize.getHeight() - 60;
+            const slpSignY = doc.internal.pageSize.getHeight() - 70;
             doc.line(30, slpSignY, 230, slpSignY);
             doc.text("SLP Signature", 30, slpSignY + 10);
 
             // Dennis Signature
             const dennisSignY = doc.internal.pageSize.getHeight() - 30;
             const sigHeight = sigCanvas.height * 0.5;
-            doc.addImage(sigImageData, 'PNG', 35, dennisSignY - sigHeight, sigCanvas.width * 0.5, sigHeight);
+            doc.addImage(sigImageData, 'PNG', 35, dennisSignY - sigHeight - 5, sigCanvas.width * 0.5, sigHeight);
             doc.line(30, dennisSignY, 230, dennisSignY);
             doc.text("Dennis, Master Detective", 30, dennisSignY + 10);
             
