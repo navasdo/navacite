@@ -187,6 +187,18 @@ def fluency_tools():
         app.logger.error(f"CRITICAL: Could not find 'templates/fluency-tools/index.html'. Error: {e}")
         abort(500)
 
+# --- Dynamic Route for Individual Fluency-Tool Pages ---
+@app.route('/fluency-tools/<fluencyTools_slug>')
+@token_required
+def fluency_page(fluencyTools_slug):
+    app.logger.info(f"Request received for Fluency tools page: /fluency-tools/{fluencyTools_slug}")
+    try:
+        # This is the correct path, starting from inside the 'templates' folder.
+        return render_template(f'/fluency-tools/{fluencyTools_slug}/index.html')
+    except Exception as e:
+        app.logger.error(f"CRITICAL: Could not find template for '{fluencyTools_slug}'. Error: {e}")
+        abort(404)
+
 # --- SLP Tools ---
 @app.route('/slp-tools')
 @token_required
