@@ -1,62 +1,287 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <link rel="icon" type="image/x-icon" href="https://raw.githubusercontent.com/navasdo/navacite/main/images/navacite.ico">
-    <a href="https://navacite.com/library" class="absolute top-4 right-4 z-10 p-1 rounded-full bg-gray-700/50 hover:bg-gray-600/50 transition" title="Back to Homepage"><img src="https://raw.githubusercontent.com/navasdo/oliver/main/navacite/gems/Navacite-Main.png" alt="Navacite Homepage" class="w-10 h-10 rounded-full"/></a>
+<body>
+    <div id="termsModal" class="hidden fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4 modal-enter">
+        <div class="bg-slate-800 border border-violet-700/50 rounded-2xl shadow-2xl shadow-violet-500/10 p-6 sm:p-8 max-w-2xl w-full max-h-[90vh] overflow-y-auto modal-content-enter">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-3xl font-bold text-slate-100">Terms & Disclaimer</h2>
+                <button id="closeTermsModal" class="text-slate-400 hover:text-white transition-colors">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                </button>
+            </div>
+            <div class="space-y-6 text-slate-300 text-left text-sm">
+                <div>
+                    <h3 class="text-xl font-semibold text-violet-400 mb-2">Disclaimer</h3>
+                    <p>Navacite tools are provided “as is” and are not intended to diagnose, prevent, or cure any speech-language disorder. They are designed as supplemental engagement supports to be used by qualified professionals. Navacite makes no warranties, expressed or implied, and hereby disclaims and negates all other warranties, including without limitation, implied warranties of merchantability, fitness for a particular purpose, and non-infringement of intellectual property or other rights. Navacite does not warrant or make any representations concerning the accuracy, likely results, or reliability of the materials on this site or on any sites linked to it.</p>
+                </div>
+                <div>
+                    <h3 class="text-xl font-semibold text-violet-400 mb-2">Professional Responsibility</h3>
+                    <p>The responsibility for all clinical decisions, interpretations, and applications of Navacite tools rests solely with the licensed professional using them. Navacite assumes no liability for misuse, misapplication, or outcomes resulting from the use of these materials.</p>
+                </div>
+                <div>
+                    <h3 class="text-xl font-semibold text-violet-400 mb-2">Revisions and Errata</h3>
+                    <p>The materials appearing on Navacite’s web site may include technical, typographical, or content errors. Navacite does not warrant that any of the materials are accurate, complete, or current. Navacite may make changes to the materials contained on its site at any time without notice, but makes no commitment to update them.</p>
+                </div>
+                <div>
+                    <h3 class="text-xl font-semibold text-violet-400 mb-2">Terms of Use Modifications</h3>
+                    <p>Navacite may revise these terms of use at any time without notice. By using this site you agree to be bound by the then-current version of these Terms & Disclaimer provisions.</p>
+                </div>
+                <div>
+                    <h3 class="text-xl font-semibold text-violet-400 mb-2">Conflict of Interest Disclaimer</h3>
+                    <p>Navacite is an independent project created in a personal capacity by its author. It is not a product of, nor is it affiliated with, endorsed by, or representative of any school district, university, or employer. All intellectual property, design, and code on this site were developed as an independent effort, outside the scope of employment. Use of Navacite does not imply involvement, approval, or responsibility by any employer, past or present.</p>
+                </div>
+                <div>
+                    <h3 class="text-xl font-semibold text-violet-400 mb-2">Limitation of Liability</h3>
+                    <p>In no event shall Navacite or its creator be liable for any damages (including, without limitation, damages for loss of data, income, or clinical outcomes) arising out of the use or inability to use the materials on this site, even if Navacite has been notified of the possibility of such damages.</p>
+                </div>
+                <div>
+                    <h3 class="text-xl font-semibold text-violet-400 mb-2">Governing Law</h3>
+                    <p>Any claim relating to Navacite’s web site shall be governed by the laws of the State of Nebraska (USA), without regard to its conflict of law provisions.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+
+    <link rel="icon" type="image/x-icon" href="https://raw.githubusercontent.com/navasdo/navacite/refs/heads/main/templates/static/ico/navacite.ico">
+    <a href="/library" class="absolute top-4 right-4 z-10 p-1 rounded-full bg-gray-700/50 hover:bg-gray-600/50 transition" title="Back to Homepage"><img src="https://raw.githubusercontent.com/navasdo/navacite/refs/heads/main/templates/static/navacite-images/Navacite-Main.png" alt="Navacite Homepage" class="w-10 h-10 rounded-full"/></a>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Under Construction</title>
+    <title>Navacite Library: Fluency Tools</title>
     <!-- Direct link to Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        /* Custom glow effect for the image */
-        .glow {
-            filter: drop-shadow(0 0 15px rgba(167, 139, 250, 0.4)) drop-shadow(0 0 45px rgba(167, 139, 250, 0.2));
+        /* Smooth scrolling behavior */
+        html {
+            scroll-behavior: smooth;
         }
+        /* Custom styles for checkbox labels */
+        .filter-label {
+            transition: all 0.2s ease-in-out;
+            cursor: pointer;
+        }
+        .filter-label:hover {
+            background-color: #3e2e6b; /* A slightly lighter violet for hover */
+        }
+        input:checked + .filter-label {
+            background-color: #7c3aed; /* bg-violet-600 */
+            border-color: #a78bfa; /* border-violet-400 */
+            color: #ffffff;
+            transform: scale(1.05);
+            box-shadow: 0 0 15px rgba(167, 139, 250, 0.5);
+        }
+        /* Hide the actual checkbox */
+        input[type="checkbox"] {
+            display: none;
+        }
+        /* Style for the modal backdrop to animate in */
+.modal-enter {
+    opacity: 0;
+}
+.modal-enter-active {
+    opacity: 1;
+    transition: opacity 300ms;
+}
+/* Style for the modal content to animate in */
+.modal-content-enter {
+    opacity: 0;
+    transform: scale(0.95);
+}
+.modal-content-enter-active {
+    opacity: 1;
+    transform: scale(1);
+    transition: opacity 300ms, transform 300ms;
+}
+
     </style>
 </head>
-<body class="bg-[#0c0a18] min-h-screen font-sans text-slate-300 flex flex-col items-center justify-center p-4 sm:p-6 lg:p-8 overflow-x-hidden">
+<body class="bg-[#0c0a18] min-h-screen font-sans text-slate-300 flex flex-col items-center p-4 sm:p-6 lg:p-8 overflow-x-hidden">
 
-    <!-- Main Content -->
-    <main class="w-full max-w-2xl mx-auto flex flex-col items-center justify-center text-center">
-        <!-- Under Construction Image -->
-        <img 
-            src="https://raw.githubusercontent.com/navasdo/navacite/refs/heads/main/templates/static/updates/construction.png" 
-            alt="Under Construction" 
-            class="w-full max-w-sm sm:max-w-md md:max-w-lg mb-8 glow"
-            onerror="this.onerror=null; this.src='https://placehold.co/600x400/0c0a18/a78bfa?text=Image+Not+Found';"
-        >
+    <!-- Header Section -->
+    <header class="w-full max-w-5xl mx-auto my-8">
+        <div class="text-center pt-8">
+            <img src="https://raw.githubusercontent.com/navasdo/navacite/refs/heads/main/templates/static/navacite-images/navacite-fluency.png"
+                 alt="SLP Tools Visual"
+                 class="w-48 mx-auto mb-4 [filter:drop-shadow(0_0_15px_rgba(255,255,255,0.3))]"
+                 onerror="this.onerror=null; this.src='https://placehold.co/192x108/0c0a18/a78bfa?text=Navacite-Main';"
+            />
+            <h1 class="text-5xl md:text-6xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-violet-400 to-fuchsia-500">
+                Fluency Tools
+            </h1>
+            <p class="text-md md:text-lg text-slate-400 italic max-w-3xl mx-auto mt-2">
+                "Quote Here" - Whoever Said It
+            </p>
+        </div>
+    </header>
 
-        <!-- Randomized Quote -->
-        <div id="quote-container" class="max-w-lg">
-             <p id="quote-display" class="text-md md:text-lg text-slate-400 italic"></p>
+    <!-- Main Content - Tool Library Section -->
+    <main class="w-full max-w-5xl mx-auto flex-grow">
+        
+        <!-- ===== Filter Section ===== -->
+        <div id="filter-container" class="mb-12 p-6 bg-slate-900/40 rounded-2xl border border-violet-900/80">
+            <p class="text-center text-slate-400 mb-6">Select the area you would like to target.</p>
+            <div>
+                <h3 class="text-xl font-bold text-violet-400 mb-4 text-center">Tool Focus</h3>
+                <div id="target-area-filters" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
+                    <!-- Target Area checkboxes will be inserted here by JavaScript -->
+                </div>
+            </div>
+            <div class="text-center mt-6">
+                <button id="reset-filters" class="bg-slate-600 hover:bg-slate-700 text-white font-bold py-2 px-6 rounded-lg transition-colors duration-300">Reset Filters</button>
+            </div>
+        </div>
+
+        <!-- ===== Tool Buttons Section ===== -->
+        <div id="tool-grid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 transition-all duration-500">
+            <!-- Tool buttons will be injected here by JavaScript -->
         </div>
     </main>
 
+    
+
     <script>
         document.addEventListener('DOMContentLoaded', () => {
-            const quotes = [
-                { text: "The longer you wait for something, the more you appreciate it when it arrives.", author: "Unknown" },
-                { text: "The idea of waiting for something makes it more exciting.", author: "Andy Warhol" },
-                { text: "Beautiful things take time but the wait is the best part.", author: "Kian Sabik" },
-                { text: "Our willingness to wait reveals the value we place on what we're waiting for.", author: "Charles Stanley" },
-                { text: "The two most powerful warriors are patience and time.", author: "Leo Tolstoy" },
-                { text: "Adopt the pace of nature: her secret is patience.", author: "Unknown" },
-                { text: "Patience is bitter, but its fruit is sweet.", author: "Jean-Jacques Rousseau" },
-                { text: "He that can have patience can have what he will.", author: "Benjamin Franklin" },
-                { text: "Rivers know this: there is no hurry. We shall get there some day.", author: "Unknown" }
+            
+            const fluencyTools = [
+                { name: 'Fearless Finder', slug: 'fearless-finder', tags: ['Avoidance Reduction'] },
+                { name: 'Placeholder Tool 1', slug: 'placeholder-tool-1', tags: ['Place Holder1'] },
+                { name: 'Placeholder Tool 2', slug: 'placeholder-tool-2', tags: ['Place Holder2'] },
+                { name: 'Placeholder Tool 3', slug: 'placeholder-tool-3', tags: ['Place Holder3'] },
+                { name: 'Placeholder Tool 4', slug: 'placeholder-tool-4', tags: ['Place Holder4'] },
+                { name: 'Placeholder Tool 5', slug: 'placeholder-tool-5', tags: ['Place Holder5'] },
+                { name: 'Placeholder Tool 6', slug: 'placeholder-tool-6', tags: ['Place Holder6'] }
             ];
 
-            const quoteDisplay = document.getElementById('quote-display');
-            
-            // Select a random quote from the array
-            const randomIndex = Math.floor(Math.random() * quotes.length);
-            const randomQuote = quotes[randomIndex];
+            const targetAreas = [
+                'Avoidance Reduction',
+                'Place Holder1',
+                'Place Holder2',
+                'Place Holder3',
+                'Place Holder4',
+                'Place Holder5',
+                'Place Holder6'
+            ];
 
-            // Display the quote and author
-            quoteDisplay.innerHTML = `"${randomQuote.text}" <br><span class="text-slate-500 not-italic">— ${randomQuote.author}</span>`;
+            const toolGrid = document.getElementById('tool-grid');
+            const targetAreaFilters = document.getElementById('target-area-filters');
+            const resetButton = document.getElementById('reset-filters');
+
+            // --- Create Filter Checkboxes ---
+            const createCheckbox = (value) => {
+                const cleanValue = value.replace(/[\s/&]+/g, '-').toLowerCase();
+                return `
+                    <div class="relative">
+                        <input type="checkbox" id="tag-${cleanValue}" name="targetArea" value="${value}">
+                        <label for="tag-${cleanValue}" class="filter-label block w-full text-center p-2.5 rounded-md border border-slate-700 bg-slate-800/60 text-slate-300 font-semibold text-sm">
+                            ${value}
+                        </label>
+                    </div>
+                `;
+            };
+
+            targetAreaFilters.innerHTML = targetAreas.map(area => createCheckbox(area)).join('');
+
+            // --- Create Tool Buttons ---
+            const createToolButton = (tool) => {
+                const button = document.createElement('a');
+                // You will need a new dynamic route in Flask for '/slp-tools/<slug>'
+                button.href = `/slp-tools/${tool.slug}`; 
+                button.className = "group relative flex flex-col items-center justify-center p-6 text-center bg-slate-900/40 rounded-2xl border border-violet-900/80 transition-all duration-300 ease-in-out hover:border-violet-600/80 hover:scale-105 hover:shadow-[0_0_25px_-5px_rgba(167,139,250,0.4)]";
+                
+                // Add tags to a data attribute for filtering
+                button.dataset.tags = tool.tags.join('|');
+                
+                button.innerHTML = `
+                    <h2 class="text-xl font-bold text-slate-200 group-hover:text-violet-400 transition-colors duration-300">${tool.name.replace('_', ' ')}</h2>
+                    <p class="text-slate-500 mt-2 text-xs">${tool.tags.join(', ') || 'General Tool'}</p>
+                `;
+                return button;
+            };
+
+            const toolButtons = fluencyTools.map(createToolButton);
+            toolButtons.forEach(button => toolGrid.appendChild(button));
+
+
+            // --- Filter Logic ---
+            const applyFilter = () => {
+                const selectedTags = Array.from(document.querySelectorAll('input[name="targetArea"]:checked')).map(cb => cb.value);
+
+                toolButtons.forEach(button => {
+                    if (selectedTags.length === 0) {
+                        button.style.display = 'flex'; // Show all if no filter is selected
+                        return;
+                    }
+
+                    const buttonTags = button.dataset.tags.split('|');
+                    const isMatch = selectedTags.some(selectedTag => buttonTags.includes(selectedTag));
+
+                    button.style.display = isMatch ? 'flex' : 'none';
+                });
+            };
+            
+            const resetAllFilters = () => {
+                document.querySelectorAll('input[type="checkbox"]:checked').forEach(cb => {
+                    cb.checked = false;
+                });
+                applyFilter();
+            };
+
+            targetAreaFilters.addEventListener('change', applyFilter);
+            resetButton.addEventListener('click', resetAllFilters);
         });
     </script>
+    <footer class="w-full max-w-3xl mx-auto mt-24 text-center text-sm text-slate-500 p-6 border-t border-slate-800/50">
+    <p class="font-bold text-violet-400">
+        &copy; 2025 Navacite | All Rights Reserved
+    </p>
+    <p class="mt-4 text-xs text-slate-500">
+        Navacite tools are provided ‘as is’ and are not intended to diagnose. Use requires professional judgment. <br><br>
+        <a href="#" id="openTermsModal" class="underline hover:text-violet-400 transition-colors">Terms & Disclaimer</a>
+    </p>
+</footer>
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    // --- Terms & Disclaimer Modal Logic ---
+    const termsModal = document.getElementById('termsModal');
+    const openTermsLink = document.getElementById('openTermsModal');
+    const closeTermsButton = document.getElementById('closeTermsModal');
+
+    function showTermsModal(event) {
+        event.preventDefault(); 
+        termsModal.classList.remove('hidden');
+        setTimeout(() => {
+            termsModal.classList.add('modal-enter-active');
+            termsModal.querySelector('.modal-content-enter').classList.add('modal-content-enter-active');
+        }, 10);
+    }
+
+    function hideTermsModal() {
+        termsModal.classList.add('hidden');
+        termsModal.classList.remove('modal-enter-active');
+        termsModal.querySelector('.modal-content-enter').classList.remove('modal-content-enter-active');
+    }
+
+    if (openTermsLink) {
+        openTermsLink.addEventListener('click', showTermsModal);
+    }
+    if (closeTermsButton) {
+        closeTermsButton.addEventListener('click', hideTermsModal);
+    }
+    if (termsModal) {
+        termsModal.addEventListener('click', (event) => {
+            if (event.target === termsModal) {
+                hideTermsModal();
+            }
+        });
+    }
+    // --- You can add other page-specific JavaScript inside this listener ---
+});
+</script>
+
+
 </body>
 </html>
-
