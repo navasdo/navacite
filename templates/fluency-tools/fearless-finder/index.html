@@ -21,17 +21,17 @@
             transition: transform 0.2s ease-in-out; /* Keep transform transition on group */
             cursor: pointer;
         }
-        .map-location rect {
-            fill: rgba(124, 58, 237, 0.4); /* Base fill color */
+        .map-location .map-location-bg {
+            fill: rgba(124, 58, 237, 0.2); /* Base fill color */
             transition: fill 0.2s ease-in-out; /* Transition for fill on the rect */
             stroke: #a78bfa; /* violet-400 */
             stroke-width: 2;
         }
         .map-location:hover {
-            transform: scale(1.03);
+            transform: scale(1.05);
         }
-        .map-location:hover rect {
-             fill: rgba(167, 139, 250, 0.6); /* Hover fill color */
+        .map-location:hover .map-location-bg {
+             fill: rgba(167, 139, 250, 0.4); /* Hover fill color */
         }
         .trick-btn {
             transition: all 0.2s ease-in-out;
@@ -160,6 +160,15 @@
         </div>
     </div>
     
+    <!-- No Clues Modal -->
+    <div id="no-clues-modal" class="hidden fixed inset-0 z-[80] flex items-center justify-center p-4 bg-black/60 backdrop-filter backdrop-blur-sm modal-enter">
+        <div class="bg-slate-800 rounded-lg p-6 text-center shadow-lg border border-violet-700 modal-content-enter w-full max-w-sm">
+            <img src="https://raw.githubusercontent.com/navasdo/navacite/refs/heads/main/templates/fluency-tools/fearless-finder/static/visual/images/tumbleweed.png" alt="Tumbleweed" class="w-24 h-24 mx-auto mb-4">
+            <p class="text-white mb-4">You don't see anyone around. Looks like there are no more clues here, Detective. Try another location!</p>
+            <button id="no-clues-ok-btn" class="bg-violet-600 hover:bg-violet-700 text-white font-bold py-2 px-8 rounded-lg">OK</button>
+        </div>
+    </div>
+    
     <!-- Challenge Map Unlocked Modal -->
     <div id="challenge-overlay" class="hidden fixed inset-0 z-50 bg-slate-900/80 backdrop-blur-sm flex items-center justify-center modal-enter">
         <div class="text-center modal-content-enter">
@@ -225,30 +234,33 @@
                     <div id="progress-bar" class="bg-violet-600 h-4 rounded-full transition-all duration-500" style="width: 0%"></div>
                 </div>
                 <div id="school-map-container" class="bg-slate-800/50 p-4 rounded-lg">
-                    <svg viewBox="0 0 800 400" class="w-full h-auto">
-                        <rect width="800" height="400" fill="#2E3A4D" rx="10"/>
-                        <text x="400" y="30" font-size="20" fill="#a78bfa" text-anchor="middle" font-weight="bold">Detective Academy</text>
-                        <g class="map-location" data-location="Gym">
-                            <rect x="50" y="50" width="200" height="120" rx="10"/>
-                            <text x="150" y="115" font-size="20" fill="white" text-anchor="middle" class="pointer-events-none">Gym</text>
-                        </g>
-                        <g class="map-location" data-location="Theatre">
-                             <rect x="300" y="50" width="200" height="120" rx="10"/>
-                             <text x="400" y="115" font-size="20" fill="white" text-anchor="middle" class="pointer-events-none">Theatre</text>
-                        </g>
-                        <g class="map-location" data-location="Playground">
-                             <rect x="550" y="50" width="200" height="120" rx="10"/>
-                             <text x="650" y="115" font-size="20" fill="white" text-anchor="middle" class="pointer-events-none">Playground</text>
-                        </g>
-                        <g class="map-location" data-location="Cafeteria">
-                             <rect x="50" y="230" width="325" height="120" rx="10"/>
-                             <text x="212.5" y="295" font-size="20" fill="white" text-anchor="middle" class="pointer-events-none">Cafeteria</text>
-                        </g>
-                        <g class="map-location" data-location="Library">
-                             <rect x="425" y="230" width="325" height="120" rx="10"/>
-                             <text x="587.5" y="295" font-size="20" fill="white" text-anchor="middle" class="pointer-events-none">Library</text>
-                        </g>
-                    </svg>
+                    <div class="text-center text-xl font-bold text-violet-400 mb-4">Silverpeak Academy</div>
+                    <div class="grid grid-cols-3 gap-4">
+                        <div class="map-location flex flex-col items-center justify-center p-4 rounded-lg bg-slate-900/50 border border-violet-800/50" data-location="Gym">
+                            <img src="https://raw.githubusercontent.com/navasdo/navacite/refs/heads/main/templates/fluency-tools/fearless-finder/static/visual/images/gym.png" alt="Gym Icon" class="h-20 w-20 mb-2 pointer-events-none">
+                            <span class="font-semibold text-slate-300 pointer-events-none">Gym</span>
+                        </div>
+                        <div class="map-location flex flex-col items-center justify-center p-4 rounded-lg bg-slate-900/50 border border-violet-800/50" data-location="Auditorium">
+                            <img src="https://raw.githubusercontent.com/navasdo/navacite/refs/heads/main/templates/fluency-tools/fearless-finder/static/visual/images/auditorium.png" alt="Auditorium Icon" class="h-20 w-20 mb-2 pointer-events-none">
+                            <span class="font-semibold text-slate-300 pointer-events-none">Auditorium</span>
+                        </div>
+                        <div class="map-location flex flex-col items-center justify-center p-4 rounded-lg bg-slate-900/50 border border-violet-800/50" data-location="Playground">
+                            <img src="https://raw.githubusercontent.com/navasdo/navacite/refs/heads/main/templates/fluency-tools/fearless-finder/static/visual/images/playground.png" alt="Playground Icon" class="h-20 w-20 mb-2 pointer-events-none">
+                            <span class="font-semibold text-slate-300 pointer-events-none">Playground</span>
+                        </div>
+                        <div class="map-location flex flex-col items-center justify-center p-4 rounded-lg bg-slate-900/50 border border-violet-800/50" data-location="Cafeteria">
+                            <img src="https://raw.githubusercontent.com/navasdo/navacite/refs/heads/main/templates/fluency-tools/fearless-finder/static/visual/images/cafeteria.png" alt="Cafeteria Icon" class="h-20 w-20 mb-2 pointer-events-none">
+                            <span class="font-semibold text-slate-300 pointer-events-none">Cafeteria</span>
+                        </div>
+                        <div class="map-location flex flex-col items-center justify-center p-4 rounded-lg bg-slate-900/50 border border-violet-800/50" data-location="Classroom">
+                            <img src="https://raw.githubusercontent.com/navasdo/navacite/refs/heads/main/templates/fluency-tools/fearless-finder/static/visual/images/classroom.png" alt="Classroom Icon" class="h-20 w-20 mb-2 pointer-events-none">
+                            <span class="font-semibold text-slate-300 pointer-events-none">Classroom</span>
+                        </div>
+                        <div class="map-location flex flex-col items-center justify-center p-4 rounded-lg bg-slate-900/50 border border-violet-800/50" data-location="Library">
+                            <img src="https://raw.githubusercontent.com/navasdo/navacite/refs/heads/main/templates/fluency-tools/fearless-finder/static/visual/images/library.png" alt="Library Icon" class="h-20 w-20 mb-2 pointer-events-none">
+                            <span class="font-semibold text-slate-300 pointer-events-none">Library</span>
+                        </div>
+                    </div>
                 </div>
             </section>
 
@@ -402,44 +414,59 @@
         // --- Video Data Block ---
         const videoData = [
             {
-                videoId: "cYzF014hQ26",
+                videoId: "VffVYcqOH3I",
+                location: "Gym",
                 question: {
                     text: "What type of Speech Trick did you see?",
                     choices: ["Body Trick", "Hand Trick", "Sound Trick", "Word Trick", "Face Trick", "Eye Trick"],
                 },
-                correctAnswer: "Face Trick"
+                correctAnswer: "Eye Trick"
             },
             {
-                videoId: "z3cyyK9P2CD",
+                videoId: "4zKCeDB5sFx_library_word1",
+                location: "Library",
                 question: {
                     text: "Watch closely! What kind of trick was that?",
                     choices: ["Body Trick", "Hand Trick", "Sound Trick", "Word Trick", "Face Trick", "Eye Trick"],
                 },
-                correctAnswer: "Face Trick"
+                correctAnswer: "Word Trick"
             },
             {
-                videoId: "OxCLC8U30Q6",
+                videoId: "OxCLC8U30Q6_classoom_eye1",
+                location: "Classroom",
                 question: {
                     text: "Did you spot the Speech Trick?",
                     choices: ["Body Trick", "Hand Trick", "Sound Trick", "Word Trick", "Face Trick", "Eye Trick"],
                 },
-                correctAnswer: "Face Trick"
+                correctAnswer: "Eye Trick"
             },
             {
-                videoId: "RcjisepZ6yv",
+                videoId: "RcjisepZ6yv_playground_eye1",
+                location: "Playground",
                 question: {
                     text: "A good detective finds every clue. What did you see?",
                     choices: ["Body Trick", "Hand Trick", "Sound Trick", "Word Trick", "Face Trick", "Eye Trick"],
                 },
-                correctAnswer: "Face Trick"
+                correctAnswer: "Eye Trick"
             },
             {
-                videoId: "VffVYcqOH3I",
+                videoId: "FWW9IoLXH5G_cafeteria_sound1",
+                location: "Cafeteria",
                 question: {
                     text: "Time to solve the case! What was the trick?",
                     choices: ["Body Trick", "Hand Trick", "Sound Trick", "Word Trick", "Face Trick", "Eye Trick"],
                 },
-                correctAnswer: "Face Trick"
+                correctAnswer: "Sound Trick"
+            },
+            // Add a video for the Auditorium
+            {
+                videoId: "VffVYcqOH3I",
+                location: "Auditorium",
+                question: {
+                    text: "What trick is being used on stage?",
+                    choices: ["Body Trick", "Hand Trick", "Sound Trick", "Word Trick", "Face Trick", "Eye Trick"],
+                },
+                correctAnswer: "Eye Trick"
             }
         ];
 
@@ -447,7 +474,6 @@
         const dateInput = document.getElementById('date');
         const tricksCounter = document.getElementById('tricks-found-counter');
         const progressBar = document.getElementById('progress-bar');
-        const mapLocations = document.querySelectorAll('.map-location');
         const videoModal = document.getElementById('video-modal');
         const videoModalQuestion = document.getElementById('video-modal-question');
         const trickVideo = document.getElementById('trick-video');
@@ -488,6 +514,8 @@
         const openPrivacyBtn = document.getElementById('openPrivacyModal');
         const closePrivacyBtn = document.getElementById('closePrivacyModal');
         const privacyModal = document.getElementById('privacyModal');
+        const noCluesModal = document.getElementById('no-clues-modal');
+        const noCluesOkBtn = document.getElementById('no-clues-ok-btn');
 
         // --- Tutorial Data ---
         const tutorialSteps = {
@@ -556,7 +584,13 @@
         function addEventListeners() {
             // Main Actions
             beginBtn.addEventListener('click', handleBeginInvestigation);
-            mapLocations.forEach(loc => loc.addEventListener('click', handleLocationClick));
+            
+            schoolMapContainer.addEventListener('click', (e) => {
+                const locationDiv = e.target.closest('.map-location');
+                if (locationDiv) {
+                    handleLocationClick(locationDiv.dataset.location);
+                }
+            });
             
             // Speech Detective Modal
             trickSelectionContainer.addEventListener('click', handleTrickSelection);
@@ -586,6 +620,7 @@
             // Generic Modals
             alertOkBtn.addEventListener('click', () => closeModal(alertModal));
             closeCertBtn.addEventListener('click', () => closeModal(certificateModal));
+            noCluesOkBtn.addEventListener('click', () => closeModal(noCluesModal));
 
             // Terms & Privacy Modals
             openTermsBtn.addEventListener('click', (e) => { e.preventDefault(); openModal(termsModal); });
@@ -658,24 +693,30 @@
         }
         
         // --- Speech Detective Logic ---
-        function handleLocationClick() {
+        function handleLocationClick(location) {
             if (tricksFound >= TRICKS_TO_FIND) {
                 showCustomAlert("You've already found all the tricks! Time for the Challenge Map.");
                 return;
             }
-            openVideoModal();
+            openVideoModal(location);
         }
         
-        function openVideoModal() {
-            if (availableVideos.length === 0) {
-                showCustomAlert("Great work, Detective! You've seen all the available clues. Click 'Begin Investigation' to start a new round.");
+        function openVideoModal(location) {
+            const locationSpecificPool = availableVideos.filter(v => v.location === location);
+
+            if (locationSpecificPool.length === 0) {
+                openModal(noCluesModal);
                 return;
             }
 
-            const randomIndex = Math.floor(Math.random() * availableVideos.length);
-            const videoInfo = availableVideos[randomIndex];
+            const randomIndex = Math.floor(Math.random() * locationSpecificPool.length);
+            const videoInfo = locationSpecificPool[randomIndex];
             
-            availableVideos.splice(randomIndex, 1);
+            // Remove the video from the main pool so it can't be selected again this session
+            const mainIndex = availableVideos.findIndex(v => v.videoId === videoInfo.videoId);
+            if(mainIndex > -1) {
+                availableVideos.splice(mainIndex, 1);
+            }
             
             currentCorrectTrick = videoInfo.correctAnswer;
             
@@ -850,7 +891,7 @@
             doc.addImage(badgeImgUrl, 'PNG', doc.internal.pageSize.getWidth() - 250, doc.internal.pageSize.getHeight() - 250, 225, 225);
             
             const sigCanvas = await html2canvas(document.getElementById('signature-capture'), { backgroundColor: null });
-            const sigImageData = sigCanvas.toDataURL('image/png', 1.0);
+            const sigImageData = sigCanvas.toDataURL('image/png', .5);
 
             doc.setFontSize(9);
             doc.setFont('Helvetica', 'bold');
