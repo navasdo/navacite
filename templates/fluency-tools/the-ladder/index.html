@@ -1,0 +1,711 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Ladder</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/2.3.6/purify.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Lexend:wght@400;600&family=Comic+Neue:wght@700&family=Caveat:wght@700&display=swap" rel="stylesheet">
+    <style>
+        html { scroll-behavior: smooth; }
+        body { font-family: 'Inter', sans-serif; }
+        
+        /* Custom Fonts for Unlocks */
+        .font-lexend { font-family: 'Lexend', sans-serif; }
+        .font-comic-neue { font-family: 'Comic Neue', cursive; }
+        .font-caveat { font-family: 'Caveat', cursive; }
+
+        .ladder-container {
+            position: relative;
+            width: 150px;
+            height: 400px;
+            margin: 0 auto;
+        }
+
+        .ladder-bg {
+            background-size: cover;
+            background-position: center;
+        }
+
+        .ladder-avatar {
+            position: absolute;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 50px;
+            height: 50px;
+            transition: bottom 0.8s ease-in-out;
+            z-index: 10;
+        }
+
+        .rung-item {
+            cursor: pointer;
+            transition: all 0.2s ease-in-out;
+            border-left: 15px solid #6b7280; /* gray-500 */
+        }
+        
+        .rung-item:hover {
+            transform: scale(1.05);
+            background-color: #374151; /* gray-700 */
+        }
+
+        .rung-visual {
+            background-color: #6b7280; /* gray-500 */
+            position: absolute;
+            width: calc(100% - 30px);
+            left: 15px;
+            transition: background-color 0.2s ease-in-out;
+        }
+        
+        .achievement-item.locked {
+            opacity: 0.4;
+            cursor: not-allowed;
+        }
+        .achievement-item.active {
+            box-shadow: 0 0 0 3px rgba(167, 139, 250, 0.8);
+            transform: scale(1.05);
+        }
+
+        /* Modal Animation Styles */
+        .modal-enter { opacity: 0; }
+        .modal-enter-active { opacity: 1; transition: opacity 300ms; }
+        .modal-content-enter { opacity: 0; transform: scale(0.95); }
+        .modal-content-enter-active { opacity: 1; transform: scale(1); transition: opacity 300ms, transform 300ms; }
+        .modal-exit { opacity: 0; transition: opacity 300ms; }
+        .modal-content-exit { opacity: 0; transform: scale(0.95); transition: opacity 300ms, transform 300ms; }
+
+        @media print {
+            body * { visibility: hidden; }
+            #pdf-export-content, #pdf-export-content * { visibility: visible; }
+            #pdf-export-content { position: absolute; left: 0; top: 0; width: 100%;}
+            .no-print { display: none; }
+        }
+        .toast-show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    </style>
+</head>
+<body class="bg-slate-900 min-h-screen font-sans text-slate-300 flex flex-col items-center p-4 sm:p-6 lg:p-8 overflow-x-hidden">
+
+    <!-- Hidden container for PDF export content -->
+    <div id="pdf-export-content" class="absolute -left-full bg-white text-black p-8" style="width: 595px;"></div>
+
+    <!-- Main App Container -->
+    <div class="w-full max-w-5xl mx-auto flex-grow">
+        <header class="w-full mx-auto my-8 text-center">
+            <img src="https://raw.githubusercontent.com/navasdo/navacite/refs/heads/main/templates/static/navacite-images/ladder.png" alt="The Ladder Logo" class="w-48 mx-auto mb-4" style="filter: drop-shadow(0 0 15px rgba(167, 139, 250, 0.4))">
+            <h1 class="text-5xl md:text-6xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-violet-400 to-fuchsia-500">
+                The Ladder
+            </h1>
+            <p class="text-md md:text-lg text-slate-400 italic max-w-4xl mx-auto mt-2">
+                The Ladder provides adolescents with a structured and empowering tool to systematically work through a personal desensitization hierarchy. Users build their own 'ladder' by adding and ranking real-world speaking situations ('rungs'), each with a unique fear rating and a self-defined success metric. Before attempting a challenge, a guided journal prompts reflection on the personal importance of the goal. After the attempt, a second entry encourages debriefing on the thoughts, feelings, and actual outcome, rewarding the act of participation. Progress is visualized by an avatar climbing the ladder, and points are awarded for effort—attempting rungs and completing journals—not for fluency. These points unlock fun customizations, reinforcing consistent bravery and transforming therapy into a personalized journey of growth. This approach empowers users to face challenges incrementally, redefines success as courage, and helps them build lasting communication confidence.
+            </p>
+        </header>
+
+        <main class="space-y-12">
+            <!-- Setup Section -->
+            <section id="setup-section" class="p-6 bg-slate-800/50 rounded-2xl border border-violet-900/80">
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+                    <div>
+                        <label for="date" class="text-slate-400">Date</label>
+                        <input id="date" type="text" readonly class="w-full mt-2 p-3 rounded-md bg-slate-700/60 text-slate-300 border border-slate-600">
+                    </div>
+                    <div>
+                        <label for="clinician" class="text-slate-400">Clinician Name</label>
+                        <input id="clinician" type="text" class="w-full mt-2 p-3 rounded-md bg-slate-700/60 text-slate-300 border border-slate-600 focus:outline-none focus:ring-2 focus:ring-violet-500" placeholder="Enter your name...">
+                    </div>
+                    <div>
+                        <label for="student" class="text-slate-400">Student Name</label>
+                        <input id="student" type="text" class="w-full mt-2 p-3 rounded-md bg-slate-700/60 text-slate-300 border border-slate-600 focus:outline-none focus:ring-2 focus:ring-violet-500" placeholder="For printable report">
+                    </div>
+                     <div>
+                        <label for="points" class="text-slate-400">Total Points</label>
+                        <input id="points" type="number" min="0" value="0" class="w-full mt-2 p-3 rounded-md bg-slate-700/60 text-slate-300 border border-slate-600 focus:outline-none focus:ring-2 focus:ring-violet-500" placeholder="Enter points...">
+                    </div>
+                </div>
+            </section>
+
+            <!-- Gamification Section -->
+            <section id="gamification-section" class="p-6 bg-slate-800/50 rounded-2xl border border-violet-900/80">
+                <h3 class="text-2xl font-bold text-violet-400 mb-6 text-center">Achievements Unlocked</h3>
+                <div id="achievements-container" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 text-center">
+                    <!-- Achievements will be populated by JS -->
+                </div>
+            </section>
+
+            <!-- The Ladder Module -->
+            <section id="ladder-module" class="p-6 bg-slate-800/50 rounded-2xl border border-violet-900/80">
+                <h3 class="text-2xl font-bold text-violet-400 mb-4 text-center">Build Your Ladder</h3>
+                <div class="flex flex-col md:flex-row gap-8 items-start">
+                    <!-- Ladder Visual -->
+                    <div id="ladder-visual-container" class="w-full md:w-1/3 p-4 rounded-lg ladder-bg">
+                        <div class="ladder-container">
+                            <div class="ladder-pole absolute top-0 bottom-0 left-0 w-[15px] bg-gray-500 rounded-t-md transition-colors duration-200"></div>
+                            <div class="ladder-pole absolute top-0 bottom-0 right-0 w-[15px] bg-gray-500 rounded-t-md transition-colors duration-200"></div>
+                            <img id="ladder-avatar" src="https://img.icons8.com/ios-filled/100/a78bfa/climbing.png" alt="Avatar" class="ladder-avatar" style="bottom: -25px;">
+                            <div id="rungs-visual-container" class="absolute inset-0">
+                                <!-- Rung visuals will be generated here -->
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Rung Details -->
+                    <div class="w-full md:w-2/3">
+                        <p class="text-center text-slate-400 mb-4">Add up to 4 speaking situations to your ladder. Click a rung to edit or delete it.</p>
+                        <div id="rungs-list-container" class="space-y-4">
+                            <!-- Rung list items will be generated here -->
+                        </div>
+                        <div class="text-center mt-6">
+                            <button id="add-rung-btn" class="bg-violet-600 hover:bg-violet-700 text-white font-bold py-3 px-8 rounded-lg transition-all duration-300">
+                                Add a Rung
+                            </button>
+                             <button id="export-pdf-btn" class="bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-8 rounded-lg transition-all duration-300 ml-4 disabled:bg-slate-600 disabled:cursor-not-allowed" disabled>
+                                Export PDF
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- Rung Editor Modal -->
+    <div id="rung-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-filter backdrop-blur-sm modal-enter">
+         <div class="bg-slate-800 w-full max-w-lg rounded-2xl border border-violet-700 p-6 relative modal-content-enter">
+            <h3 id="rung-modal-title" class="text-2xl font-bold text-center text-violet-400 mb-6">Add a New Rung</h3>
+            <div class="space-y-4">
+                <div>
+                    <label for="rung-situation-preset" class="text-slate-400">Speaking Situation (Select or type your own)</label>
+                    <select id="rung-situation-preset" class="w-full mt-2 p-3 rounded-md bg-slate-700 text-slate-300 border border-slate-600">
+                        <option value="">-- Select a preset challenge --</option>
+                        <option value="Maintain eye contact during a stutter">Maintain eye contact during a stutter</option>
+                        <option value="Say exactly what I want without switching words">Say exactly what I want without switching words</option>
+                        <option value="Self-disclose: 'Sometimes I stutter'">Self-disclose: 'Sometimes I stutter'</option>
+                        <option value="Raise my hand and ask a question in class">Raise my hand and ask a question in class</option>
+                        <option value="Order my own food at a restaurant">Order my own food at a restaurant</option>
+                        <option value="Call a store to ask a question">Call a store to ask a question</option>
+                        <option value="Start a conversation with a new person">Start a conversation with a new person</option>
+                    </select>
+                    <input id="rung-situation-custom" type="text" class="w-full mt-2 p-3 rounded-md bg-slate-700 text-slate-300 border border-slate-600" placeholder="Or type your own situation here...">
+                </div>
+                 <div>
+                    <label for="rung-fear-rating" class="text-slate-400">Fear Rating (1 = Easy, 10 = Terrifying)</label>
+                    <input id="rung-fear-rating" type="range" min="1" max="10" value="5" class="w-full mt-2">
+                    <div class="text-center font-bold text-xl text-white" id="fear-rating-display">5</div>
+                </div>
+                <div>
+                    <label for="rung-success-metric" class="text-slate-400">My Personal Success Metric</label>
+                    <input id="rung-success-metric" type="text" class="w-full mt-2 p-3 rounded-md bg-slate-700 text-slate-300 border border-slate-600" placeholder="e.g., I will not switch words">
+                </div>
+            </div>
+            <div class="flex justify-end gap-4 mt-6">
+                <button id="delete-rung-btn" class="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-6 rounded-lg transition hidden">Delete</button>
+                <button id="cancel-rung-btn" class="bg-slate-600 hover:bg-slate-700 text-white font-bold py-2 px-6 rounded-lg transition">Cancel</button>
+                <button id="save-rung-btn" class="bg-violet-600 hover:bg-violet-700 text-white font-bold py-2 px-6 rounded-lg transition">Save Rung</button>
+            </div>
+         </div>
+    </div>
+
+    <!-- Pre-Attempt Journal Modal -->
+    <div id="journal-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-filter backdrop-blur-sm modal-enter">
+         <div class="bg-slate-800 w-full max-w-lg rounded-2xl border border-violet-700 p-6 relative modal-content-enter">
+            <h3 class="text-2xl font-bold text-center text-violet-400 mb-2">Pre-Challenge Journal</h3>
+            <p id="journal-prompt" class="text-center text-slate-400 mb-6"></p>
+            <textarea id="journal-entry" rows="5" class="w-full mt-2 p-3 rounded-md bg-slate-700 text-slate-300 border border-slate-600" placeholder="Your thoughts here..."></textarea>
+            <div class="flex justify-end gap-4 mt-6">
+                <button id="save-journal-btn" class="bg-violet-600 hover:bg-violet-700 text-white font-bold py-2 px-6 rounded-lg transition">Save Journal & Add to Ladder</button>
+            </div>
+         </div>
+    </div>
+
+    <!-- Notification Toast -->
+    <div id="notification-toast" class="fixed bottom-5 right-5 bg-red-500 text-white py-3 px-5 rounded-lg shadow-lg text-base transition-all duration-300 opacity-0 transform translate-y-4 z-[100]" style="pointer-events: none;">
+        Message
+    </div>
+
+    <script>
+    document.addEventListener('DOMContentLoaded', () => {
+        // --- State Management ---
+        let ladderRungs = [];
+        let currentEditingRung = null; // Can be a temporary object or an ID
+        let playerPoints = 0;
+        let activeAchievements = {}; // Object to store active achievement for each category
+        
+        const MAX_RUNGS = 4;
+
+        // --- DOM Element References ---
+        const dateInput = document.getElementById('date');
+        const pointsInput = document.getElementById('points');
+        const achievementsContainer = document.getElementById('achievements-container');
+        const ladderVisualContainer = document.getElementById('ladder-visual-container');
+        const rungsVisualContainer = document.getElementById('rungs-visual-container');
+        const rungsListContainer = document.getElementById('rungs-list-container');
+        const addRungBtn = document.getElementById('add-rung-btn');
+        const exportPdfBtn = document.getElementById('export-pdf-btn');
+        const rungModal = document.getElementById('rung-modal');
+        const rungModalTitle = document.getElementById('rung-modal-title');
+        const rungSituationPreset = document.getElementById('rung-situation-preset');
+        const rungSituationCustom = document.getElementById('rung-situation-custom');
+        const rungFearRating = document.getElementById('rung-fear-rating');
+        const fearRatingDisplay = document.getElementById('fear-rating-display');
+        const rungSuccessMetric = document.getElementById('rung-success-metric');
+        const cancelRungBtn = document.getElementById('cancel-rung-btn');
+        const saveRungBtn = document.getElementById('save-rung-btn');
+        const deleteRungBtn = document.getElementById('delete-rung-btn');
+        const journalModal = document.getElementById('journal-modal');
+        const journalPrompt = document.getElementById('journal-prompt');
+        const journalEntry = document.getElementById('journal-entry');
+        const saveJournalBtn = document.getElementById('save-journal-btn');
+        const avatar = document.getElementById('ladder-avatar');
+        const notificationToast = document.getElementById('notification-toast');
+
+        // --- Data ---
+        const achievements = [
+            { points: 1, id: 'rung-color-teal', type: 'style', category: 'rungColor', property: 'borderColor', value: '#14b8a6', name: 'Teal Rungs' },
+            { points: 5, id: 'font-lexend', type: 'font', category: 'font', value: 'font-lexend', name: 'Lexend Font' },
+            { points: 10, id: 'bg-halloween', type: 'background', category: 'background', value: 'url(https://raw.githubusercontent.com/navasdo/navacite/refs/heads/main/templates/fluency-tools/the-ladder/static/images/halloween.png)', name: 'Halloween BG' },
+            { points: 10, id: 'bg-winter', type: 'background', category: 'background', value: 'url(https://raw.githubusercontent.com/navasdo/navacite/refs/heads/main/templates/fluency-tools/the-ladder/static/images/winter.png)', name: 'Winter BG' },
+            { points: 10, id: 'bg-emoji', type: 'background', category: 'background', value: 'url(https://raw.githubusercontent.com/navasdo/navacite/refs/heads/main/templates/fluency-tools/the-ladder/static/images/emoji.png)', name: 'Emoji BG' },
+            { points: 10, id: 'bg-summer', type: 'background', category: 'background', value: 'url(https://raw.githubusercontent.com/navasdo/navacite/refs/heads/main/templates/fluency-tools/the-ladder/static/images/summer.png)', name: 'Summer BG' },
+            { points: 20, id: 'ladder-curved', type: 'style', category: 'ladderShape', property: 'borderRadius', value: '10px', name: 'Curved Ladder' },
+            { points: 30, id: 'rung-shape-rounded', type: 'style', category: 'rungShape', property: 'borderRadius', value: '10px', name: 'Rounded Rungs' },
+            { points: 40, id: 'font-comic-neue', type: 'font', category: 'font', value: 'font-comic-neue', name: 'Comic Neue Font' },
+            { points: 75, id: 'ladder-gradient', type: 'style', category: 'rungColor', property: 'borderColor', value: 'purple', name: 'Gradient Ladder' },
+            { points: 125, id: 'border-fancy', type: 'pdf-style', category: 'pdfBorder', name: 'Fancy PDF Border' },
+            { points: 150, id: 'font-caveat', type: 'font', category: 'font', value: 'font-caveat', name: 'Caveat Font' },
+            { points: 200, id: 'theme-golden', type: 'style', category: 'rungColor', property: 'borderColor', value: '#f59e0b', name: 'Golden Ladder' },
+        ];
+        
+        const journalPrompts = {
+            pre: [
+                "What do you hope to achieve by tackling this challenge?",
+                "Why is being able to do this specific thing meaningful to you?",
+                "How might facing this challenge change how you see yourself as a communicator?",
+                "What's the best possible outcome you can imagine from trying this?",
+            ],
+            post: [
+                "Reflect on what you did differently to face this fear. What was the outcome?",
+                "Describe your thoughts and feelings before, during, and after. Was the actual experience different from what you anticipated?",
+                "What did you learn from this attempt, regardless of how 'fluent' you were?",
+                "How did the listener react? Was it what you expected? Describe the interaction.",
+                "What's one thing you're proud of from this attempt?",
+            ]
+        };
+
+        // --- Initialization ---
+        function initialize() {
+            const today = new Date();
+            dateInput.value = today.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+            addEventListeners();
+            updateGamification();
+            renderAll();
+        }
+
+        // --- Event Listeners ---
+        function addEventListeners() {
+            pointsInput.addEventListener('input', () => {
+                playerPoints = parseInt(pointsInput.value, 10) || 0;
+                updateGamification();
+            });
+            addRungBtn.addEventListener('click', () => openRungModal());
+            rungFearRating.addEventListener('input', (e) => fearRatingDisplay.textContent = e.target.value);
+            rungSituationPreset.addEventListener('change', (e) => {
+                if(e.target.value) rungSituationCustom.value = e.target.value;
+            });
+            cancelRungBtn.addEventListener('click', () => closeModal(rungModal));
+            saveRungBtn.addEventListener('click', saveRung);
+            deleteRungBtn.addEventListener('click', deleteRung);
+            saveJournalBtn.addEventListener('click', saveJournal);
+            exportPdfBtn.addEventListener('click', exportPDF);
+            
+            achievementsContainer.addEventListener('click', (e) => {
+                const item = e.target.closest('.achievement-item');
+                if (item && !item.classList.contains('locked')) {
+                    toggleAchievement(item.dataset.id);
+                }
+            });
+        }
+
+        // --- Rendering Logic ---
+        function renderAll() {
+            renderRungsList();
+            renderRungsVisual();
+            updateAddRungButton();
+            updateExportButton();
+            updateAvatar();
+        }
+
+        function renderRungsList() {
+            rungsListContainer.innerHTML = '';
+            if (ladderRungs.length === 0) {
+                rungsListContainer.innerHTML = `<p class="text-slate-500 text-center italic">Your ladder is empty. Add a rung to get started!</p>`;
+            } else {
+                const sortedRungs = [...ladderRungs].sort((a, b) => a.fear - b.fear);
+                sortedRungs.forEach((rung, index) => {
+                    const rungEl = document.createElement('div');
+                    rungEl.className = 'rung-item p-4 rounded-lg bg-slate-700/50 flex justify-between items-center';
+                    rungEl.style.borderLeftColor = '#6b7280'; // Default color
+                    rungEl.dataset.id = rung.id;
+                    rungEl.addEventListener('click', () => openRungModal(rung.id));
+                    
+                    rungEl.innerHTML = `
+                        <div>
+                            <p class="font-bold text-lg rung-text">${rung.situation}</p>
+                            <p class="text-sm text-slate-400">Fear: ${rung.fear}/10 | Success: ${rung.successMetric}</p>
+                        </div>
+                        <div class="text-2xl font-black text-slate-500">${index + 1}</div>
+                    `;
+                    rungsListContainer.appendChild(rungEl);
+                });
+            }
+        }
+        
+        function renderRungsVisual() {
+            rungsVisualContainer.innerHTML = '';
+             const sortedRungs = [...ladderRungs].sort((a, b) => a.fear - b.fear);
+             sortedRungs.forEach((rung, index) => {
+                const rungEl = document.createElement('div');
+                const position = (index / (MAX_RUNGS - 1)) * 95;
+                rungEl.className = 'rung-visual h-2.5 rounded-md';
+                rungEl.style.bottom = `${position}%`;
+                rungsVisualContainer.appendChild(rungEl);
+             });
+        }
+        
+        function updateAvatar() {
+            const sortedRungs = [...ladderRungs].sort((a, b) => a.fear - b.fear);
+            let highestAttemptedIndex = -1;
+            sortedRungs.forEach((rung, index) => {
+                if (rung.preJournal) {
+                    highestAttemptedIndex = index;
+                }
+            });
+
+            if (highestAttemptedIndex !== -1) {
+                const position = (highestAttemptedIndex / (MAX_RUNGS - 1)) * 95;
+                avatar.style.bottom = `calc(${position}% - 25px)`;
+            } else {
+                avatar.style.bottom = '-25px';
+            }
+        }
+
+
+        function updateAddRungButton() {
+            addRungBtn.disabled = ladderRungs.length >= MAX_RUNGS;
+            addRungBtn.textContent = ladderRungs.length >= MAX_RUNGS ? 'Ladder Full' : 'Add a Rung';
+        }
+        
+        function updateExportButton() {
+            exportPdfBtn.disabled = ladderRungs.length === 0;
+        }
+
+        // --- Rung & Journal Logic ---
+        function openRungModal(rungId = null) {
+            rungSituationCustom.value = '';
+            rungSituationPreset.value = '';
+            rungSuccessMetric.value = '';
+            rungFearRating.value = 5;
+            fearRatingDisplay.textContent = 5;
+            
+            if (rungId) {
+                const rung = ladderRungs.find(r => r.id === rungId);
+                currentEditingRung = rung;
+                rungModalTitle.textContent = 'Edit Rung';
+                rungSituationCustom.value = rung.situation;
+                rungSuccessMetric.value = rung.successMetric;
+                rungFearRating.value = rung.fear;
+                fearRatingDisplay.textContent = rung.fear;
+                deleteRungBtn.classList.remove('hidden');
+            } else {
+                currentEditingRung = { id: Date.now() }; // New rung
+                rungModalTitle.textContent = 'Add a New Rung';
+                deleteRungBtn.classList.add('hidden');
+            }
+            openModal(rungModal);
+        }
+
+        function showNotification(message, isError = true) {
+            notificationToast.textContent = message;
+            notificationToast.classList.toggle('bg-red-500', isError);
+            notificationToast.classList.toggle('bg-green-500', !isError);
+            notificationToast.classList.add('toast-show');
+
+            setTimeout(() => {
+                notificationToast.classList.remove('toast-show');
+            }, 3000);
+        }
+
+        function saveRung() {
+            const situation = rungSituationCustom.value.trim();
+            if (!situation) { 
+                showNotification('Please enter a speaking situation.'); 
+                return; 
+            }
+            
+            currentEditingRung.situation = situation;
+            currentEditingRung.fear = parseInt(rungFearRating.value, 10);
+            currentEditingRung.successMetric = rungSuccessMetric.value.trim() || 'Attempt the challenge';
+
+            const isEditing = ladderRungs.some(r => r.id === currentEditingRung.id);
+            if (!isEditing) {
+                // This is a new rung, so open the journal modal
+                closeModal(rungModal);
+                openJournalModal();
+            } else {
+                // Just updating an existing rung
+                const index = ladderRungs.findIndex(r => r.id === currentEditingRung.id);
+                ladderRungs[index] = currentEditingRung;
+                closeModal(rungModal);
+                renderAll();
+            }
+        }
+        
+        function deleteRung() {
+            ladderRungs = ladderRungs.filter(r => r.id !== currentEditingRung.id);
+            closeModal(rungModal);
+            renderAll();
+        }
+
+        function openJournalModal() {
+            journalEntry.value = '';
+            journalPrompt.textContent = journalPrompts.pre[Math.floor(Math.random() * journalPrompts.pre.length)];
+            openModal(journalModal);
+        }
+        
+        function saveJournal() {
+            currentEditingRung.preJournal = journalEntry.value.trim();
+            currentEditingRung.postJournalPrompt = journalPrompts.post[Math.floor(Math.random() * journalPrompts.post.length)];
+            ladderRungs.push(currentEditingRung);
+            closeModal(journalModal);
+            renderAll();
+        }
+
+        // --- Gamification Logic ---
+        function updateGamification() {
+            achievementsContainer.innerHTML = '';
+            achievements.forEach(ach => {
+                const isUnlocked = playerPoints >= ach.points;
+                const isActive = Object.values(activeAchievements).includes(ach.id);
+                const item = document.createElement('div');
+                item.className = `achievement-item p-3 rounded-lg bg-slate-700/50 cursor-pointer transition ${!isUnlocked ? 'locked' : 'hover:bg-violet-800'} ${isActive ? 'active' : ''}`;
+                item.dataset.id = ach.id;
+                
+                let nameClass = '';
+                if(ach.type === 'font') nameClass = ach.value;
+
+                item.innerHTML = `
+                    <p class="font-bold text-lg ${nameClass}">${ach.name}</p>
+                    <p class="text-xs text-slate-400">${ach.points} pts</p>
+                `;
+                achievementsContainer.appendChild(item);
+            });
+        }
+        
+        function toggleAchievement(id) {
+            const achievement = achievements.find(a => a.id === id);
+            if (!achievement) return;
+
+            const { category } = achievement;
+            
+            // If the clicked achievement is already active in its category, deactivate it.
+            // Otherwise, activate it (this will also switch from another active one in the same category).
+            if (activeAchievements[category] === id) {
+                activeAchievements[category] = null;
+            } else {
+                activeAchievements[category] = id;
+            }
+            
+            resetAllStyles();
+            applyActiveStyles();
+            updateGamification(); // Re-render to show active state
+        }
+
+        function resetAllStyles() {
+             // Reset fonts
+            document.querySelectorAll('.rung-text').forEach(el => {
+                el.classList.remove('font-lexend', 'font-comic-neue', 'font-caveat');
+            });
+            // Reset backgrounds
+            ladderVisualContainer.style.backgroundImage = '';
+            // Reset colors and shapes
+            const defaultColor = '#6b7280'; // gray-500
+            document.querySelectorAll('.rung-item').forEach(el => {
+                el.style.borderLeftColor = defaultColor;
+                el.style.borderRadius = '';
+            });
+            document.querySelectorAll('.rung-visual').forEach(el => {
+                el.style.backgroundColor = defaultColor;
+                el.style.borderRadius = '';
+            });
+            document.querySelectorAll('.ladder-pole').forEach(el => {
+                el.style.backgroundColor = defaultColor;
+                el.style.borderTopLeftRadius = '';
+                el.style.borderTopRightRadius = '';
+            });
+        }
+
+        function applyActiveStyles() {
+            for (const category in activeAchievements) {
+                const achievementId = activeAchievements[category];
+                if (achievementId) {
+                    const achievement = achievements.find(a => a.id === achievementId);
+                    if (achievement.type === 'style') {
+                        const { property, value } = achievement;
+                        if (achievement.category === 'ladderShape') { // Curved Ladder
+                            document.querySelectorAll('.ladder-pole').forEach(el => {
+                                el.style.borderTopLeftRadius = value;
+                                el.style.borderTopRightRadius = value;
+                            });
+                        } else if (achievement.category === 'rungColor') {
+                             document.querySelectorAll('.rung-item').forEach(el => el.style.borderLeftColor = value);
+                             document.querySelectorAll('.rung-visual').forEach(el => el.style.backgroundColor = value);
+                             document.querySelectorAll('.ladder-pole').forEach(el => el.style.backgroundColor = value);
+                        } else if (achievement.category === 'rungShape') { // Rounded rungs
+                            document.querySelectorAll('.rung-item, .rung-visual').forEach(el => el.style.borderRadius = value);
+                        }
+                    } else if (achievement.type === 'font') {
+                        document.querySelectorAll('.rung-text').forEach(el => {
+                             el.classList.add(achievement.value);
+                        });
+                    } else if (achievement.type === 'background') {
+                       ladderVisualContainer.style.backgroundImage = achievement.value;
+                    }
+                }
+            }
+        }
+
+
+        // --- PDF Export Logic ---
+        async function exportPDF() {
+            exportPdfBtn.textContent = 'Generating...';
+            exportPdfBtn.disabled = true;
+
+            try {
+                const { jsPDF } = window.jspdf;
+                const doc = new jsPDF({ orientation: 'p', unit: 'pt', format: 'a4' });
+                
+                const clinicianName = document.getElementById('clinician').value || 'Clinician';
+                const date = dateInput.value;
+                
+                const shuffledPrompts = [...journalPrompts.post].sort(() => 0.5 - Math.random());
+
+                // Use html2canvas to capture the ladder visual
+                const canvas = await html2canvas(ladderVisualContainer, { 
+                    backgroundColor: '#1e293b', // slate-800
+                    useCORS: true,
+                    allowTaint: true,
+                    onclone: (clonedDoc) => {
+                        const clonedAvatar = clonedDoc.getElementById('ladder-avatar');
+                        if (clonedAvatar) {
+                            clonedAvatar.src = 'https://img.icons8.com/ios-filled/100/a78bfa/climbing.png';
+                        }
+                    }
+                });
+                const ladderImgData = canvas.toDataURL('image/png');
+                
+                // Using inline styles for robust PDF rendering
+                let htmlContent = `
+                    <div style="font-family: 'Helvetica', 'Arial', sans-serif; color: #333; font-size: 11pt;">
+                        <div style="text-align: center; border-bottom: 2px solid #ddd; padding-bottom: 10px; margin-bottom: 20px;">
+                            <h1 style="color: #6d28d9; margin: 0; font-size: 20pt;">The Ladder: Challenge Report</h1>
+                        </div>
+                        <div style="font-size: 10pt; color: #555; margin-bottom: 15px;">
+                            <div style="padding: 3px 0;"><strong>Student Name:</strong> <span style="border-bottom: 1px solid #333; padding-left: 150px;">&nbsp;</span></div>
+                            <div style="padding: 3px 0;"><strong>Clinician:</strong> ${clinicianName}</div>
+                            <div style="padding: 3px 0;"><strong>Date:</strong> ${date}</div>
+                        </div>
+                        <div style="text-align: left; margin-bottom: 20px;">
+                            <img src="${ladderImgData}" style="max-width: 150px;" />
+                        </div>
+                `;
+                
+                const sortedRungs = [...ladderRungs].sort((a, b) => a.fear - b.fear);
+                sortedRungs.forEach((rung, index) => {
+                    const postPrompt = shuffledPrompts.pop() || "Describe the experience.";
+                    htmlContent += `
+                        <div style="margin-bottom: 15px; border: 1px solid #ccc; padding: 15px; border-radius: 8px; page-break-inside: avoid;">
+                            <h3 style="margin-top: 0; color: #5b21b6; border-bottom: 1px solid #ddd; padding-bottom: 5px; font-size: 13pt;">
+                                <strong>Rung ${index + 1}:</strong> ${rung.situation} (Fear: ${rung.fear}/10)
+                            </h3>
+                            <p><strong>My Success Metric:</strong> ${rung.successMetric}</p>
+                            
+                            <div>
+                                <h4 style="color: #7c3aed; margin: 15px 0 5px 0; font-size: 11pt; font-weight: bold;">Pre-Challenge Reflection</h4>
+                                <div style="white-space: pre-wrap; background-color: #f9fafb; padding: 10px; border-radius: 4px; border: 1px solid #f3f4f6; min-height: 20px;">
+                                    ${rung.preJournal || '&nbsp;'}
+                                </div>
+                            </div>
+
+                            <div>
+                                <h4 style="color: #7c3aed; margin: 15px 0 5px 0; font-size: 11pt; font-weight: bold;">Post-Challenge Reflection Prompt</h4>
+                                <p><strong>${postPrompt}</strong></p>
+                                <div style="margin-top: 8px;">
+                                    <div style="border-bottom: 1px solid #ccc; height: 22px;"></div>
+                                    <div style="border-bottom: 1px solid #ccc; height: 22px;"></div>
+                                    <div style="border-bottom: 1px solid #ccc; height: 22px;"></div>
+                                    <div style="border-bottom: 1px solid #ccc; height: 22px;"></div>
+                                    <div style="border-bottom: 1px solid #ccc; height: 22px;"></div>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                });
+                
+                htmlContent += `</div>`; // Close main container
+
+                await doc.html(htmlContent, {
+                    callback: function(doc) {
+                        doc.save(`TheLadder_Report.pdf`);
+                    },
+                    margin: [40, 40, 40, 40],
+                    autoPaging: 'text',
+                    width: 515,
+                    windowWidth: 595,
+                });
+            } catch (error) {
+                console.error("PDF Export failed:", error);
+                showNotification("Failed to generate PDF. Check console for details.");
+            } finally {
+                exportPdfBtn.textContent = 'Export PDF';
+                updateExportButton();
+            }
+        }
+        
+        // --- Generic Modal Logic ---
+        function openModal(modal) {
+            const modalContent = modal.querySelector('[class*="modal-content-"]');
+            modal.classList.remove('hidden');
+            
+            requestAnimationFrame(() => {
+                modal.classList.add('modal-enter-active');
+                if (modalContent) {
+                    modalContent.classList.add('modal-content-enter-active');
+                }
+            });
+        }
+
+        function closeModal(modal) {
+            const modalContent = modal.querySelector('[class*="modal-content-"]');
+            modal.classList.remove('modal-enter-active');
+            if (modalContent) {
+                modalContent.classList.remove('modal-content-enter-active');
+            }
+            setTimeout(() => {
+                modal.classList.add('hidden');
+            }, 300);
+        }
+        
+        initialize();
+    });
+    </script>
+</body>
+</html>
+
+
+
+
