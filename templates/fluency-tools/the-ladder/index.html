@@ -1,8 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <a href="/fluency-tools" class="absolute top-4 right-4 z-10 p-1 rounded-full bg-gray-700/50 hover:bg-gray-600/50 transition" title="Back to Fluency Tools"><img src="https://raw.githubusercontent.com/navasdo/navacite/refs/heads/main/templates/static/navacite-images/Navacite-Main.png" alt="Navacite" class="w-10 h-10 rounded-full"/></a>
-    <link rel="icon" type="https://raw.githubusercontent.com/navasdo/navacite/refs/heads/main/templates/static/ico/navacite.ico" href="https://raw.githubusercontent.com/navasdo/navacite/refs/heads/main/templates/static/ico/navacite.ico">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>The Ladder</title>
@@ -11,14 +9,19 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Lexend:wght@400;600&family=Comic+Neue:wght@700&family=Caveat:wght@700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Lexend:wght@400;600&family=Comic+Neue:wght@700&family=Caveat:wght@700&family=Gochi+Hand&family=Patrick+Hand&family=Architects+Daughter&display=swap" rel="stylesheet">
     <style>
         html { scroll-behavior: smooth; }
         body { font-family: 'Inter', sans-serif; }
         
+        /* Custom Fonts for Unlocks */
         .font-lexend { font-family: 'Lexend', sans-serif; }
         .font-comic-neue { font-family: 'Comic Neue', cursive; }
         .font-caveat { font-family: 'Caveat', cursive; }
+        .font-patrick-hand { font-family: 'Patrick Hand', cursive; }
+        .font-gochi-hand { font-family: 'Gochi Hand', cursive; }
+        .font-architects-daughter { font-family: 'Architects Daughter', cursive; }
+
 
         .ladder-container {
             position: relative;
@@ -96,6 +99,8 @@
             }
             .page-break {
                 page-break-after: always;
+                background-size: 100% 100%;
+                background-repeat: no-repeat;
             }
         }
     </style>
@@ -139,9 +144,14 @@
 
             <!-- Gamification Section -->
             <section id="gamification-section" class="p-6 bg-slate-800/50 rounded-2xl border border-violet-900/80">
-                <h3 class="text-2xl font-bold text-violet-400 mb-6 text-center">Achievements Unlocked</h3>
-                <div id="achievements-container" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 text-center">
-                    <!-- Achievements will be populated by JS -->
+                <div id="achievements-header" class="flex justify-center items-center cursor-pointer">
+                    <h3 class="text-2xl font-bold text-violet-400">Achievements Unlocked</h3>
+                    <svg id="achievements-arrow" class="w-6 h-6 ml-2 text-violet-400 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                </div>
+                <div id="achievements-collapsible-wrapper" class="overflow-hidden transition-all duration-500 ease-in-out">
+                    <div id="achievements-container" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 text-center mt-6">
+                        <!-- Achievements will be populated by JS -->
+                    </div>
                 </div>
             </section>
 
@@ -154,7 +164,7 @@
                         <div class="ladder-container">
                             <div class="ladder-pole absolute top-0 bottom-0 left-0 w-[15px] bg-gray-500 rounded-t-md transition-colors duration-200"></div>
                             <div class="ladder-pole absolute top-0 bottom-0 right-0 w-[15px] bg-gray-500 rounded-t-md transition-colors duration-200"></div>
-                            <img id="ladder-avatar" src="https://img.icons8.com/ios-filled/100/a78bfa/climbing.png" alt="Avatar" class="ladder-avatar" style="bottom: -25px;">
+                            <img id="ladder-avatar" src="https://img.icons8.com/ios-filled/100/a78bfa/climbing.png" alt="Avatar" class="ladder-avatar">
                             <div id="rungs-visual-container" class="absolute inset-0">
                                 <!-- Rung visuals will be generated here -->
                             </div>
@@ -181,7 +191,7 @@
         </main>
     </div>
 
-    <!-- Modals (same as before) -->
+    <!-- Modals -->
     <div id="rung-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-filter backdrop-blur-sm modal-enter">
          <div class="bg-slate-800 w-full max-w-lg rounded-2xl border border-violet-700 p-6 relative modal-content-enter">
             <h3 id="rung-modal-title" class="text-2xl font-bold text-center text-violet-400 mb-6">Add a New Rung</h3>
@@ -238,7 +248,6 @@
 
     <script>
     document.addEventListener('DOMContentLoaded', () => {
-        // State and DOM references are the same as before...
         let ladderRungs = [];
         let currentEditingRung = null;
         let playerPoints = 0;
@@ -270,21 +279,48 @@
         const avatar = document.getElementById('ladder-avatar');
         const notificationToast = document.getElementById('notification-toast');
         const printContainer = document.getElementById('print-container');
+        const achievementsHeader = document.getElementById('achievements-header');
+        const achievementsCollapsibleWrapper = document.getElementById('achievements-collapsible-wrapper');
+        const achievementsArrow = document.getElementById('achievements-arrow');
         
         const achievements = [
-            { points: 1, id: 'rung-color-teal', type: 'style', category: 'rungColor', property: 'borderColor', value: '#14b8a6', name: 'Teal Rungs' },
-            { points: 5, id: 'font-lexend', type: 'font', category: 'font', value: 'font-lexend', name: 'Lexend Font' },
-            { points: 10, id: 'bg-halloween', type: 'background', category: 'background', value: 'url(https://raw.githubusercontent.com/navasdo/navacite/refs/heads/main/templates/fluency-tools/the-ladder/static/images/halloween.png)', name: 'Halloween BG' },
-            { points: 10, id: 'bg-winter', type: 'background', category: 'background', value: 'url(https://raw.githubusercontent.com/navasdo/navacite/refs/heads/main/templates/fluency-tools/the-ladder/static/images/winter.png)', name: 'Winter BG' },
-            { points: 10, id: 'bg-emoji', type: 'background', category: 'background', value: 'url(https://raw.githubusercontent.com/navasdo/navacite/refs/heads/main/templates/fluency-tools/the-ladder/static/images/emoji.png)', name: 'Emoji BG' },
-            { points: 10, id: 'bg-summer', type: 'background', category: 'background', value: 'url(https://raw.githubusercontent.com/navasdo/navacite/refs/heads/main/templates/fluency-tools/the-ladder/static/images/summer.png)', name: 'Summer BG' },
-            { points: 20, id: 'ladder-curved', type: 'style', category: 'ladderShape', property: 'borderRadius', value: '10px', name: 'Curved Ladder' },
-            { points: 30, id: 'rung-shape-rounded', type: 'style', category: 'rungShape', property: 'borderRadius', value: '10px', name: 'Rounded Rungs' },
-            { points: 40, id: 'font-comic-neue', type: 'font', category: 'font', value: 'font-comic-neue', name: 'Comic Neue Font' },
-            { points: 75, id: 'ladder-gradient', type: 'style', category: 'rungColor', property: 'borderColor', value: 'purple', name: 'Gradient Ladder' },
-            { points: 125, id: 'border-fancy', type: 'pdf-style', category: 'pdfBorder', name: 'Fancy PDF Border' },
-            { points: 150, id: 'font-caveat', type: 'font', category: 'font', value: 'font-caveat', name: 'Caveat Font' },
-            { points: 200, id: 'theme-golden', type: 'style', category: 'rungColor', property: 'borderColor', value: '#f59e0b', name: 'Golden Ladder' },
+            // Rung Colors
+            { points: 1, id: 'rung-color-teal', type: 'style', category: 'rungColor', value: '#14b8a6', name: 'Teal Rungs' },
+            { points: 15, id: 'rung-color-amber', type: 'style', category: 'rungColor', value: '#f59e0b', name: 'Amber Rungs' },
+            { points: 35, id: 'rung-color-rose', type: 'style', category: 'rungColor', value: '#f43f5e', name: 'Rose Rungs' },
+            
+            // Ladder Colors
+            { points: 5, id: 'ladder-color-slate', type: 'style', category: 'ladderColor', value: '#475569', name: 'Slate Ladder' },
+            { points: 25, id: 'ladder-color-indigo', type: 'style', category: 'ladderColor', value: '#4f46e5', name: 'Indigo Ladder' },
+            { points: 50, id: 'ladder-color-gold', type: 'style', category: 'ladderColor', value: '#d97706', name: 'Gold Ladder' },
+
+            // Avatars
+            { points: 10, id: 'avatar-pizza', type: 'avatar', category: 'avatar', value: 'https://img.icons8.com/?size=100&id=haGE3cNerO9L&format=png&color=000000', name: 'Pizza Climber' },
+            { points: 20, id: 'avatar-soccer', type: 'avatar', category: 'avatar', value: 'https://img.icons8.com/?size=100&id=UHfPUJ7HQWiY&format=png&color=000000', name: 'Soccer Ball' },
+            { points: 40, id: 'avatar-poop', type: 'avatar', category: 'avatar', value: 'https://img.icons8.com/?size=100&id=dp8vVVv3xHgE&format=png&color=000000', name: 'Poop Emoji' },
+            
+            // App Fonts (affect rung list)
+            { points: 10, id: 'font-lexend', type: 'font', category: 'font', value: 'font-lexend', name: 'Lexend Font' },
+            { points: 45, id: 'font-comic-neue', type: 'font', category: 'font', value: 'font-comic-neue', name: 'Comic Neue Font' },
+            { points: 80, id: 'font-caveat', type: 'font', category: 'font', value: 'font-caveat', name: 'Caveat Font' },
+
+            // PDF Report Fonts
+            { points: 60, id: 'pdf-font-patrick-hand', type: 'pdf-style', category: 'pdfFont', value: "'Patrick Hand', cursive", name: 'Patrick Hand PDF' },
+            { points: 90, id: 'pdf-font-gochi-hand', type: 'pdf-style', category: 'pdfFont', value: "'Gochi Hand', cursive", name: 'Gochi Hand PDF' },
+            { points: 120, id: 'pdf-font-architects-daughter', type: 'pdf-style', category: 'pdfFont', value: "'Architects Daughter', cursive", name: 'Architects PDF' },
+            
+            // PDF Borders
+            { points: 70, id: 'pdf-border-simple', type: 'pdf-style', category: 'pdfBorder', value: 'url(https://raw.githubusercontent.com/navasdo/navacite/main/templates/static/navacite-images/simple-border.png)', name: 'Simple Border' },
+            { points: 100, id: 'pdf-border-swirl', type: 'pdf-style', category: 'pdfBorder', value: 'url(https://raw.githubusercontent.com/navasdo/navacite/main/templates/static/navacite-images/swirl-border.png)', name: 'Swirl Border' },
+            { points: 150, id: 'pdf-border-stars', type: 'pdf-style', category: 'pdfBorder', value: 'url(https://raw.githubusercontent.com/navasdo/navacite/main/templates/static/navacite-images/stars-border.png)', name: 'Star Border' },
+
+            // Backgrounds & Shapes
+            { points: 15, id: 'bg-halloween', type: 'background', category: 'background', value: 'url(https://raw.githubusercontent.com/navasdo/navacite/refs/heads/main/templates/fluency-tools/the-ladder/static/images/halloween.png)', name: 'Halloween BG' },
+            { points: 15, id: 'bg-winter', type: 'background', category: 'background', value: 'url(https://raw.githubusercontent.com/navasdo/navacite/refs/heads/main/templates/fluency-tools/the-ladder/static/images/winter.png)', name: 'Winter BG' },
+            { points: 15, id: 'bg-emoji', type: 'background', category: 'background', value: 'url(https://raw.githubusercontent.com/navasdo/navacite/refs/heads/main/templates/fluency-tools/the-ladder/static/images/emoji.png)', name: 'Emoji BG' },
+            { points: 15, id: 'bg-summer', type: 'background', category: 'background', value: 'url(https://raw.githubusercontent.com/navasdo/navacite/refs/heads/main/templates/fluency-tools/the-ladder/static/images/summer.png)', name: 'Summer BG' },
+            { points: 30, id: 'ladder-curved', type: 'style', category: 'ladderShape', value: '10px', name: 'Curved Ladder' },
+            { points: 55, id: 'rung-shape-rounded', type: 'style', category: 'rungShape', value: '10px', name: 'Rounded Rungs' },
         ];
         
         const journalPrompts = {
@@ -307,7 +343,7 @@
             const today = new Date();
             dateInput.value = today.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
             addEventListeners();
-            updateGamification();
+            updateGamification(true); // Initial setup, start expanded
             renderAll();
         }
 
@@ -325,8 +361,10 @@
             saveRungBtn.addEventListener('click', saveRung);
             deleteRungBtn.addEventListener('click', deleteRung);
             saveJournalBtn.addEventListener('click', saveJournal);
-            exportPdfBtn.addEventListener('click', exportToPrint); // Changed to new function
+            exportPdfBtn.addEventListener('click', exportToPrint);
             
+            achievementsHeader.addEventListener('click', toggleAchievements);
+
             achievementsContainer.addEventListener('click', (e) => {
                 const item = e.target.closest('.achievement-item');
                 if (item && !item.classList.contains('locked')) {
@@ -335,13 +373,13 @@
             });
         }
         
-        // All other functions (renderAll, openRungModal, saveRung, etc.) remain the same...
         function renderAll() {
             renderRungsList();
             renderRungsVisual();
             updateAddRungButton();
             updateExportButton();
             updateAvatar();
+            applyActiveStyles();
         }
 
         function renderRungsList() {
@@ -353,7 +391,6 @@
                 sortedRungs.forEach((rung, index) => {
                     const rungEl = document.createElement('div');
                     rungEl.className = 'rung-item p-4 rounded-lg bg-slate-700/50 flex justify-between items-center';
-                    rungEl.style.borderLeftColor = '#6b7280'; // Default color
                     rungEl.dataset.id = rung.id;
                     rungEl.addEventListener('click', () => openRungModal(rung.id));
                     
@@ -485,7 +522,8 @@
             renderAll();
         }
 
-        function updateGamification() {
+        function updateGamification(isInitialLoad = false) {
+            achievements.sort((a,b) => a.points - b.points);
             achievementsContainer.innerHTML = '';
             achievements.forEach(ach => {
                 const isUnlocked = playerPoints >= ach.points;
@@ -495,7 +533,7 @@
                 item.dataset.id = ach.id;
                 
                 let nameClass = '';
-                if(ach.type === 'font') nameClass = ach.value;
+                if(ach.type === 'font' || ach.category === 'pdfFont') nameClass = ach.value.split(',')[0].replace(/'/g, "").toLowerCase().replace(" ", "-");
 
                 item.innerHTML = `
                     <p class="font-bold text-lg ${nameClass}">${ach.name}</p>
@@ -503,6 +541,29 @@
                 `;
                 achievementsContainer.appendChild(item);
             });
+
+            // Adjust height after content is added
+            if (isInitialLoad) {
+                achievementsCollapsibleWrapper.style.maxHeight = achievementsContainer.scrollHeight + 40 + 'px';
+            } else {
+                 const isCollapsed = achievementsCollapsibleWrapper.style.maxHeight === '0px';
+                 if (!isCollapsed) {
+                    setTimeout(() => { // Delay to allow DOM update
+                         achievementsCollapsibleWrapper.style.maxHeight = achievementsContainer.scrollHeight + 40 + 'px';
+                    }, 50);
+                 }
+            }
+        }
+
+        function toggleAchievements() {
+            const isCollapsed = achievementsCollapsibleWrapper.style.maxHeight === '0px' || !achievementsCollapsibleWrapper.style.maxHeight;
+            if (isCollapsed) {
+                achievementsCollapsibleWrapper.style.maxHeight = achievementsContainer.scrollHeight + 40 + 'px'; // Add padding/margin allowance
+                achievementsArrow.style.transform = 'rotate(0deg)';
+            } else {
+                achievementsCollapsibleWrapper.style.maxHeight = '0px';
+                achievementsArrow.style.transform = 'rotate(-180deg)';
+            }
         }
         
         function toggleAchievement(id) {
@@ -516,8 +577,7 @@
                 activeAchievements[category] = id;
             }
             
-            resetAllStyles();
-            applyActiveStyles();
+            renderAll();
             updateGamification();
         }
 
@@ -526,23 +586,27 @@
                 el.classList.remove('font-lexend', 'font-comic-neue', 'font-caveat');
             });
             ladderVisualContainer.style.backgroundImage = '';
-            const defaultColor = '#6b7280';
+            const defaultRungColor = '#6b7280';
+            const defaultLadderColor = '#6b7280';
+
             document.querySelectorAll('.rung-item').forEach(el => {
-                el.style.borderLeftColor = defaultColor;
+                el.style.borderLeftColor = defaultRungColor;
                 el.style.borderRadius = '';
             });
             document.querySelectorAll('.rung-visual').forEach(el => {
-                el.style.backgroundColor = defaultColor;
+                el.style.backgroundColor = defaultRungColor;
                 el.style.borderRadius = '';
             });
             document.querySelectorAll('.ladder-pole').forEach(el => {
-                el.style.backgroundColor = defaultColor;
+                el.style.backgroundColor = defaultLadderColor;
                 el.style.borderTopLeftRadius = '';
                 el.style.borderTopRightRadius = '';
             });
+            avatar.src = 'https://img.icons8.com/ios-filled/100/a78bfa/climbing.png';
         }
 
         function applyActiveStyles() {
+            resetAllStyles();
             for (const category in activeAchievements) {
                 const achievementId = activeAchievements[category];
                 if (achievementId) {
@@ -557,6 +621,7 @@
                         } else if (achievement.category === 'rungColor') {
                              document.querySelectorAll('.rung-item').forEach(el => el.style.borderLeftColor = value);
                              document.querySelectorAll('.rung-visual').forEach(el => el.style.backgroundColor = value);
+                        } else if (achievement.category === 'ladderColor') {
                              document.querySelectorAll('.ladder-pole').forEach(el => el.style.backgroundColor = value);
                         } else if (achievement.category === 'rungShape') {
                             document.querySelectorAll('.rung-item, .rung-visual').forEach(el => el.style.borderRadius = value);
@@ -567,12 +632,13 @@
                         });
                     } else if (achievement.type === 'background') {
                        ladderVisualContainer.style.backgroundImage = achievement.value;
+                    } else if (achievement.type === 'avatar') {
+                        avatar.src = achievement.value;
                     }
                 }
             }
         }
         
-        // --- NEW Print Export Logic ---
         async function exportToPrint() {
             exportPdfBtn.textContent = 'Generating...';
             exportPdfBtn.disabled = true;
@@ -583,6 +649,11 @@
                 const date = dateInput.value;
                 const shuffledPrompts = [...journalPrompts.post].sort(() => 0.5 - Math.random());
                 const sortedRungs = [...ladderRungs].sort((a, b) => a.fear - b.fear);
+                
+                const activePdfFontId = activeAchievements['pdfFont'];
+                const activePdfBorderId = activeAchievements['pdfBorder'];
+                const activePdfFont = activePdfFontId ? achievements.find(a=>a.id === activePdfFontId).value : "'Helvetica', 'Arial', sans-serif";
+                const activePdfBorder = activePdfBorderId ? achievements.find(a=>a.id === activePdfBorderId).value : 'none';
 
                 const canvas = await html2canvas(ladderVisualContainer, {
                     backgroundColor: '#0f172a',
@@ -594,9 +665,9 @@
                 let reportHtml = '';
 
                 for (let i = 0; i < MAX_RUNGS; i++) {
-                    let pageHtml = `<div class="page-break" style="padding: 20px;">`; // Each rung is a page
+                    const borderStyle = activePdfBorder !== 'none' ? `background-image: ${activePdfBorder}; background-size: 100% 100%;` : '';
+                    let pageHtml = `<div class="page-break" style="${borderStyle} padding: 40px; min-height: 1122px; font-family: ${activePdfFont};">`;
 
-                    // Add header ONLY to the first page (i === 0)
                     if (i === 0) {
                          pageHtml += `
                             <div style="text-align: center; border-bottom: 2px solid #ddd; padding-bottom: 10px; margin-bottom: 20px;">
@@ -654,7 +725,6 @@
                             </div>
                         `;
                     } else {
-                        // Placeholder for empty rungs
                         rungContentHtml += `
                             <div style="margin-top: 0; color: #5b21b6; border-bottom: 1px solid #ddd; padding-bottom: 5px; font-size: 13pt; margin-bottom: 10px;">
                                 <strong>Rung ${i + 1}:</strong> (Challenge not yet added)
@@ -664,15 +734,15 @@
                             </div>
                         `;
                     }
-                    rungContentHtml += `</div>`; // Close rung container
+                    rungContentHtml += `</div>`;
                     pageHtml += rungContentHtml;
-                    pageHtml += `</div>`; // Close page container
+                    pageHtml += `</div>`;
                     reportHtml += pageHtml;
                 }
 
                 printContainer.innerHTML = reportHtml;
                 window.print();
-                printContainer.innerHTML = ''; // Clean up after printing
+                printContainer.innerHTML = '';
 
             } catch(error) {
                 console.error("Print Export failed:", error);
@@ -683,7 +753,6 @@
             }
         }
         
-        // --- Generic Modal Logic ---
         function openModal(modal) {
             const modalContent = modal.querySelector('[class*="modal-content-"]');
             modal.classList.remove('hidden');
@@ -712,9 +781,4 @@
     </script>
 </body>
 </html>
-
-
-
-
-
 
