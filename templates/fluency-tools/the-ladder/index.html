@@ -7,7 +7,6 @@
     <title>The Ladder</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/2.3.6/purify.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -16,7 +15,6 @@
         html { scroll-behavior: smooth; }
         body { font-family: 'Inter', sans-serif; }
         
-        /* Custom Fonts for Unlocks */
         .font-lexend { font-family: 'Lexend', sans-serif; }
         .font-comic-neue { font-family: 'Comic Neue', cursive; }
         .font-caveat { font-family: 'Caveat', cursive; }
@@ -46,16 +44,16 @@
         .rung-item {
             cursor: pointer;
             transition: all 0.2s ease-in-out;
-            border-left: 15px solid #6b7280; /* gray-500 */
+            border-left: 15px solid #6b7280;
         }
         
         .rung-item:hover {
             transform: scale(1.05);
-            background-color: #374151; /* gray-700 */
+            background-color: #374151;
         }
 
         .rung-visual {
-            background-color: #6b7280; /* gray-500 */
+            background-color: #6b7280;
             position: absolute;
             width: calc(100% - 30px);
             left: 15px;
@@ -71,7 +69,6 @@
             transform: scale(1.05);
         }
 
-        /* Modal Animation Styles */
         .modal-enter { opacity: 0; }
         .modal-enter-active { opacity: 1; transition: opacity 300ms; }
         .modal-content-enter { opacity: 0; transform: scale(0.95); }
@@ -79,25 +76,33 @@
         .modal-exit { opacity: 0; transition: opacity 300ms; }
         .modal-content-exit { opacity: 0; transform: scale(0.95); transition: opacity 300ms, transform 300ms; }
 
-        @media print {
-            body * { visibility: hidden; }
-            #pdf-export-content, #pdf-export-content * { visibility: visible; }
-            #pdf-export-content { position: absolute; left: 0; top: 0; width: 100%;}
-            .no-print { display: none; }
-        }
         .toast-show {
             opacity: 1;
             transform: translateY(0);
+        }
+
+        /* NEW Print Styles */
+        @media print {
+            body > *:not(#print-container) {
+                display: none;
+            }
+            #print-container {
+                display: block !important;
+                position: absolute;
+                top: 0;
+                left: 0;
+                width: 100%;
+            }
+            .page-break {
+                page-break-after: always;
+            }
         }
     </style>
 </head>
 <body class="bg-slate-900 min-h-screen font-sans text-slate-300 flex flex-col items-center p-4 sm:p-6 lg:p-8 overflow-x-hidden">
 
-    <!-- Hidden container for PDF export content -->
-    <div id="pdf-export-content" class="absolute -left-full bg-white text-black p-8" style="width: 595px;"></div>
-
-    <!-- Main App Container -->
-    <div class="w-full max-w-5xl mx-auto flex-grow">
+    <!-- Container for the main app UI -->
+    <div id="app-container" class="w-full max-w-5xl mx-auto flex-grow">
         <header class="w-full mx-auto my-8 text-center">
             <img src="https://raw.githubusercontent.com/navasdo/navacite/refs/heads/main/templates/static/navacite-images/ladder.png" alt="The Ladder Logo" class="w-48 mx-auto mb-4" style="filter: drop-shadow(0 0 15px rgba(167, 139, 250, 0.4))">
             <h1 class="text-5xl md:text-6xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-violet-400 to-fuchsia-500">
@@ -175,7 +180,7 @@
         </main>
     </div>
 
-    <!-- Rung Editor Modal -->
+    <!-- Modals (same as before) -->
     <div id="rung-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-filter backdrop-blur-sm modal-enter">
          <div class="bg-slate-800 w-full max-w-lg rounded-2xl border border-violet-700 p-6 relative modal-content-enter">
             <h3 id="rung-modal-title" class="text-2xl font-bold text-center text-violet-400 mb-6">Add a New Rung</h3>
@@ -211,8 +216,6 @@
             </div>
          </div>
     </div>
-
-    <!-- Pre-Attempt Journal Modal -->
     <div id="journal-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-filter backdrop-blur-sm modal-enter">
          <div class="bg-slate-800 w-full max-w-lg rounded-2xl border border-violet-700 p-6 relative modal-content-enter">
             <h3 class="text-2xl font-bold text-center text-violet-400 mb-2">Pre-Challenge Journal</h3>
@@ -223,23 +226,24 @@
             </div>
          </div>
     </div>
-
-    <!-- Notification Toast -->
     <div id="notification-toast" class="fixed bottom-5 right-5 bg-red-500 text-white py-3 px-5 rounded-lg shadow-lg text-base transition-all duration-300 opacity-0 transform translate-y-4 z-[100]" style="pointer-events: none;">
         Message
     </div>
 
+    <!-- NEW Print Container -->
+    <div id="print-container" class="hidden bg-white text-black p-4" style="font-family: 'Helvetica', 'Arial', sans-serif;">
+        <!-- Report content will be built here by JS -->
+    </div>
+
     <script>
     document.addEventListener('DOMContentLoaded', () => {
-        // --- State Management ---
+        // State and DOM references are the same as before...
         let ladderRungs = [];
-        let currentEditingRung = null; // Can be a temporary object or an ID
+        let currentEditingRung = null;
         let playerPoints = 0;
-        let activeAchievements = {}; // Object to store active achievement for each category
-        
+        let activeAchievements = {}; 
         const MAX_RUNGS = 4;
 
-        // --- DOM Element References ---
         const dateInput = document.getElementById('date');
         const pointsInput = document.getElementById('points');
         const achievementsContainer = document.getElementById('achievements-container');
@@ -264,8 +268,8 @@
         const saveJournalBtn = document.getElementById('save-journal-btn');
         const avatar = document.getElementById('ladder-avatar');
         const notificationToast = document.getElementById('notification-toast');
-
-        // --- Data ---
+        const printContainer = document.getElementById('print-container');
+        
         const achievements = [
             { points: 1, id: 'rung-color-teal', type: 'style', category: 'rungColor', property: 'borderColor', value: '#14b8a6', name: 'Teal Rungs' },
             { points: 5, id: 'font-lexend', type: 'font', category: 'font', value: 'font-lexend', name: 'Lexend Font' },
@@ -298,7 +302,6 @@
             ]
         };
 
-        // --- Initialization ---
         function initialize() {
             const today = new Date();
             dateInput.value = today.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
@@ -307,7 +310,6 @@
             renderAll();
         }
 
-        // --- Event Listeners ---
         function addEventListeners() {
             pointsInput.addEventListener('input', () => {
                 playerPoints = parseInt(pointsInput.value, 10) || 0;
@@ -322,7 +324,7 @@
             saveRungBtn.addEventListener('click', saveRung);
             deleteRungBtn.addEventListener('click', deleteRung);
             saveJournalBtn.addEventListener('click', saveJournal);
-            exportPdfBtn.addEventListener('click', exportPDF);
+            exportPdfBtn.addEventListener('click', exportToPrint); // Changed to new function
             
             achievementsContainer.addEventListener('click', (e) => {
                 const item = e.target.closest('.achievement-item');
@@ -331,8 +333,8 @@
                 }
             });
         }
-
-        // --- Rendering Logic ---
+        
+        // All other functions (renderAll, openRungModal, saveRung, etc.) remain the same...
         function renderAll() {
             renderRungsList();
             renderRungsVisual();
@@ -395,7 +397,6 @@
             }
         }
 
-
         function updateAddRungButton() {
             addRungBtn.disabled = ladderRungs.length >= MAX_RUNGS;
             addRungBtn.textContent = ladderRungs.length >= MAX_RUNGS ? 'Ladder Full' : 'Add a Rung';
@@ -405,7 +406,6 @@
             exportPdfBtn.disabled = ladderRungs.length === 0;
         }
 
-        // --- Rung & Journal Logic ---
         function openRungModal(rungId = null) {
             rungSituationCustom.value = '';
             rungSituationPreset.value = '';
@@ -423,7 +423,7 @@
                 fearRatingDisplay.textContent = rung.fear;
                 deleteRungBtn.classList.remove('hidden');
             } else {
-                currentEditingRung = { id: Date.now() }; // New rung
+                currentEditingRung = { id: Date.now() };
                 rungModalTitle.textContent = 'Add a New Rung';
                 deleteRungBtn.classList.add('hidden');
             }
@@ -454,11 +454,9 @@
 
             const isEditing = ladderRungs.some(r => r.id === currentEditingRung.id);
             if (!isEditing) {
-                // This is a new rung, so open the journal modal
                 closeModal(rungModal);
                 openJournalModal();
             } else {
-                // Just updating an existing rung
                 const index = ladderRungs.findIndex(r => r.id === currentEditingRung.id);
                 ladderRungs[index] = currentEditingRung;
                 closeModal(rungModal);
@@ -486,7 +484,6 @@
             renderAll();
         }
 
-        // --- Gamification Logic ---
         function updateGamification() {
             achievementsContainer.innerHTML = '';
             achievements.forEach(ach => {
@@ -510,11 +507,8 @@
         function toggleAchievement(id) {
             const achievement = achievements.find(a => a.id === id);
             if (!achievement) return;
-
             const { category } = achievement;
             
-            // If the clicked achievement is already active in its category, deactivate it.
-            // Otherwise, activate it (this will also switch from another active one in the same category).
             if (activeAchievements[category] === id) {
                 activeAchievements[category] = null;
             } else {
@@ -523,18 +517,15 @@
             
             resetAllStyles();
             applyActiveStyles();
-            updateGamification(); // Re-render to show active state
+            updateGamification();
         }
 
         function resetAllStyles() {
-             // Reset fonts
             document.querySelectorAll('.rung-text').forEach(el => {
                 el.classList.remove('font-lexend', 'font-comic-neue', 'font-caveat');
             });
-            // Reset backgrounds
             ladderVisualContainer.style.backgroundImage = '';
-            // Reset colors and shapes
-            const defaultColor = '#6b7280'; // gray-500
+            const defaultColor = '#6b7280';
             document.querySelectorAll('.rung-item').forEach(el => {
                 el.style.borderLeftColor = defaultColor;
                 el.style.borderRadius = '';
@@ -556,8 +547,8 @@
                 if (achievementId) {
                     const achievement = achievements.find(a => a.id === achievementId);
                     if (achievement.type === 'style') {
-                        const { property, value } = achievement;
-                        if (achievement.category === 'ladderShape') { // Curved Ladder
+                        const { value } = achievement;
+                        if (achievement.category === 'ladderShape') {
                             document.querySelectorAll('.ladder-pole').forEach(el => {
                                 el.style.borderTopLeftRadius = value;
                                 el.style.borderTopRightRadius = value;
@@ -566,7 +557,7 @@
                              document.querySelectorAll('.rung-item').forEach(el => el.style.borderLeftColor = value);
                              document.querySelectorAll('.rung-visual').forEach(el => el.style.backgroundColor = value);
                              document.querySelectorAll('.ladder-pole').forEach(el => el.style.backgroundColor = value);
-                        } else if (achievement.category === 'rungShape') { // Rounded rungs
+                        } else if (achievement.category === 'rungShape') {
                             document.querySelectorAll('.rung-item, .rung-visual').forEach(el => el.style.borderRadius = value);
                         }
                     } else if (achievement.type === 'font') {
@@ -579,98 +570,112 @@
                 }
             }
         }
-
-
-        // --- PDF Export Logic ---
-        async function exportPDF() {
+        
+        // --- NEW Print Export Logic ---
+        async function exportToPrint() {
             exportPdfBtn.textContent = 'Generating...';
             exportPdfBtn.disabled = true;
 
             try {
-                const { jsPDF } = window.jspdf;
-                const doc = new jsPDF({ orientation: 'p', unit: 'pt', format: 'a4' });
-                
                 const clinicianName = document.getElementById('clinician').value || 'Clinician';
+                const studentName = document.getElementById('student').value;
                 const date = dateInput.value;
-                
                 const shuffledPrompts = [...journalPrompts.post].sort(() => 0.5 - Math.random());
+                const sortedRungs = [...ladderRungs].sort((a, b) => a.fear - b.fear);
 
-                // Use html2canvas to capture the ladder visual
-                const canvas = await html2canvas(ladderVisualContainer, { 
-                    backgroundColor: '#1e293b', // slate-800
+                const canvas = await html2canvas(ladderVisualContainer, {
+                    backgroundColor: '#0f172a',
                     useCORS: true,
                     allowTaint: true,
-                    onclone: (clonedDoc) => {
-                        const clonedAvatar = clonedDoc.getElementById('ladder-avatar');
-                        if (clonedAvatar) {
-                            clonedAvatar.src = 'https://img.icons8.com/ios-filled/100/a78bfa/climbing.png';
-                        }
-                    }
                 });
                 const ladderImgData = canvas.toDataURL('image/png');
                 
-                // Using inline styles for robust PDF rendering
-                let htmlContent = `
-                    <div style="font-family: 'Helvetica', 'Arial', sans-serif; color: #333; font-size: 11pt;">
-                        <div style="text-align: center; border-bottom: 2px solid #ddd; padding-bottom: 10px; margin-bottom: 20px;">
-                            <h1 style="color: #6d28d9; margin: 0; font-size: 20pt;">The Ladder: Challenge Report</h1>
-                        </div>
-                        <div style="font-size: 10pt; color: #555; margin-bottom: 15px;">
-                            <div style="padding: 3px 0;"><strong>Student Name:</strong> <span style="border-bottom: 1px solid #333; padding-left: 150px;">&nbsp;</span></div>
-                            <div style="padding: 3px 0;"><strong>Clinician:</strong> ${clinicianName}</div>
-                            <div style="padding: 3px 0;"><strong>Date:</strong> ${date}</div>
-                        </div>
-                        <div style="text-align: left; margin-bottom: 20px;">
-                            <img src="${ladderImgData}" style="max-width: 150px;" />
-                        </div>
-                `;
-                
-                const sortedRungs = [...ladderRungs].sort((a, b) => a.fear - b.fear);
-                sortedRungs.forEach((rung, index) => {
-                    const postPrompt = shuffledPrompts.pop() || "Describe the experience.";
-                    htmlContent += `
-                        <div style="margin-bottom: 15px; border: 1px solid #ccc; padding: 15px; border-radius: 8px; page-break-inside: avoid;">
-                            <h3 style="margin-top: 0; color: #5b21b6; border-bottom: 1px solid #ddd; padding-bottom: 5px; font-size: 13pt;">
-                                <strong>Rung ${index + 1}:</strong> ${rung.situation} (Fear: ${rung.fear}/10)
-                            </h3>
-                            <p><strong>My Success Metric:</strong> ${rung.successMetric}</p>
-                            
-                            <div>
-                                <h4 style="color: #7c3aed; margin: 15px 0 5px 0; font-size: 11pt; font-weight: bold;">Pre-Challenge Reflection</h4>
-                                <div style="white-space: pre-wrap; background-color: #f9fafb; padding: 10px; border-radius: 4px; border: 1px solid #f3f4f6; min-height: 20px;">
-                                    ${rung.preJournal || '&nbsp;'}
+                let reportHtml = '';
+
+                for (let i = 0; i < MAX_RUNGS; i++) {
+                    let pageHtml = `<div class="page-break" style="padding: 20px;">`; // Each rung is a page
+
+                    // Add header ONLY to the first page (i === 0)
+                    if (i === 0) {
+                         pageHtml += `
+                            <div style="text-align: center; border-bottom: 2px solid #ddd; padding-bottom: 10px; margin-bottom: 20px;">
+                                <h1 style="color: #6d28d9; margin: 0; font-size: 20pt;">The Ladder: Challenge Report</h1>
+                            </div>
+                            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 20px;">
+                                <div style="font-size: 10pt; color: #555; line-height: 1.6;">
+                                    <div style="padding: 3px 0;">
+                                        <strong style="display: inline-block; width: 90px;">Student Name:</strong> 
+                                        <span style="border-bottom: 1px solid #333; padding-left: 150px;">${studentName || ''}</span>
+                                    </div>
+                                    <div style="padding: 3px 0;">
+                                        <strong style="display: inline-block; width: 90px;">Clinician:</strong> ${clinicianName}
+                                    </div>
+                                    <div style="padding: 3px 0;">
+                                        <strong style="display: inline-block; width: 90px;">Date:</strong> ${date}
+                                    </div>
+                                </div>
+                                <div style="text-align: right;">
+                                    <img src="${ladderImgData}" style="max-width: 120px;" />
                                 </div>
                             </div>
+                        `;
+                    }
 
+                    const rung = sortedRungs[i];
+                    
+                    let rungContentHtml = `<div style="border: 1px solid #ccc; padding: 15px; border-radius: 8px;">`;
+                    
+                    if (rung) {
+                        const postPrompt = shuffledPrompts.pop() || "Describe the experience.";
+                        let responseLinesHtml = '';
+                        for (let j = 0; j < 7; j++) {
+                            responseLinesHtml += `<div style="border-bottom: 1px solid #ccc; height: 32px;"></div>`;
+                        }
+
+                        rungContentHtml += `
+                            <div style="margin-top: 0; color: #5b21b6; border-bottom: 1px solid #ddd; padding-bottom: 5px; font-size: 13pt; margin-bottom: 10px;">
+                                <strong>Rung ${i + 1}:</strong> ${DOMPurify.sanitize(rung.situation)} (Fear: ${rung.fear}/10)
+                            </div>
+                            <div style="display: flex; align-items: baseline; margin-bottom: 10px;">
+                                <strong style="width: 150px; flex-shrink: 0;">My Success Metric:</strong>
+                                <span>${DOMPurify.sanitize(rung.successMetric)}</span>
+                            </div>
                             <div>
-                                <h4 style="color: #7c3aed; margin: 15px 0 5px 0; font-size: 11pt; font-weight: bold;">Post-Challenge Reflection Prompt</h4>
+                                <h4 style="color: #7c3aed; margin: 10px 0 5px 0; font-size: 11pt; font-weight: bold;">Pre-Challenge Reflection</h4>
+                                <div style="white-space: pre-wrap; background-color: #f9fafb; padding: 10px; border-radius: 4px; border: 1px solid #f3f4f6; min-height: 20px; text-align: left;">
+                                    ${DOMPurify.sanitize(rung.preJournal) || '&nbsp;'}
+                                </div>
+                            </div>
+                            <div>
+                                <h4 style="color: #7c3aed; margin: 10px 0 5px 0; font-size: 11pt; font-weight: bold;">Post-Challenge Reflection Prompt</h4>
                                 <p><strong>${postPrompt}</strong></p>
-                                <div style="margin-top: 8px;">
-                                    <div style="border-bottom: 1px solid #ccc; height: 22px;"></div>
-                                    <div style="border-bottom: 1px solid #ccc; height: 22px;"></div>
-                                    <div style="border-bottom: 1px solid #ccc; height: 22px;"></div>
-                                    <div style="border-bottom: 1px solid #ccc; height: 22px;"></div>
-                                    <div style="border-bottom: 1px solid #ccc; height: 22px;"></div>
-                                </div>
+                                <div style="margin-top: 8px;">${responseLinesHtml}</div>
                             </div>
-                        </div>
-                    `;
-                });
-                
-                htmlContent += `</div>`; // Close main container
+                        `;
+                    } else {
+                        // Placeholder for empty rungs
+                        rungContentHtml += `
+                            <div style="margin-top: 0; color: #5b21b6; border-bottom: 1px solid #ddd; padding-bottom: 5px; font-size: 13pt; margin-bottom: 10px;">
+                                <strong>Rung ${i + 1}:</strong> (Challenge not yet added)
+                            </div>
+                            <div style="height: 500px; display: flex; align-items: center; justify-content: center; color: #999;">
+                                <p>This space is ready for your next challenge!</p>
+                            </div>
+                        `;
+                    }
+                    rungContentHtml += `</div>`; // Close rung container
+                    pageHtml += rungContentHtml;
+                    pageHtml += `</div>`; // Close page container
+                    reportHtml += pageHtml;
+                }
 
-                await doc.html(htmlContent, {
-                    callback: function(doc) {
-                        doc.save(`TheLadder_Report.pdf`);
-                    },
-                    margin: [40, 40, 40, 40],
-                    autoPaging: 'text',
-                    width: 515,
-                    windowWidth: 595,
-                });
-            } catch (error) {
-                console.error("PDF Export failed:", error);
-                showNotification("Failed to generate PDF. Check console for details.");
+                printContainer.innerHTML = reportHtml;
+                window.print();
+                printContainer.innerHTML = ''; // Clean up after printing
+
+            } catch(error) {
+                console.error("Print Export failed:", error);
+                showNotification("Failed to generate report for printing.");
             } finally {
                 exportPdfBtn.textContent = 'Export PDF';
                 updateExportButton();
@@ -706,6 +711,8 @@
     </script>
 </body>
 </html>
+
+
 
 
 
