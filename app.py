@@ -221,6 +221,29 @@ def slp_page(slpTools_slug):
     except Exception as e:
         app.logger.error(f"CRITICAL: Could not find template for '{slpTools_slug}'. Error: {e}")
         abort(404)
+
+# --- Cognition Tools ---
+@app.route('/cognition-tools')
+@token_required
+def slp_tools():
+    app.logger.info("Request for /cognition-tools. Trying 'templates/cognition-tools/index.html'.")
+    try:
+        return render_template('cognition-tools/index.html')
+    except Exception as e:
+        app.logger.error(f"CRITICAL: Could not find 'templates/cognition-tools/index.html'. Error: {e}")
+        abort(500)
+
+# --- Dynamic Route for Individual Cognition-Tool Pages ---
+@app.route('/cognition-tools/<cognitionTools_slug>')
+@token_required
+def cognition_page(cognitionTools_slug):
+    app.logger.info(f"Request received for cognition tools page: /cognition-tools/{cognitionTools_slug}")
+    try:
+        # This is the correct path, starting from inside the 'templates' folder.
+        return render_template(f'/cognition-tools/{cognitionTools_slug}/index.html')
+    except Exception as e:
+        app.logger.error(f"CRITICAL: Could not find template for '{cognitionTools_slug}'. Error: {e}")
+        abort(404)
         
 # --- Redirects to enforce clean URLs ---
 # These catch old links and point them to the correct, clean URL.
