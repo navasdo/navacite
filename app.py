@@ -225,7 +225,7 @@ def slp_page(slpTools_slug):
 # --- Cognition Tools ---
 @app.route('/cognition-tools')
 @token_required
-def slp_tools():
+def cognition_tools():
     app.logger.info("Request for /cognition-tools. Trying 'templates/cognition-tools/index.html'.")
     try:
         return render_template('cognition-tools/index.html')
