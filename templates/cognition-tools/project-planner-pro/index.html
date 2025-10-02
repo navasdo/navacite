@@ -1,0 +1,633 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <link rel="icon" type="https://raw.githubusercontent.com/navasdo/navacite/refs/heads/main/templates/static/ico/navacite.ico" href="https://raw.githubusercontent.com/navasdo/navacite/refs/heads/main/templates/static/ico/navacite.ico">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Project Planner Pro</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <style>
+        body {
+            background-color: #0c0a18;
+            font-family: sans-serif;
+        }
+        .modal-enter {
+            opacity: 0;
+        }
+        .modal-enter-active {
+            opacity: 1;
+            transition: opacity 300ms;
+        }
+        .modal-content-enter {
+            opacity: 0;
+            transform: scale(0.95);
+        }
+        .modal-content-enter-active {
+            opacity: 1;
+            transform: scale(1);
+            transition: opacity 300ms, transform 300ms;
+        }
+        /* Custom scrollbar for better aesthetics */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #1e293b;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #4f46e5;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #6366f1;
+        }
+    </style>
+</head>
+<body class="text-slate-300 min-h-screen flex flex-col">
+
+    <!-- Navacite Home Link -->
+    <a href="/cognition-tools" class="absolute top-4 right-4 z-10 p-1 rounded-full bg-gray-700/50 hover:bg-gray-600/50 transition" title="Back to Cognition Tools">
+        <img src="https://raw.githubusercontent.com/navasdo/navacite/refs/heads/main/templates/static/navacite-images/Navacite-Main.png" alt="Navacite" class="w-10 h-10 rounded-full"/>
+    </a>
+
+    <!-- Terms & Disclaimer Modal -->
+    <div id="termsModal" class="hidden fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4 modal-enter">
+        <div class="bg-slate-800 border border-violet-700/50 rounded-2xl shadow-2xl shadow-violet-500/10 p-6 sm:p-8 max-w-2xl w-full max-h-[90vh] overflow-y-auto modal-content-enter">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-3xl font-bold text-slate-100">Terms & Disclaimer</h2>
+                <button id="closeTermsModal" class="text-slate-400 hover:text-white transition-colors">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
+                </button>
+            </div>
+            <div class="space-y-6 text-slate-300 text-left text-sm">
+                 <div><h3 class="text-xl font-semibold text-violet-400 mb-2">Disclaimer</h3><p>Navacite tools are provided "as is" and are not intended to diagnose, prevent, or cure any speech-language disorder. They are designed as supplemental engagement supports to be used by qualified professionals. Navacite makes no warranties, expressed or implied, and hereby disclaims and negates all other warranties, including without limitation, implied warranties of merchantability, fitness for a particular purpose, and non-infringement of intellectual property or other rights. Navacite does not warrant or make any representations concerning the accuracy, likely results, or reliability of the materials on this site or on any sites linked to it.</p></div>
+                <div><h3 class="text-xl font-semibold text-violet-400 mb-2">Professional Responsibility</h3><p>The responsibility for all clinical decisions, interpretations, and applications of Navacite tools rests solely with the licensed professional using them. Navacite assumes no liability for misuse, misapplication, or outcomes resulting from the use of these materials.</p></div>
+                <div><h3 class="text-xl font-semibold text-violet-400 mb-2">Revisions and Errata</h3><p>The materials appearing on Navacite's web site may include technical, typographical, or content errors. Navacite does not warrant that any of the materials are accurate, complete, or current. Navacite may make changes to the materials contained on its site at any time without notice, but makes no commitment to update them.</p></div>
+                <div><h3 class="text-xl font-semibold text-violet-400 mb-2">Terms of Use Modifications</h3><p>Navacite may revise these terms of use at any time without notice. By using this site you agree to be bound by the then-current version of these Terms & Disclaimer provisions.</p></div>
+                <div><h3 class="text-xl font-semibold text-violet-400 mb-2">Conflict of Interest Disclaimer</h3><p>Navacite is an independent project created in a personal capacity by its author. It is not a product of, nor is it affiliated with, endorsed by, or representative of any school district, university, or employer. All intellectual property, design, and code on this site were developed as an independent effort, outside the scope of employment. Use of Navacite does not imply involvement, approval, or responsibility by any employer, past or present.</p></div>
+                <div><h3 class="text-xl font-semibold text-violet-400 mb-2">Limitation of Liability</h3><p>In no event shall Navacite or its creator be liable for any damages (including, without limitation, damages for loss of data, income, or clinical outcomes) arising out of the use or inability to use the materials on this site, even if Navacite has been notified of the possibility of such damages.</p></div>
+                <div><h3 class="text-xl font-semibold text-violet-400 mb-2">Governing Law</h3><p>Any claim relating to Navacite's web site shall be governed by the laws of the State of Nebraska (USA), without regard to its conflict of law provisions.</p></div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Privacy Modal -->
+    <div id="privacyModal" class="hidden fixed inset-0 bg-black bg-opacity-75 backdrop-filter backdrop-blur-sm flex items-center justify-center z-50 p-4 modal-enter">
+        <div class="bg-slate-800 border border-violet-700/50 rounded-2xl shadow-2xl shadow-violet-500/10 p-6 sm:p-8 max-w-2xl w-full max-h-[90vh] overflow-y-auto modal-content-enter">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-3xl font-bold text-slate-100">Student Data Privacy</h2>
+                <button id="closePrivacyModal" class="text-slate-400 hover:text-white transition-colors">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
+                </button>
+            </div>
+            <div class="space-y-4 text-slate-300 text-left text-sm">
+                <p>This application is designed to support language assessment activities without collecting or maintaining student data.</p>
+                <p><strong class="text-violet-400 block mb-1">Student Information Use:</strong> Student names may be entered by the examiner for the sole purpose of personalizing a printable PDF report. This information is not transmitted, stored, or retained by the application or its hosting service.</p>
+                <p><strong class="text-violet-400 block mb-1">Data Retention:</strong> Once the examiner completes an assessment, the entered name is cleared from the page. No student information is written to logs, databases, or external servers.</p>
+                <p><strong class="text-violet-400 block mb-1">Ownership of Records:</strong> The only lasting record generated is the PDF report saved or printed by the examiner. As such, all student records remain under the direct custody and control of the examiner and their institution, in compliance with FERPA.</p>
+                <p><strong class="text-violet-400 block mb-1">Compliance Alignment:</strong> Because the application does not maintain education records or personally identifiable information, it functions as a local instructional tool rather than a record-keeping system.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Reflection Modal -->
+    <div id="reflectionModal" class="hidden fixed inset-0 bg-black bg-opacity-75 backdrop-filter backdrop-blur-sm flex items-center justify-center z-50 p-4">
+        <div class="bg-slate-900 border border-violet-700 rounded-2xl shadow-2xl shadow-violet-500/10 p-8 max-w-2xl w-full max-h-[90vh] flex flex-col">
+            <div id="reflectionContent">
+                <h3 class="text-2xl font-bold text-violet-400 mb-4">Task Complete! Time to Reflect.</h3>
+                <p id="reflectionPrompt" class="text-slate-300 mb-4"></p>
+                <textarea id="reflectionInput" class="w-full mt-2 p-3 rounded-md bg-slate-800/60 text-slate-300 border border-slate-700 focus:outline-none focus:ring-2 focus:ring-violet-500" rows="6" placeholder="Type your thoughts here..."></textarea>
+            </div>
+            <div class="mt-6 flex gap-4 justify-end">
+                <button id="exportReflectionBtn" class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-6 rounded-lg transition-colors">Export Reflection (PDF)</button>
+                <button id="closeReflectionModalBtn" class="bg-slate-600 hover:bg-slate-700 text-white font-bold py-2 px-6 rounded-lg transition-colors">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <main class="w-full max-w-5xl mx-auto p-4 md:p-8 flex-grow">
+        <header class="w-full mx-auto my-8 text-center">
+             <img src="https://raw.githubusercontent.com/navasdo/navacite/refs/heads/main/templates/navacite-images/project-planner.png" alt="Project Planner Pro Logo" class="w-48 mx-auto mb-4" style="filter: drop-shadow(0 0 15px rgba(167, 139, 250, 0.4))">
+            <h1 class="text-5xl md:text-6xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-violet-400 to-fuchsia-500">
+                Project Planner Pro
+            </h1>
+            <p class="text-md md:text-lg text-slate-400 italic max-w-4xl mx-auto mt-2">
+                This tool digitizes the Goal-Plan-Do-Review (GPDR/R) framework to build executive functioning skills. Clinicians can guide students to break down large assignments into manageable steps, estimate time, and create a concrete plan. Students can then use the integrated Pomodoro timer to execute their plan in focused work sessions and engage in structured self-reflection to build metacognitive awareness.
+            </p>
+        </header>
+
+        <!-- View Toggler -->
+        <div class="flex justify-center my-8">
+            <div class="bg-slate-800/60 border border-slate-700 rounded-lg p-1 flex gap-1">
+                <button id="showPlannerBtn" class="font-bold py-2 px-6 rounded-md transition-all duration-300">Planner</button>
+                <button id="showDoerBtn" class="font-bold py-2 px-6 rounded-md transition-all duration-300">Doer</button>
+            </div>
+        </div>
+
+        <!-- Planner View -->
+        <div id="plannerView">
+            <div class="bg-slate-900/40 border border-violet-900/80 rounded-2xl p-6 md:p-8 space-y-8">
+                <!-- Goal Section -->
+                <div>
+                    <h3 class="text-xl font-bold text-violet-400 mb-4 border-b-2 border-violet-700 pb-2">Step 1: Define Your Goal</h3>
+                    <div class="grid md:grid-cols-3 gap-4">
+                        <div>
+                            <label for="projectGoal" class="text-slate-400">What is the project or assignment?</label>
+                            <input type="text" id="projectGoal" placeholder="e.g., Write a 5-paragraph essay on the water cycle" class="w-full mt-2 p-3 rounded-md bg-slate-800/60 text-slate-300 border border-slate-700 focus:outline-none focus:ring-2 focus:ring-violet-500">
+                        </div>
+                        <div>
+                            <label for="studentName" class="text-slate-400 flex items-center gap-2">
+                                Student Name (for printable report)
+                                <button id="openPrivacyModalBtn" title="Privacy Information" class="text-slate-500 hover:text-violet-400 transition-colors">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
+                                </button>
+                            </label>
+                            <input type="text" id="studentName" placeholder="e.g., Alex Doe" class="w-full mt-2 p-3 rounded-md bg-slate-800/60 text-slate-300 border border-slate-700 focus:outline-none focus:ring-2 focus:ring-violet-500">
+                        </div>
+                        <div>
+                            <label for="projectDueDate" class="text-slate-400">When is the project or assignment due?</label>
+                            <input type="date" id="projectDueDate" class="w-full mt-2 p-3 rounded-md bg-slate-800/60 text-slate-300 border border-slate-700 focus:outline-none focus:ring-2 focus:ring-violet-500" style="color-scheme: dark;">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Plan Section -->
+                <div>
+                    <h3 class="text-xl font-bold text-violet-400 mb-4 border-b-2 border-violet-700 pb-2">Step 2: Make Your Plan</h3>
+                    <div id="stepsContainer" class="space-y-4 mb-4">
+                        <!-- Dynamic steps will be added here -->
+                    </div>
+                    <button id="addStepBtn" class="bg-violet-600 hover:bg-violet-700 text-white font-bold py-2 px-6 rounded-lg transition-colors">+ Add Step</button>
+                </div>
+                 <!-- Generate Plan Button -->
+                <div class="text-center">
+                    <button id="printPlanBtn" class="bg-green-600 hover:bg-green-700 disabled:bg-slate-600 disabled:opacity-50 disabled:cursor-not-allowed text-white font-bold py-3 px-8 rounded-lg transition-colors text-lg">Print Your Plan</button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Doer View -->
+        <div id="doerView" class="hidden">
+            <div class="bg-slate-900/40 border border-violet-900/80 rounded-2xl p-6 md:p-8 flex flex-col items-center">
+                 <h3 class="text-xl font-bold text-violet-400 mb-4">Let's Get to Work!</h3>
+                 <div class="w-full max-w-md">
+                     <label for="taskSelector" class="text-slate-400 mb-2 block text-center">Select a task to focus on:</label>
+                     <select id="taskSelector" class="w-full p-3 rounded-md bg-slate-800/60 text-slate-300 border border-slate-700 focus:outline-none focus:ring-2 focus:ring-violet-500"></select>
+                 </div>
+
+                 <div id="timerDisplay" class="text-8xl font-extrabold my-8 text-transparent bg-clip-text bg-gradient-to-r from-violet-400 to-fuchsia-500">25:00</div>
+                 <div id="timerStatus" class="text-slate-400 text-lg mb-8 h-6"></div>
+
+                 <div class="flex flex-wrap justify-center gap-4">
+                     <button id="startTimerBtn" class="bg-violet-600 hover:bg-violet-700 disabled:bg-slate-600 disabled:cursor-not-allowed text-white font-bold py-3 px-8 rounded-lg transition-colors text-lg">Start</button>
+                     <button id="pauseTimerBtn" class="bg-yellow-600 hover:bg-yellow-700 disabled:bg-slate-600 disabled:cursor-not-allowed text-white font-bold py-3 px-8 rounded-lg transition-colors text-lg hidden">Pause</button>
+                     <button id="completeEarlyBtn" class="bg-green-600 hover:bg-green-700 disabled:bg-slate-600 disabled:cursor-not-allowed text-white font-bold py-3 px-8 rounded-lg transition-colors text-lg hidden">Complete Task Early</button>
+                 </div>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="w-full max-w-3xl mx-auto mt-24 text-center text-sm text-slate-500 p-6 border-t border-slate-800/50">
+        <p class="font-bold text-violet-400">&copy; 2025 Navacite | All Rights Reserved</p>
+        <p class="mt-4 text-xs text-slate-500">
+            Navacite tools are provided 'as is' and are not intended to diagnose. Use requires professional judgment. <br><br>
+            <a href="#" id="openTermsModal" class="underline hover:text-violet-400 transition-colors">Terms & Disclaimer</a>
+        </p>
+    </footer>
+
+    <!-- Printable Plan Area (Hidden) -->
+    <div id="printableArea" class="hidden">
+        <style>
+            @media print {
+                body * { visibility: hidden; font-family: sans-serif; }
+                #printableArea, #printableArea * { visibility: visible; }
+                #printableArea { position: absolute; left: 0; top: 0; width: 100%; padding: 20px; color: black; }
+                .print-header { text-align: center; margin-bottom: 20px; }
+                .print-header img { width: 150px; margin: 0 auto; }
+                .print-title { font-size: 24px; font-weight: bold; margin-top: 10px; }
+                .print-section { margin-top: 20px; }
+                .print-section h3 { font-size: 18px; font-weight: bold; border-bottom: 2px solid #ccc; padding-bottom: 5px; margin-bottom: 10px;}
+                .print-details p { margin: 5px 0; }
+                .print-details strong { display: inline-block; min-width: 100px; }
+                table.print-table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+                table.print-table th, table.print-table td { border: 1px solid #ccc; padding: 8px; text-align: left; }
+                table.print-table th { background-color: #f2f2f2; font-weight: bold; }
+            }
+        </style>
+        <div class="print-header">
+            <img src="https://raw.githubusercontent.com/navasdo/navacite/refs/heads/main/templates/navacite-images/project-planner.png" alt="Project Planner Pro Logo">
+            <h1 class="print-title">Project Plan</h1>
+        </div>
+        <div class="print-section">
+            <h3>Goal Details</h3>
+            <div id="printGoalDetails" class="print-details">
+                <!-- JS will populate this -->
+            </div>
+        </div>
+         <div class="print-section">
+            <h3>Action Steps</h3>
+            <table id="printStepsTable" class="print-table">
+                <thead><tr><th>Step</th><th>Task</th><th>Estimated Time (minutes)</th></tr></thead>
+                <tbody></tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+    document.addEventListener('DOMContentLoaded', () => {
+
+        // --- Constants & State Variables ---
+        const WORK_TIME = 25 * 60; // 25 minutes
+        const SHORT_BREAK_TIME = 5 * 60; // 5 minutes
+        const LONG_BREAK_TIME = 15 * 60; // 15 minutes
+
+        const breakAudio = new Audio('https://raw.githubusercontent.com/navasdo/navacite/refs/heads/main/templates/cognition-tools/project-planner-pro/static/audio/timer-done.mp3');
+        const taskCompleteAudio = new Audio('https://raw.githubusercontent.com/navasdo/navacite/refs/heads/main/templates/cognition-tools/project-planner-pro/static/audio/task-complete.mp3');
+
+        const reflectionPrompts = [
+            "How did this task go? Was it easier or harder than you expected?",
+            "Did this take more or less time than you planned? Why do you think that is?",
+            "What is one thing you will do differently for the next step?",
+            "What part of this task felt the most successful?",
+            "Where did you get stuck, and how did you get unstuck?",
+            "On a scale of 1-5, how focused were you? What could help you improve your focus next time?",
+            "Did your plan for this step work well? What would you change about the plan?",
+            "What did you learn from completing this step?",
+            "Describe the environment you worked in. Was it helpful or distracting?",
+            "How are you feeling now that this step is complete? What's your energy level for the next task?"
+        ];
+        
+        let steps = [];
+        let timerInterval;
+        let timeLeft = WORK_TIME;
+        let isTimerRunning = false;
+        let isWorkSession = true;
+        let pomodorosCompleted = 0;
+        let totalTimeForCurrentTask = 0;
+        let accumulatedWorkTime = 0;
+
+        // --- DOM Elements ---
+        const plannerView = document.getElementById('plannerView');
+        const doerView = document.getElementById('doerView');
+        const showPlannerBtn = document.getElementById('showPlannerBtn');
+        const showDoerBtn = document.getElementById('showDoerBtn');
+        const addStepBtn = document.getElementById('addStepBtn');
+        const stepsContainer = document.getElementById('stepsContainer');
+        const printPlanBtn = document.getElementById('printPlanBtn');
+        const taskSelector = document.getElementById('taskSelector');
+        const timerDisplay = document.getElementById('timerDisplay');
+        const timerStatus = document.getElementById('timerStatus');
+        const startTimerBtn = document.getElementById('startTimerBtn');
+        const pauseTimerBtn = document.getElementById('pauseTimerBtn');
+        const completeEarlyBtn = document.getElementById('completeEarlyBtn');
+        
+        const reflectionModal = document.getElementById('reflectionModal');
+        const reflectionPromptEl = document.getElementById('reflectionPrompt');
+        const reflectionInput = document.getElementById('reflectionInput');
+        const exportReflectionBtn = document.getElementById('exportReflectionBtn');
+        const closeReflectionModalBtn = document.getElementById('closeReflectionModalBtn');
+
+        // --- Planner Logic ---
+
+        function renderSteps() {
+            stepsContainer.innerHTML = '';
+            steps.forEach((step, index) => {
+                const stepEl = document.createElement('div');
+                stepEl.className = 'flex items-center gap-2 bg-slate-800/60 p-3 rounded-lg';
+                stepEl.innerHTML = `
+                    <span class="font-bold text-violet-400">${index + 1}.</span>
+                    <input type="text" data-index="${index}" value="${step.task}" placeholder="Task Description" class="task-input flex-grow p-2 rounded-md bg-slate-700/50 text-slate-300 border border-slate-600 focus:outline-none focus:ring-2 focus:ring-violet-500">
+                    <input type="number" data-index="${index}" value="${step.time}" placeholder="Mins" class="time-input w-24 p-2 rounded-md bg-slate-700/50 text-slate-300 border border-slate-600 focus:outline-none focus:ring-2 focus:ring-violet-500">
+                    <button data-index="${index}" class="remove-step-btn text-red-400 hover:text-red-600 font-bold text-2xl">&times;</button>
+                `;
+                stepsContainer.appendChild(stepEl);
+            });
+            updatePrintButtonState();
+            updateDoerView();
+        }
+
+        function handleAddStep() {
+            steps.push({ task: '', time: '' });
+            renderSteps();
+        }
+
+        function handleStepChange(e) {
+            const index = e.target.dataset.index;
+            if (e.target.classList.contains('task-input')) {
+                steps[index].task = e.target.value;
+            } else if (e.target.classList.contains('time-input')) {
+                steps[index].time = e.target.value;
+            }
+            updatePrintButtonState();
+            updateDoerView();
+        }
+
+        function handleRemoveStep(e) {
+            if (e.target.classList.contains('remove-step-btn')) {
+                const index = e.target.dataset.index;
+                steps.splice(index, 1);
+                renderSteps();
+            }
+        }
+        
+        function updatePrintButtonState() {
+            const allFilled = steps.length > 0 && steps.every(step => step.task.trim() !== '' && step.time > 0);
+            printPlanBtn.disabled = !allFilled;
+        }
+
+        function handlePrintPlan() {
+            const studentName = document.getElementById('studentName').value || 'Not Specified';
+            const projectGoal = document.getElementById('projectGoal').value || 'Not Specified';
+            const projectDueDateInput = document.getElementById('projectDueDate').value;
+            let projectDueDate = 'Not Specified';
+            if (projectDueDateInput) {
+                // Handles date formatting correctly across timezones
+                const date = new Date(projectDueDateInput);
+                projectDueDate = new Date(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate()).toLocaleDateString();
+            }
+
+            const goalDetailsContainer = document.getElementById('printGoalDetails');
+            goalDetailsContainer.innerHTML = `
+                <p><strong>Student:</strong> ${studentName}</p>
+                <p><strong>Goal:</strong> ${projectGoal}</p>
+                <p><strong>Due Date:</strong> ${projectDueDate}</p>
+            `;
+
+            const tableBody = document.querySelector('#printStepsTable tbody');
+            tableBody.innerHTML = '';
+            steps.forEach((step, index) => {
+                const row = tableBody.insertRow();
+                row.innerHTML = `<td>${index + 1}</td><td>${step.task}</td><td>${step.time}</td>`;
+            });
+
+            window.print();
+        }
+        
+        // --- Doer & Timer Logic ---
+
+        function formatTime(seconds) {
+            const mins = Math.floor(seconds / 60);
+            const secs = seconds % 60;
+            return `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+        }
+        
+        function updateTimerDisplay() {
+            timerDisplay.textContent = formatTime(timeLeft);
+        }
+
+        function startTimer() {
+            if (isTimerRunning) return;
+            isTimerRunning = true;
+            startTimerBtn.classList.add('hidden');
+            pauseTimerBtn.classList.remove('hidden');
+            if (isWorkSession) {
+                completeEarlyBtn.classList.remove('hidden');
+            }
+            timerInterval = setInterval(() => {
+                timeLeft--;
+                updateTimerDisplay();
+                if (timeLeft <= 0) {
+                    clearInterval(timerInterval);
+                    timerCompleted();
+                }
+            }, 1000);
+        }
+
+        function pauseTimer() {
+            clearInterval(timerInterval);
+            isTimerRunning = false;
+            startTimerBtn.textContent = "Resume";
+            startTimerBtn.classList.remove('hidden');
+            pauseTimerBtn.classList.add('hidden');
+            completeEarlyBtn.classList.add('hidden');
+        }
+        
+        function resetTimerControls(isTaskDone = false) {
+             clearInterval(timerInterval);
+             isTimerRunning = false;
+             startTimerBtn.textContent = 'Start';
+             startTimerBtn.classList.remove('hidden');
+             pauseTimerBtn.classList.add('hidden');
+             completeEarlyBtn.classList.add('hidden');
+             if(isTaskDone) {
+                 startTimerBtn.disabled = true; // Disable until a new task is selected
+             }
+        }
+
+        function timerCompleted() {
+             if (isWorkSession) {
+                accumulatedWorkTime += WORK_TIME;
+                pomodorosCompleted++;
+                if (accumulatedWorkTime >= totalTimeForCurrentTask * 60) {
+                    taskCompleteAudio.play();
+                    timerStatus.textContent = "Task complete!";
+                    showReflectionModal();
+                    resetTimerControls(true);
+                } else {
+                    breakAudio.play();
+                    startBreak();
+                }
+            } else {
+                breakAudio.play();
+                startNextWorkSession();
+            }
+        }
+        
+        function handleTaskCompletion() {
+            taskCompleteAudio.play();
+            timerStatus.textContent = "Task complete!";
+            showReflectionModal();
+            resetTimerControls(true);
+        }
+
+        function startBreak() {
+            isWorkSession = false;
+            let breakTime = (pomodorosCompleted % 4 === 0) ? LONG_BREAK_TIME : SHORT_BREAK_TIME;
+            timeLeft = breakTime;
+            timerStatus.textContent = (pomodorosCompleted % 4 === 0) ? "Time for a long break!" : "Time for a short break!";
+            updateTimerDisplay();
+            isTimerRunning = false;
+            // Breaks cannot be skipped
+            startTimerBtn.disabled = true;
+            completeEarlyBtn.classList.add('hidden');
+            // Auto-start break
+            startTimer();
+        }
+
+        function startNextWorkSession() {
+            isWorkSession = true;
+            timeLeft = WORK_TIME;
+            timerStatus.textContent = "Time to focus!";
+            updateTimerDisplay();
+            isTimerRunning = false;
+            startTimerBtn.disabled = false;
+            resetTimerControls();
+        }
+
+        function handleTaskSelection() {
+            const selectedIndex = taskSelector.value;
+            if (selectedIndex === "-1") {
+                startTimerBtn.disabled = true;
+                totalTimeForCurrentTask = 0;
+                return;
+            };
+            totalTimeForCurrentTask = parseInt(steps[selectedIndex].time, 10);
+            accumulatedWorkTime = 0;
+            pomodorosCompleted = 0;
+            resetTimerControls();
+            startTimerBtn.disabled = false;
+            startNextWorkSession();
+        }
+        
+        // --- View & UI Logic ---
+        function updateActiveView(view) {
+            if (view === 'planner') {
+                plannerView.classList.remove('hidden');
+                doerView.classList.add('hidden');
+                showPlannerBtn.style.backgroundColor = '#7c3aed';
+                showPlannerBtn.style.color = 'white';
+                showDoerBtn.style.backgroundColor = 'transparent';
+                showDoerBtn.style.color = '';
+            } else { // doer
+                plannerView.classList.add('hidden');
+                doerView.classList.remove('hidden');
+                showDoerBtn.style.backgroundColor = '#7c3aed';
+                showDoerBtn.style.color = 'white';
+                showPlannerBtn.style.backgroundColor = 'transparent';
+                showPlannerBtn.style.color = '';
+                updateDoerView();
+            }
+        }
+
+        function updateDoerView() {
+            taskSelector.innerHTML = '<option value="-1">-- Select a Task --</option>';
+            steps.forEach((step, index) => {
+                if (step.task && step.time) {
+                    const option = document.createElement('option');
+                    option.value = index;
+                    option.textContent = `${step.task} (${step.time} mins)`;
+                    taskSelector.appendChild(option);
+                }
+            });
+            handleTaskSelection();
+        }
+
+        // --- Reflection Modal Logic ---
+        function showReflectionModal() {
+            const randomIndex = Math.floor(Math.random() * reflectionPrompts.length);
+            reflectionPromptEl.textContent = reflectionPrompts[randomIndex];
+            reflectionInput.value = '';
+            reflectionModal.classList.remove('hidden');
+        }
+
+        function hideReflectionModal() {
+            reflectionModal.classList.add('hidden');
+        }
+
+        function handleExportReflection() {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+            
+            const content = document.getElementById('reflectionContent');
+            const studentName = document.getElementById('studentName').value || 'Student';
+            const selectedTask = taskSelector.options[taskSelector.selectedIndex].text;
+
+            doc.setFontSize(18);
+            doc.text(`Reflection for: ${studentName}`, 14, 22);
+            doc.setFontSize(14);
+            doc.text(`Task: ${selectedTask}`, 14, 32);
+            doc.setLineWidth(0.5);
+            doc.line(14, 35, 196, 35);
+
+            doc.setFontSize(12);
+            doc.setFont('helvetica', 'bold');
+            doc.text("Prompt:", 14, 45);
+            
+            const promptText = doc.splitTextToSize(reflectionPromptEl.textContent, 180);
+            doc.setFont('helvetica', 'normal');
+            doc.text(promptText, 14, 52);
+            
+            const responseYStart = 52 + (promptText.length * 7);
+            doc.setFont('helvetica', 'bold');
+            doc.text("Response:", 14, responseYStart);
+            
+            const responseText = doc.splitTextToSize(reflectionInput.value, 180);
+            doc.setFont('helvetica', 'normal');
+            doc.text(responseText, 14, responseYStart + 7);
+            
+            doc.save(`${studentName}_Reflection_${selectedTask.split(' ')[0]}.pdf`);
+        }
+
+
+        // --- Terms & Disclaimer Modal Logic ---
+        const termsModal = document.getElementById('termsModal');
+        const openTermsLink = document.getElementById('openTermsModal');
+        const closeTermsButton = document.getElementById('closeTermsModal');
+        function showTermsModal(event) {
+            event.preventDefault();
+            termsModal.classList.remove('hidden');
+            setTimeout(() => {
+                termsModal.classList.add('modal-enter-active');
+                termsModal.querySelector('.modal-content-enter').classList.add('modal-content-enter-active');
+            }, 10);
+        }
+        function hideTermsModal() {
+            termsModal.querySelector('.modal-content-enter').classList.remove('modal-content-enter-active');
+            termsModal.classList.remove('modal-enter-active');
+            setTimeout(() => termsModal.classList.add('hidden'), 300);
+        }
+        if (openTermsLink) openTermsLink.addEventListener('click', showTermsModal);
+        if (closeTermsButton) closeTermsButton.addEventListener('click', hideTermsModal);
+        if (termsModal) termsModal.addEventListener('click', (event) => { if (event.target === termsModal) hideTermsModal(); });
+
+        // --- Privacy Modal Logic ---
+        const privacyModal = document.getElementById('privacyModal');
+        const openPrivacyBtn = document.getElementById('openPrivacyModalBtn');
+        const closePrivacyBtn = document.getElementById('closePrivacyModal');
+        function showPrivacyModal(event) {
+            event.preventDefault();
+            privacyModal.classList.remove('hidden');
+            setTimeout(() => {
+                privacyModal.classList.add('modal-enter-active');
+                privacyModal.querySelector('.modal-content-enter').classList.add('modal-content-enter-active');
+            }, 10);
+        }
+        function hidePrivacyModal() {
+            privacyModal.querySelector('.modal-content-enter').classList.remove('modal-content-enter-active');
+            privacyModal.classList.remove('modal-enter-active');
+            setTimeout(() => privacyModal.classList.add('hidden'), 300);
+        }
+        if (openPrivacyBtn) openPrivacyBtn.addEventListener('click', showPrivacyModal);
+        if (closePrivacyBtn) closePrivacyBtn.addEventListener('click', hidePrivacyModal);
+        if (privacyModal) privacyModal.addEventListener('click', (event) => { if (event.target === privacyModal) hidePrivacyModal(); });
+
+
+        // --- Event Listeners ---
+        showPlannerBtn.addEventListener('click', () => updateActiveView('planner'));
+        showDoerBtn.addEventListener('click', () => updateActiveView('doer'));
+        addStepBtn.addEventListener('click', handleAddStep);
+        stepsContainer.addEventListener('change', handleStepChange);
+        stepsContainer.addEventListener('click', handleRemoveStep);
+        printPlanBtn.addEventListener('click', handlePrintPlan);
+        taskSelector.addEventListener('change', handleTaskSelection);
+        startTimerBtn.addEventListener('click', startTimer);
+        pauseTimerBtn.addEventListener('click', pauseTimer);
+        completeEarlyBtn.addEventListener('click', handleTaskCompletion);
+        closeReflectionModalBtn.addEventListener('click', hideReflectionModal);
+        exportReflectionBtn.addEventListener('click', handleExportReflection);
+
+        // --- Initial Setup ---
+        updateActiveView('planner');
+        handleAddStep(); // Start with one empty step
+    });
+    </script>
+</body>
+</html>
+
+
+
