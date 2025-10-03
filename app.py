@@ -14,9 +14,9 @@ logging.basicConfig(level=logging.INFO)
 
 # --- Security Configuration ---
 # This securely reads your secret key from Render's environment variables.
-app.config['SECRET_KEY'] = os.environ.get('JWT_SECRET', 'a-very-secret-key-that-you-should-change')
-app.config['GEMINI_API_KEY_COGNITION'] = os.environ.get('GEMINI_API_KEY_COGNITION', 'AIzaSyCSJQNucC9O8Z1EuKG4EF7wEorpx-ShShM')
-app.config['GEMINI_API_KEY_SLP'] = os.environ.get('GEMINI_API_KEY_SLP', 'AIzaSyDbyFRosCckpHMGRRmA4hSpvSeJhPiSQuA')
+app.config['SECRET_KEY'] = os.environ.get('JWT_SECRET')
+app.config['GEMINI_API_KEY_COGNITION'] = os.environ.get('GEMINI_API_KEY_COGNITION')
+app.config['GEMINI_API_KEY_SLP'] = os.environ.get('GEMINI_API_KEY_SLP')
 
 
 # --- User Management ---
