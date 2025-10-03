@@ -4,6 +4,9 @@ import os
 from functools import wraps
 from datetime import datetime, timedelta
 import logging
+import requests
+import json
+from flask import jsonify
 
 # --- Basic Configuration ---
 app = Flask(__name__, template_folder='templates', static_folder='static')
@@ -12,8 +15,8 @@ logging.basicConfig(level=logging.INFO)
 # --- Security Configuration ---
 # This securely reads your secret key from Render's environment variables.
 app.config['SECRET_KEY'] = os.environ.get('JWT_SECRET', 'a-very-secret-key-that-you-should-change')
-app.config['COGNITION_KEY'] = os.environ.get('GEMINI_API_KEY_COGNITION')
-app.config['SLP_KEY'] = os.environ.get('GEMINI_API_KEY_SLP')
+app.config['GEMINI_API_KEY_COGNITION'] = os.environ.get('GEMINI_API_KEY_COGNITION')
+app.config['GEMINI_API_KEY_SLP'] = os.environ.get('GEMINI_API_KEY_SLP')
 
 
 # --- User Management ---
@@ -265,5 +268,139 @@ def page_not_found(e):
     app.logger.warning(f"404 Not Found error triggered for path: {request.path}")
     return "This page was not found in the application.", 404
 
-if __name__ == '__main__':
+# --- ALL API ROUTES GO HERE, OUTSIDE THE MAIN BLOCK ---
+
+# SESSION SCRIBE --- Waiter #1: Handles the compliance check
+@app.route('/api/compliance-check', methods=['POST'])
+def handle_compliance_check():
+    data = request.get_json()
+    user_input = data.get('userInput')
+    
+    if not user_input:
+        return jsonify({"error": "No user input provided"}), 400
+
+    try:
+        # Securely gets the key from your Render environment variables
+        api_key = app.config['SLP_KEY'] 
+        google_api_url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={api_key}"
+        
+        # This is the same payload your JavaScript was creating
+        payload = {
+            "contents": [{ "parts": [{ "text": f"Analyze the following text for potential PII and return the result as a JSON object: \"{user_input}\"" }] }],
+            "systemInstruction": { "parts": [{ "text": "You are a compliance-checking AI. Your task is to identify potential personally identifiable information (PII) or FERPA violations in a given text. Return a JSON object with a single key \"violations\" which is an array of strings. Each string in the array should be a word or phrase you've identified as a potential violation. Focus on names of people, specific non-school locations, or titles of works that could be misinterpreted as names. If there are no potential violations, return an empty array. Do not explain your reasoning, just return the JSON object." }] },
+            "generationConfig": {
+                "responseMimeType": "application/json",
+                "responseSchema": { "type": "OBJECT", "properties": { "violations": { "type": "ARRAY", "items": { "type": "STRING" } } } }
+            }
+        }
+        
+        response = requests.post(google_api_url, headers={"Content-Type": "application/json"}, data=json.dumps(payload))
+        response.raise_for_status() # Check for errors
+        
+        # Send Google's response back to the browser
+        return response.json()
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+# Waiter #2: Handles generating the final note
+@app.route('/api/generate-note', methods=['POST'])
+def handle_generate_note():
+    data = request.get_json()
+    user_input = data.get('userInput')
+    glossary = data.get('glossary')
+
+    if not user_input or not glossary:
+        return jsonify({"error": "Missing user input or glossary"}), 400
+
+    try:
+        # Securely gets the key from your Render environment variables
+        api_key = app.config['SLP_KEY']
+        google_api_url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={api_key}"
+        
+        # This is the same payload your JavaScript was creating
+        payload = {
+            "contents": [{ "parts": [{ "text": f"Using the following glossary, please expand the shorthand note below into a professional therapy note.\n\nGlossary:\n{json.dumps(glossary, indent=2)}\n\nShorthand Note:\n\"{user_input}\"" }] }],
+            "systemInstruction": { "parts": [{ "text": "You are a Speech-Language Pathologist’s assistant. Your only task is to take shorthand prompts (fragments, abbreviations, or incomplete sentences) and expand them into full, professional attendance notes for school-based therapy. Write in a clear, concise, professional tone appropriate for clinical documentation. Crucially, all notes must be de-identified. Always refer to individuals as \"the student\" or \"the students\" and use neutral pronouns (they/them/their) to ensure anonymity and FERPA compliance. Use the provided glossary to expand shorthand. For terms not in the glossary, expand them logically." }] }
+        }
+
+        response = requests.post(google_api_url, headers={"Content-Type": "application/json"}, data=json.dumps(payload))
+        response.raise_for_status() # Check for errors
+        
+        # Send Google's response back to the browser
+        return response.json()
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
     app.run(debug=True)
+
+    # MIND SHIFTER Waiter for checking a student's solution in Mind Shifter
+@app.route('/api/check-solution', methods=['POST'])
+def handle_check_solution():
+    data = request.get_json()
+    student_answer = data.get('studentAnswer')
+    solution_keywords = data.get('solutionKeywords')
+    
+    if not student_answer or not solution_keywords:
+        return jsonify({"error": "Missing required data"}), 400
+
+    try:
+        # Securely uses the COGNITION key from your app config
+        api_key = app.config['GEMINI_API_KEY_COGNITION']
+        google_api_url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={api_key}"
+        
+        # This part runs two checks: one for inappropriate content and one for conceptual match
+        inappropriate_prompt = f"Is the following text inappropriate, offensive, or off-topic for a school assignment? Answer only \"Yes\" or \"No\". Text: \"{student_answer}\""
+        inappropriate_payload = {"contents": [{"parts": [{"text": inappropriate_prompt}]}]}
+        inappropriate_response = requests.post(google_api_url, headers={"Content-Type": "application/json"}, data=json.dumps(inappropriate_payload))
+        inappropriate_response.raise_for_status()
+        inappropriate_result = inappropriate_response.json().get('candidates', [{}])[0].get('content', {}).get('parts', [{}])[0].get('text', '')
+        
+        if 'yes' in inappropriate_result.strip().lower():
+            return jsonify({"match": False, "inappropriate": True})
+
+        concept_prompt = f"You are an AI assistant. Compare a student's answer to a list of keywords. Is the student's answer conceptually similar to any of the keywords? Answer only \"Yes\" or \"No\".\nStudent Answer: \"{student_answer}\"\nKeywords: \"{', '.join(solution_keywords)}\""
+        concept_payload = {"contents": [{"parts": [{"text": concept_prompt}]}]}
+        concept_response = requests.post(google_api_url, headers={"Content-Type": "application/json"}, data=json.dumps(concept_payload))
+        concept_response.raise_for_status()
+        concept_result = concept_response.json().get('candidates', [{}])[0].get('content', {}).get('parts', [{}])[0].get('text', '')
+        is_match = 'yes' in concept_result.strip().lower()
+        
+        return jsonify({"match": is_match, "inappropriate": False})
+
+    except Exception as e:
+        # A fallback in case the API call fails
+        is_match = any(keyword in student_answer.lower() for keyword in solution_keywords)
+        return jsonify({"match": is_match, "inappropriate": False})
+
+
+# Waiter for getting a helpful hint in Mind Shifter
+@app.route('/api/get-scaffolding', methods=['POST'])
+def handle_get_scaffolding():
+    data = request.get_json()
+    student_answer = data.get('studentAnswer')
+    
+    if not student_answer:
+        return jsonify({"error": "Missing student answer"}), 400
+        
+    try:
+        # Securely uses the COGNITION key from your app config
+        api_key = app.config['GEMINI_API_KEY_COGNITION']
+        google_api_url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={api_key}"
+
+        prompt = f"A student's answer isn't quite right: \"{student_answer}\". Provide a short, encouraging, one-sentence question to help them think of a better solution. Do not give the answer."
+        payload = {"contents": [{"parts": [{"text": prompt}]}]}
+
+        response = requests.post(google_api_url, headers={"Content-Type": "application/json"}, data=json.dumps(payload))
+        response.raise_for_status()
+        
+        scaffold_text = response.json().get('candidates', [{}])[0].get('content', {}).get('parts', [{}])[0].get('text', "Good start! How might someone else see this situation?")
+        
+        return jsonify({"scaffoldText": scaffold_text})
+
+    except Exception as e:
+        return jsonify({"scaffoldText": "Good start! How might someone else see this situation?"})
+
+# --- This block should be the VERY LAST thing in your file ---
+    if __name__ == '__main__':
