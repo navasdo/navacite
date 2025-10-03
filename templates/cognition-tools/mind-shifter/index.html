@@ -1,0 +1,932 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <a href="/cognition-tools" class="absolute top-4 right-4 z-20 p-1 rounded-full bg-gray-700/50 hover:bg-gray-600/50 transition" title="Back to PREVIOUS PAGE"><img src="https://raw.githubusercontent.com/navasdo/navacite/refs/heads/main/templates/static/navacite-images/Navacite-Main.png" alt="Navacite" class="w-10 h-10 rounded-full"/></a>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mind Shifter</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="icon" type="image/x-icon" href="https://raw.githubusercontent.com/navasdo/navacite/refs/heads/main/templates/static/ico/navacite.ico">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #0c0a18;
+        }
+        .modal-enter, .lobey-enter { opacity: 0; }
+        .modal-enter-active, .lobey-enter-active { opacity: 1; transition: opacity 300ms; }
+        .modal-content-enter { opacity: 0; transform: scale(0.95); }
+        .modal-content-enter-active { opacity: 1; transform: scale(1); transition: opacity 300ms, transform 300ms; }
+
+        .selection-button.selected {
+            background-color: #7c3aed;
+            border-color: #a78bfa;
+            color: #ffffff;
+            transform: scale(1.05);
+            box-shadow: 0 0 15px rgba(167, 139, 250, 0.5);
+        }
+        
+        /* Progress Tracker Styles */
+        .progress-step {
+            display: flex;
+            align-items: center;
+            color: #6b7280; /* gray-500 */
+            transition: all 0.3s ease;
+        }
+        .progress-step.active {
+            color: #a78bfa; /* violet-400 */
+            font-weight: bold;
+        }
+        .progress-step .step-circle {
+            width: 2rem;
+            height: 2rem;
+            border-radius: 9999px;
+            border-width: 2px;
+            border-color: #4b5563; /* gray-600 */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 0.5rem;
+            transition: all 0.3s ease;
+        }
+        .progress-step.active .step-circle {
+            border-color: #a78bfa; /* violet-400 */
+            background-color: rgba(167, 139, 250, 0.2);
+        }
+        .progress-line {
+            flex-grow: 1;
+            height: 2px;
+            background-color: #4b5563; /* gray-600 */
+            margin: 0 1rem;
+        }
+        
+        /* Argument Card Styles */
+        .argument-card {
+            background-color: rgba(30, 27, 47, 0.8);
+            border: 1px solid #374151; /* gray-700 */
+            border-radius: 0.75rem;
+            padding: 1rem;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+        .argument-card.correct-match {
+            border-color: #22c55e; /* green-500 */
+            box-shadow: 0 0 10px rgba(34, 197, 94, 0.5);
+        }
+        .argument-card textarea {
+            background-color: transparent;
+            border: none;
+            resize: none;
+        }
+
+        /* Balance Scale */
+        #balanceScaleContainer {
+            transition: transform 0.5s ease-in-out;
+        }
+        .scale-glow {
+            filter: drop-shadow(0 0 10px #a78bfa);
+        }
+
+
+        /* Star Rating */
+        .star {
+            fill: #4b5563; /* gray-600 */
+            transition: fill 0.2s ease;
+        }
+        .star-rating.hover .star,
+        .star.filled {
+            fill: #facc15; /* yellow-400 */
+        }
+
+        /* Ripple Effect Connector */
+        .ripple-connector {
+            position: relative;
+            padding: 2rem 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .ripple-connector::before {
+            content: '';
+            position: absolute;
+            left: 50%;
+            top: 0;
+            bottom: 0;
+            width: 2px;
+            background-color: #4b5563;
+            transform: translateX(-50%);
+        }
+        .ripple-arrow {
+            color: #a78bfa;
+        }
+    </style>
+</head>
+<body class="bg-[#0c0a18] text-slate-300 flex flex-col min-h-screen">
+
+    <!-- Lobey Mascot Popup -->
+    <div id="lobeyPopup" class="hidden fixed bottom-6 right-6 z-40 flex items-end gap-4 lobey-enter">
+        <div id="lobeyContainer" class="bg-slate-800 border border-violet-700/50 rounded-2xl shadow-2xl p-4 max-w-xs text-center">
+            <p id="lobeyMessage" class="text-slate-300"></p>
+            <div id="lobeyScaffold" class="hidden mt-2"></div>
+        </div>
+        <img id="lobeyImage" src="https://raw.githubusercontent.com/navasdo/navacite/refs/heads/main/templates/cognition-tools/mind-shifter/static/images/brain-waving.png" alt="Lobey the Brain Mascot" class="w-24 h-24">
+    </div>
+    
+    <!-- Modals Container -->
+    <div id="modalContainer">
+        <!-- Sentence Starter Modal -->
+        <div id="starterModal" class="hidden fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4">
+            <div class="bg-slate-800 border border-violet-700/50 rounded-2xl shadow-2xl p-6 max-w-lg w-full">
+                <h3 class="text-2xl font-bold text-violet-400 mb-4">Stuck? Try a sentence starter!</h3>
+                <div id="starterList" class="space-y-3"></div>
+                <button class="modal-close mt-6 w-full bg-slate-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-slate-700 transition-colors">Close</button>
+            </div>
+        </div>
+        <!-- Ripple Effect Intro Modal -->
+        <div id="rippleIntroModal" class="hidden fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4">
+            <div class="bg-slate-800 border border-violet-700/50 rounded-2xl shadow-2xl p-6 max-w-2xl w-full text-center">
+                <img src="https://raw.githubusercontent.com/navasdo/navacite/refs/heads/main/templates/cognition-tools/mind-shifter/static/images/brain-surprised.png" alt="Lobey" class="w-32 h-32 mx-auto mb-4">
+                <h3 class="text-2xl font-bold text-violet-400 mb-4">Do you know what a "Ripple Effect" is?</h3>
+                <p class="text-slate-400 mb-6">It's the idea that one small action can cause a chain of events, like a pebble making ripples in a pond. Let's explore that!</p>
+                <div class="flex justify-center gap-4">
+                    <button id="watchRippleVideo" class="bg-violet-600 text-white font-bold py-2 px-6 rounded-lg hover:bg-violet-700 transition-colors">Watch Lobey Explain</button>
+                    <button id="teacherExplainRipple" class="bg-slate-600 text-white font-bold py-2 px-6 rounded-lg hover:bg-slate-700 transition-colors">My Teacher Will Explain</button>
+                </div>
+            </div>
+        </div>
+        <!-- Video Modal -->
+        <div id="videoModal" class="hidden fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4">
+            <div class="bg-slate-800 border border-violet-700/50 rounded-2xl shadow-2xl p-2 w-full max-w-3xl">
+                <video id="lobeyVideo" class="w-full rounded-lg" controls src="https://raw.githubusercontent.com/navasdo/navacite/refs/heads/main/templates/cognition-tools/mind-shifter/static/video/Lobey-Final-ST.mp4"></video>
+                <button class="modal-close mt-4 w-full bg-slate-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-slate-700 transition-colors">Close</button>
+            </div>
+        </div>
+    </div>
+
+
+    <div class="flex-grow w-full max-w-5xl mx-auto px-4">
+        <header class="w-full mx-auto my-8 md:my-12 text-center">
+             <img src="https://raw.githubusercontent.com/navasdo/navacite/refs/heads/main/templates/navacite-images/mind-shifter.png" alt="Mind Shifter Logo" class="w-48 mx-auto mb-4" style="filter: drop-shadow(0 0 15px rgba(167, 139, 250, 0.4))">   
+            <h1 class="text-5xl md:text-6xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-violet-400 to-fuchsia-500">
+                Mind Shifter
+            </h1>
+            <p class="text-md md:text-lg text-slate-400 italic max-w-4xl mx-auto mt-4">
+                This gamified platform provides structured practice in cognitive flexibility for students. By engaging in debate generation and divergent problem-solving, the tool targets the ability to shift mental perspectives, generate creative solutions, and consider opposing viewpoints. It's designed to move students from rigid, single-answer thinking to a more dynamic and adaptive cognitive process.
+            </p>
+        </header>
+
+        <main>
+            <!-- Game Mode Selection -->
+            <div class="text-center mb-12">
+                 <h3 class="text-xl font-bold text-violet-400 mb-4">Select an Activity</h3>
+                <div class="flex justify-center gap-4">
+                    <button id="selectDebateTrainer" class="selection-button p-4 rounded-md border border-slate-700 bg-slate-800/60 transition-all duration-200 ease-in-out hover:bg-[#3e2e6b] selected">Debate Trainer</button>
+                    <button id="selectScenarioSolver" class="selection-button p-4 rounded-md border border-slate-700 bg-slate-800/60 transition-all duration-200 ease-in-out hover:bg-[#3e2e6b]">Scenario Solver</button>
+                </div>
+            </div>
+
+            <!-- App Container -->
+            <div id="appContainer" class="bg-slate-900/40 border border-violet-900/80 rounded-2xl p-6 md:p-8">
+
+                <!-- Debate Trainer -->
+                <div id="debateTrainer">
+                    <!-- Progress Tracker -->
+                    <div id="debateProgress" class="flex items-center justify-center mb-6">
+                        <div class="progress-step active" data-step="1"><div class="step-circle">1</div> State Your Case</div>
+                        <div class="progress-line"></div>
+                        <div class="progress-step" data-step="2"><div class="step-circle">2</div> Argue the Opposite</div>
+                        <div class="progress-line"></div>
+                        <div class="progress-step" data-step="3"><div class="step-circle">3</div> Review</div>
+                    </div>
+
+                    <!-- Balance Scale -->
+                    <div class="flex justify-center my-4 h-24">
+                        <svg id="balanceScale" width="200" height="100" viewBox="0 0 200 100" class="transition-all duration-500">
+                            <g id="balanceScaleContainer" transform-origin="100 50">
+                                <line x1="20" y1="50" x2="180" y2="50" stroke="#a78bfa" stroke-width="4" />
+                                <polygon points="15,50 25,50 20,40" fill="#a78bfa" />
+                                <polygon points="175,50 185,50 180,40" fill="#a78bfa" />
+                            </g>
+                            <line x1="100" y1="50" x2="100" y2="90" stroke="#6b7280" stroke-width="4" />
+                            <polygon points="90,90 110,90 100,100" fill="#6b7280" />
+                        </svg>
+                    </div>
+
+                    <div class="flex justify-between items-center mb-6 flex-wrap gap-4">
+                        <div>
+                           <h3 class="text-2xl font-bold text-violet-400">Debate Trainer</h3>
+                           <p id="debateTopic" class="text-slate-400 mt-1">Should physical education be required every day?</p>
+                        </div>
+                        <button id="shuffleDebate" class="p-2 rounded-md border border-slate-700 bg-slate-800/60 hover:bg-[#3e2e6b] transition-colors flex items-center gap-2">
+                           <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 3 21 3 21 8"></polyline><line x1="4" y1="20" x2="21" y2="3"></line><polyline points="21 16 21 21 16 21"></polyline><line x1="15" y1="15" x2="21" y2="21"></line><line x1="4" y1="4" x2="9" y2="9"></line></svg>
+                           Shuffle Topic
+                        </button>
+                    </div>
+
+                    <div id="debateWorkspace" class="overflow-x-hidden">
+                        <div id="debatePanels" class="flex w-[200%] transition-transform duration-500 ease-in-out">
+                            <!-- Panel 1: Initial Stance -->
+                            <div id="initialStancePanel" class="w-1/2 px-2">
+                                <h4 class="font-semibold text-lg text-slate-300 mb-3">List 3 reasons supporting your opinion:</h4>
+                                <div class="space-y-4">
+                                    <div class="argument-card"><button class="absolute top-2 right-2 text-xl helper-btn">💡</button><textarea class="debate-input w-full p-3 bg-transparent text-slate-300 focus:outline-none" rows="2" placeholder="Reason 1..." disabled></textarea><div class="mt-2"><p class="text-xs text-slate-500 mb-1">Rate your confidence in this argument:</p><div class="star-rating flex items-center gap-1 pointer-events-none"></div></div><button class="submit-reason-btn hidden mt-2 w-full bg-violet-800 text-white text-sm font-bold py-1 rounded-lg hover:bg-violet-700 transition-colors">Submit Reason</button></div>
+                                    <div class="argument-card"><button class="absolute top-2 right-2 text-xl helper-btn">💡</button><textarea class="debate-input w-full p-3 bg-transparent text-slate-300 focus:outline-none" rows="2" placeholder="Reason 2..." disabled></textarea><div class="mt-2"><p class="text-xs text-slate-500 mb-1">Rate your confidence in this argument:</p><div class="star-rating flex items-center gap-1 pointer-events-none"></div></div><button class="submit-reason-btn hidden mt-2 w-full bg-violet-800 text-white text-sm font-bold py-1 rounded-lg hover:bg-violet-700 transition-colors">Submit Reason</button></div>
+                                    <div class="argument-card"><button class="absolute top-2 right-2 text-xl helper-btn">💡</button><textarea class="debate-input w-full p-3 bg-transparent text-slate-300 focus:outline-none" rows="2" placeholder="Reason 3..." disabled></textarea><div class="mt-2"><p class="text-xs text-slate-500 mb-1">Rate your confidence in this argument:</p><div class="star-rating flex items-center gap-1 pointer-events-none"></div></div><button class="submit-reason-btn hidden mt-2 w-full bg-violet-800 text-white text-sm font-bold py-1 rounded-lg hover:bg-violet-700 transition-colors">Submit Reason</button></div>
+                                </div>
+                            </div>
+                             <!-- Panel 2: Opposing Viewpoint -->
+                            <div id="opposingViewpointPanel" class="w-1/2 px-2">
+                                <h4 class="font-semibold text-lg text-slate-300 mb-3">Now, list 3 strong arguments for the <span class="font-medium text-violet-500"><b><u>opposite</u></b></span> opinion:</h4>
+                                 <div class="space-y-4">
+                                    <div class="argument-card"><button class="absolute top-2 right-2 text-xl helper-btn">💡</button><textarea class="debate-input w-full p-3 bg-transparent text-slate-300 focus:outline-none" rows="2" placeholder="Counter-argument 1..." disabled></textarea><div class="mt-2"><p class="text-xs text-slate-500 mb-1">Rate your confidence in this argument:</p><div class="star-rating flex items-center gap-1 pointer-events-none"></div></div><button class="submit-reason-btn hidden mt-2 w-full bg-violet-800 text-white text-sm font-bold py-1 rounded-lg hover:bg-violet-700 transition-colors">Submit Reason</button></div>
+                                    <div class="argument-card"><button class="absolute top-2 right-2 text-xl helper-btn">💡</button><textarea class="debate-input w-full p-3 bg-transparent text-slate-300 focus:outline-none" rows="2" placeholder="Counter-argument 2..." disabled></textarea><div class="mt-2"><p class="text-xs text-slate-500 mb-1">Rate your confidence in this argument:</p><div class="star-rating flex items-center gap-1 pointer-events-none"></div></div><button class="submit-reason-btn hidden mt-2 w-full bg-violet-800 text-white text-sm font-bold py-1 rounded-lg hover:bg-violet-700 transition-colors">Submit Reason</button></div>
+                                    <div class="argument-card"><button class="absolute top-2 right-2 text-xl helper-btn">💡</button><textarea class="debate-input w-full p-3 bg-transparent text-slate-300 focus:outline-none" rows="2" placeholder="Counter-argument 3..." disabled></textarea><div class="mt-2"><p class="text-xs text-slate-500 mb-1">Rate your confidence in this argument:</p><div class="star-rating flex items-center gap-1 pointer-events-none"></div></div><button class="submit-reason-btn hidden mt-2 w-full bg-violet-800 text-white text-sm font-bold py-1 rounded-lg hover:bg-violet-700 transition-colors">Submit Reason</button></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                     <div id="debateSuccessMessage" class="hidden text-center p-8 border-2 border-dashed border-green-500 rounded-lg mt-6">
+                        <p class="text-2xl font-bold text-green-400">Great Job Shifting Perspectives!</p>
+                        <p class="text-slate-400 mt-2">You've successfully argued both sides of the topic.</p>
+                        <div id="debateReview" class="mt-6"></div>
+                    </div>
+
+                    <div class="mt-8 flex justify-center gap-4">
+                        <button id="beginDebate" class="bg-violet-600 text-white font-bold py-3 px-8 rounded-lg hover:bg-violet-700 transition-colors">Begin</button>
+                        <button id="debateNextStep" class="hidden bg-violet-600 text-white font-bold py-3 px-8 rounded-lg hover:bg-violet-700 transition-colors disabled:opacity-50" disabled>Continue</button>
+                        <button id="submitDebate" class="hidden bg-green-600 text-white font-bold py-3 px-8 rounded-lg hover:bg-green-700 transition-colors disabled:opacity-50" disabled>Submit Final</button>
+                        <button id="resetDebate" class="hidden bg-slate-600 text-white font-bold py-3 px-8 rounded-lg hover:bg-slate-700 transition-colors">Reset</button>
+                    </div>
+                </div>
+
+                <!-- Scenario Solver -->
+                <div id="scenarioSolver" class="hidden">
+                     <!-- Progress Tracker -->
+                    <div id="scenarioProgress" class="flex items-center justify-center mb-6">
+                        <div class="progress-step active" data-step="1"><div class="step-circle">1</div> Understand Scenario</div>
+                        <div class="progress-line"></div>
+                        <div class="progress-step" data-step="2"><div class="step-circle">2</div> Brainstorm Solutions</div>
+                        <div class="progress-line"></div>
+                        <div class="progress-step" data-step="3"><div class="step-circle">3</div> Ripple Effects</div>
+                        <div class="progress-line"></div>
+                        <div class="progress-step" data-step="4"><div class="step-circle">4</div> Review</div>
+                    </div>
+
+                    <div class="flex justify-between items-center mb-6 flex-wrap gap-4">
+                        <div class="flex-grow">
+                           <h3 class="text-2xl font-bold text-violet-400">Scenario Solver</h3>
+                           <p id="scenarioProblem" class="text-slate-400 mt-1 text-left"></p>
+                        </div>
+                        <div class="flex items-center gap-4">
+                             <div class="text-2xl font-bold text-amber-400">
+                                Points: <span id="score">0</span>
+                            </div>
+                            <button id="shuffleScenario" class="p-2 rounded-md border border-slate-700 bg-slate-800/60 hover:bg-[#3e2e6b] transition-colors flex items-center gap-2">
+                               <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 3 21 3 21 8"></polyline><line x1="4" y1="20" x2="21" y2="3"></line><polyline points="21 16 21 21 16 21"></polyline><line x1="15" y1="15" x2="21" y2="21"></line><line x1="4" y1="4" x2="9" y2="9"></line></svg>
+                               Shuffle Scenario
+                            </button>
+                        </div>
+                    </div>
+                    <!-- Views Container -->
+                    <div id="scenarioViews">
+                        <!-- View 1: Brainstorm Solutions -->
+                        <div id="scenarioWorkspace">
+                            <h4 class="font-semibold text-lg text-slate-300 mb-3">Brainstorm and type three completely different solutions:</h4>
+                            <div class="space-y-4">
+                                <div class="argument-card" data-solution-index="0">
+                                    <textarea class="scenario-input w-full p-3 bg-transparent text-slate-300 focus:outline-none" rows="2" placeholder="Solution 1..." disabled></textarea>
+                                    <button class="submit-solution-btn hidden mt-2 w-full bg-violet-800 text-white text-sm font-bold py-1 rounded-lg hover:bg-violet-700 transition-colors disabled:opacity-50" disabled>Check Answer</button>
+                                </div>
+                                <div class="argument-card" data-solution-index="1">
+                                    <textarea class="scenario-input w-full p-3 bg-transparent text-slate-300 focus:outline-none" rows="2" placeholder="Solution 2..." disabled></textarea>
+                                    <button class="submit-solution-btn hidden mt-2 w-full bg-violet-800 text-white text-sm font-bold py-1 rounded-lg hover:bg-violet-700 transition-colors disabled:opacity-50" disabled>Check Answer</button>
+                                </div>
+                                <div class="argument-card" data-solution-index="2">
+                                    <textarea class="scenario-input w-full p-3 bg-transparent text-slate-300 focus:outline-none" rows="2" placeholder="Solution 3..." disabled></textarea>
+                                    <button class="submit-solution-btn hidden mt-2 w-full bg-violet-800 text-white text-sm font-bold py-1 rounded-lg hover:bg-violet-700 transition-colors disabled:opacity-50" disabled>Check Answer</button>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- View 2: Ripple Effect -->
+                        <div id="rippleEffectWorkspace" class="hidden mt-6">
+                            <div id="rippleContainer" class="space-y-4">
+                                <!-- Will be populated by JS -->
+                            </div>
+                        </div>
+                        <!-- View 3: Final Review -->
+                        <div id="scenarioReviewWorkspace" class="hidden mt-6 text-center">
+                            <h3 class="text-2xl font-bold text-green-400">Excellent Problem-Solving!</h3>
+                            <p class="text-slate-400 mt-2 mb-6">Here's the path you created:</p>
+                            <div id="finalRippleDisplay" class="text-left space-y-2"></div>
+                        </div>
+                    </div>
+                    
+                    <div class="mt-8 flex justify-center gap-4">
+                        <button id="beginScenario" class="bg-violet-600 text-white font-bold py-3 px-8 rounded-lg hover:bg-violet-700 transition-colors">Begin</button>
+                        <button id="submitScenario" class="hidden bg-violet-600 text-white font-bold py-3 px-8 rounded-lg hover:bg-violet-700 transition-colors">Continue</button>
+                        <button id="submitEffects" class="hidden bg-green-600 text-white font-bold py-3 px-8 rounded-lg hover:bg-green-700 transition-colors">Finish</button>
+                        <button id="resetScenario" class="hidden bg-slate-600 text-white font-bold py-3 px-8 rounded-lg hover:bg-slate-700 transition-colors">Play Again</button>
+                    </div>
+                </div>
+
+            </div>
+        </main>
+    </div>
+
+    <footer class="w-full max-w-3xl mx-auto mt-24 text-center text-sm text-slate-500 p-6 border-t border-slate-800/50">
+       <p class="mb-2">This tool is for educational purposes only. It is not a substitute for professional advice.</p>
+    </footer>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // --- MODALS ---
+            const modalContainer = document.getElementById('modalContainer');
+
+            // --- LOBEY MASCOT LOGIC ---
+            const lobeyPopup = document.getElementById('lobeyPopup');
+            const lobeyMessage = document.getElementById('lobeyMessage');
+            const lobeyImage = document.getElementById('lobeyImage');
+            const lobeyScaffold = document.getElementById('lobeyScaffold');
+            const lobeyImages = {
+                waving: 'https://raw.githubusercontent.com/navasdo/navacite/refs/heads/main/templates/cognition-tools/mind-shifter/static/images/brain-waving.png',
+                determined: 'https://raw.githubusercontent.com/navasdo/navacite/refs/heads/main/templates/cognition-tools/mind-shifter/static/images/brain-determined.png',
+                surprised: 'https://raw.githubusercontent.com/navasdo/navacite/refs/heads/main/templates/cognition-tools/mind-shifter/static/images/brain-surprised.png',
+                wakeup: 'https://raw.githubusercontent.com/navasdo/navacite/refs/heads/main/templates/cognition-tools/mind-shifter/static/images/brain-wake-up.png'
+            };
+            let lobeyTimeout;
+
+            function showLobey(message, imageName = 'waving', duration = 5000) {
+                clearTimeout(lobeyTimeout);
+                lobeyMessage.textContent = message;
+                lobeyImage.src = lobeyImages[imageName];
+                lobeyScaffold.classList.add('hidden');
+                lobeyPopup.classList.remove('hidden');
+                setTimeout(() => lobeyPopup.classList.add('lobey-enter-active'), 10);
+                if(duration > 0) {
+                   lobeyTimeout = setTimeout(hideLobey, duration);
+                }
+            }
+            
+            function showLobeyScaffold(question) {
+                clearTimeout(lobeyTimeout);
+                lobeyMessage.textContent = question;
+                lobeyImage.src = lobeyImages['surprised'];
+                lobeyPopup.classList.remove('hidden');
+                 setTimeout(() => lobeyPopup.classList.add('lobey-enter-active'), 10);
+            }
+
+            function hideLobey() {
+                lobeyPopup.classList.remove('lobey-enter-active');
+                setTimeout(() => lobeyPopup.classList.add('hidden'), 300);
+            }
+
+            // --- SOUNDS ---
+            const sounds = {
+                click: new Audio('https://raw.githubusercontent.com/navasdo/navacite/refs/heads/main/templates/cognition-tools/mind-shifter/static/audio/click.mp3'),
+                success: new Audio('https://raw.githubusercontent.com/navasdo/navacite/refs/heads/main/templates/cognition-tools/mind-shifter/static/audio/success.mp3'),
+                ding1: new Audio('https://raw.githubusercontent.com/navasdo/navacite/refs/heads/main/templates/cognition-tools/mind-shifter/static/audio/ding1.mp3'),
+                submit: new Audio('https://raw.githubusercontent.com/navasdo/navacite/refs/heads/main/templates/cognition-tools/mind-shifter/static/audio/submit.mp3')
+            };
+            
+            // --- DATA ---
+            const debateTopics = ["Should schools have a four-day week?", "Is social media more helpful or harmful for society?", "Should all students be required to learn coding?", "Are celebrities good role models?", "Should homework be banned?", "Are school uniforms a good idea?"];
+            const scenarios = [
+                {
+                    problem: "You're working on a group project and one member, Alex, isn't doing their share. The deadline is this Friday, and your grade depends on everyone's contribution. You've tried sending friendly reminders, but <span class='font-medium text-violet-500'><b><u>Alex hasn't responded</u></b></span>. You know Alex has been struggling in another class. The other group members are getting frustrated and want to complain to the teacher, which might get Alex in trouble.",
+                    solutions: [ "talk to alex privately", "tell the teacher", "speak with the teacher", "do alex's work", "divide the work" ]
+                },
+                {
+                    problem: "You are at the library and see a classmate, Jamie, <span class='font-medium text-violet-500'><b><u>writing answers on their hand</u></b></span> for a big history test that you have next period. You studied really hard for this test and want to do well. You know that if the teacher finds out, Jamie will get a zero and possibly face suspension. Jamie is a friend, but you also feel that cheating is unfair to everyone who studied.",
+                    solutions: [ "tell jamie to stop", "warn jamie", "talk to jamie", "tell the teacher", "ignore it", "mind your own business" ]
+                },
+                 {
+                    problem: "You borrowed a brand new graphic novel from your friend, Taylor. While reading it at home, you accidentally <span class='font-medium text-violet-500'><b><u>spill a glass of juice on it</u></b></span>, staining several pages. Taylor was really excited to lend it to you and told you it was a special edition. You are worried Taylor will be very upset, and you don't have enough money to buy a replacement right away.",
+                    solutions: [ "tell taylor the truth", "apologize", "offer to pay", "buy a new one", "hide it", "pretend it never happened" ]
+                }
+            ];
+            const sentenceStarters = ["Some people might argue that...", "From a different angle, you could say...", "A key reason for this view is...", "On the other hand, it's possible that...", "If you consider the impact on..."];
+
+            // --- ELEMENTS ---
+            const selectDebateTrainer = document.getElementById('selectDebateTrainer');
+            const selectScenarioSolver = document.getElementById('selectScenarioSolver');
+            const debateTrainerEl = document.getElementById('debateTrainer');
+            const scenarioSolverEl = document.getElementById('scenarioSolver');
+            
+            // Debate Elements
+            const debateTopicEl = document.getElementById('debateTopic');
+            const shuffleDebateBtn = document.getElementById('shuffleDebate');
+            const beginDebateBtn = document.getElementById('beginDebate');
+            const debateNextStepBtn = document.getElementById('debateNextStep');
+            const submitDebateBtn = document.getElementById('submitDebate');
+            const resetDebateBtn = document.getElementById('resetDebate');
+            const initialStancePanel = document.getElementById('initialStancePanel');
+            const opposingViewPanel = document.getElementById('opposingViewpointPanel');
+            const debatePanels = document.getElementById('debatePanels');
+            const debateWorkspace = document.getElementById('debateWorkspace');
+            const debateSuccessMessage = document.getElementById('debateSuccessMessage');
+            const debateReview = document.getElementById('debateReview');
+            const balanceScale = document.getElementById('balanceScale');
+            const balanceScaleContainer = document.getElementById('balanceScaleContainer');
+            const debateProgress = document.getElementById('debateProgress');
+            
+            // Scenario Elements
+            const scenarioProblemEl = document.getElementById('scenarioProblem');
+            const shuffleScenarioBtn = document.getElementById('shuffleScenario');
+            const beginScenarioBtn = document.getElementById('beginScenario');
+            const submitScenarioBtn = document.getElementById('submitScenario');
+            const submitEffectsBtn = document.getElementById('submitEffects');
+            const resetScenarioBtn = document.getElementById('resetScenario');
+            const scenarioInputs = document.querySelectorAll('.scenario-input');
+            const scenarioWorkspace = document.getElementById('scenarioWorkspace');
+            const scenarioProgress = document.getElementById('scenarioProgress');
+            const scoreEl = document.getElementById('score');
+            const rippleEffectWorkspace = document.getElementById('rippleEffectWorkspace');
+            const rippleContainer = document.getElementById('rippleContainer');
+            const scenarioReviewWorkspace = document.getElementById('scenarioReviewWorkspace');
+            const finalRippleDisplay = document.getElementById('finalRippleDisplay');
+            
+            // --- STATE ---
+            let currentDebateTopicIndex = 0;
+            let currentScenarioIndex = 0;
+            let score = 0;
+            let activeTextarea = null;
+            let rippleEffectData = [ {solution: '', effect1: '', effect2: ''}, {solution: '', effect1: '', effect2: ''}, {solution: '', effect1: '', effect2: ''} ];
+
+            
+            // --- GENERAL FUNCTIONS ---
+            function switchGameMode(mode) {
+                if (mode === 'debate') {
+                    debateTrainerEl.style.display = 'block';
+                    scenarioSolverEl.style.display = 'none';
+                    selectDebateTrainer.classList.add('selected');
+                    selectScenarioSolver.classList.remove('selected');
+                    showLobey("Let's weigh the options in the Debate Trainer!", 'determined');
+                } else {
+                    debateTrainerEl.style.display = 'none';
+                    scenarioSolverEl.style.display = 'block';
+                    selectDebateTrainer.classList.remove('selected');
+                    selectScenarioSolver.classList.add('selected');
+                     showLobey("Time to solve some tricky scenarios!", 'wakeup');
+                }
+            }
+
+            function updateProgressTracker(container, step) {
+                const steps = container.querySelectorAll('.progress-step');
+                steps.forEach(s => {
+                    if (parseInt(s.dataset.step) <= step) {
+                        s.classList.add('active');
+                    } else {
+                        s.classList.remove('active');
+                    }
+                });
+            }
+
+            // --- DEBATE TRAINER LOGIC ---
+            function shuffleDebateTopic() {
+                let newIndex;
+                do { newIndex = Math.floor(Math.random() * debateTopics.length); } while (newIndex === currentDebateTopicIndex);
+                currentDebateTopicIndex = newIndex;
+                debateTopicEl.textContent = debateTopics[currentDebateTopicIndex];
+            }
+            
+            function renderStars() {
+                const starSVG = `<svg class="star h-6 w-6 cursor-pointer" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>`;
+                document.querySelectorAll('.star-rating').forEach(container => {
+                    container.innerHTML = '';
+                    for (let i = 1; i <= 5; i++) {
+                        const starEl = document.createElement('div');
+                        starEl.innerHTML = starSVG;
+                        starEl.firstElementChild.dataset.value = i;
+                        container.appendChild(starEl.firstElementChild);
+                    }
+                });
+            }
+
+            function handleStarClick(e) {
+                const star = e.target.closest('.star');
+                if (!star) return;
+
+                const ratingContainer = star.parentElement;
+                const rating = star.dataset.value;
+                ratingContainer.dataset.rating = rating;
+                
+                sounds.click.play().catch(e => console.warn("Audio playback warning:", e));
+
+                Array.from(ratingContainer.children).forEach(s => {
+                    s.classList.toggle('filled', s.dataset.value <= rating);
+                });
+            }
+
+            function resetDebate() {
+                shuffleDebateBtn.disabled = false;
+                beginDebateBtn.classList.remove('hidden');
+                debateNextStepBtn.classList.add('hidden');
+                submitDebateBtn.classList.add('hidden');
+                resetDebateBtn.classList.add('hidden');
+                debateNextStepBtn.disabled = true;
+                submitDebateBtn.disabled = true;
+
+                document.querySelectorAll('#debateTrainer .argument-card').forEach(card => {
+                    const textarea = card.querySelector('textarea');
+                    const starContainer = card.querySelector('.star-rating');
+                    const submitBtn = card.querySelector('.submit-reason-btn');
+
+                    textarea.disabled = true;
+                    textarea.value = '';
+                    starContainer.dataset.rating = "0";
+                    Array.from(starContainer.children).forEach(s => s.classList.remove('filled'));
+                    starContainer.classList.add('pointer-events-none');
+                    submitBtn.classList.add('hidden');
+                });
+                
+                debatePanels.style.transform = 'translateX(0%)';
+                debateWorkspace.classList.remove('hidden');
+                debateSuccessMessage.classList.add('hidden');
+                debateReview.innerHTML = '';
+                updateBalanceScale();
+                updateProgressTracker(debateProgress, 1);
+            }
+            
+            function updateBalanceScale() {
+                const initialCount = Array.from(initialStancePanel.querySelectorAll('.submit-reason-btn.hidden')).length;
+                const opposingCount = Array.from(opposingViewPanel.querySelectorAll('.submit-reason-btn.hidden')).length;
+                
+                let diff = initialCount - opposingCount;
+
+                // Each argument submission should tip the scale by 5 degrees. Max angle is 15.
+                const angle = diff * 5;
+                balanceScaleContainer.style.transform = `rotate(${angle}deg)`;
+            }
+
+            function checkDebatePanelCompletion(panel) {
+                const submittedButtons = panel.querySelectorAll('.submit-reason-btn.hidden');
+                return submittedButtons.length === 3;
+            }
+
+            beginDebateBtn.addEventListener('click', () => {
+                sounds.click.play().catch(e => console.warn("Audio playback warning:", e));
+                shuffleDebateBtn.disabled = true;
+                beginDebateBtn.classList.add('hidden');
+                resetDebateBtn.classList.remove('hidden');
+                debateNextStepBtn.classList.remove('hidden');
+
+                initialStancePanel.querySelectorAll('.argument-card').forEach(card => {
+                    card.querySelector('textarea').disabled = false;
+                    card.querySelector('.star-rating').classList.remove('pointer-events-none');
+                    card.querySelector('.submit-reason-btn').classList.remove('hidden');
+                });
+                showLobey("Great! What's your first take on this?", 'determined');
+            });
+            
+            debateNextStepBtn.addEventListener('click', () => {
+                sounds.click.play().catch(e => console.warn("Audio playback warning:", e));
+                debatePanels.style.transform = 'translateX(-50%)';
+                debateNextStepBtn.classList.add('hidden');
+                submitDebateBtn.classList.remove('hidden');
+                
+                opposingViewPanel.querySelectorAll('.argument-card').forEach(card => {
+                    card.querySelector('textarea').disabled = false;
+                    card.querySelector('.star-rating').classList.remove('pointer-events-none');
+                    card.querySelector('.submit-reason-btn').classList.remove('hidden');
+                });
+                
+                updateProgressTracker(debateProgress, 2);
+                showLobey("Excellent points! Now, let's flip it. What's the other side?", 'surprised');
+            });
+
+            submitDebateBtn.addEventListener('click', () => {
+                sounds.success.play().catch(e => console.warn("Audio playback warning:", e));
+                const initialStanceArgs = Array.from(initialStancePanel.querySelectorAll('textarea')).map(input => input.value || "No answer provided.");
+                const opposingViewArgs = Array.from(opposingViewPanel.querySelectorAll('textarea')).map(input => input.value || "No answer provided.");
+                
+                debateReview.innerHTML = `
+                    <div class="flex flex-col md:flex-row justify-between gap-6 mt-6 text-left">
+                        <div class="w-full md:w-1/2 bg-slate-800/50 p-4 rounded-lg">
+                            <h5 class="font-bold text-lg text-violet-400 mb-3">Your Initial Stance</h5>
+                            <ul class="list-disc list-inside space-y-2 text-slate-300">${initialStanceArgs.map(arg => `<li>${arg}</li>`).join('')}</ul>
+                        </div>
+                        <div class="w-full md:w-1/2 bg-slate-800/50 p-4 rounded-lg">
+                            <h5 class="font-bold text-lg text-fuchsia-400 mb-3">Opposing Viewpoint</h5>
+                            <ul class="list-disc list-inside space-y-2 text-slate-300">${opposingViewArgs.map(arg => `<li>${arg}</li>`).join('')}</ul>
+                        </div>
+                    </div>`;
+
+                debateWorkspace.classList.add('hidden');
+                submitDebateBtn.classList.add('hidden');
+                debateSuccessMessage.classList.remove('hidden');
+                updateProgressTracker(debateProgress, 3);
+                 showLobey("Amazing work! You've explored both sides completely.", 'waving');
+            });
+            
+            document.querySelectorAll('.submit-reason-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    sounds.submit.play().catch(e => console.warn("Audio playback warning:", e));
+                    btn.classList.add('hidden');
+                    const card = btn.closest('.argument-card');
+                    card.querySelector('textarea').disabled = true;
+                    card.querySelector('.star-rating').classList.add('pointer-events-none');
+                    
+                    balanceScale.classList.add('scale-glow');
+                    setTimeout(() => balanceScale.classList.remove('scale-glow'), 500);
+                    
+                    updateBalanceScale();
+
+                    const panel = card.closest('div[id$="Panel"]');
+                    if(checkDebatePanelCompletion(panel)) {
+                        if(panel.id === 'initialStancePanel') {
+                            debateNextStepBtn.disabled = false;
+                            showLobey("A strong case! Ready to argue the other side?", 'determined');
+                        } else {
+                            submitDebateBtn.disabled = false;
+                            showLobey("You've built a solid counter-argument! Ready to review?", 'surprised');
+                        }
+                    }
+                });
+            });
+            
+            document.querySelectorAll('.helper-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    activeTextarea = btn.closest('.argument-card').querySelector('textarea');
+                    const starterModal = document.getElementById('starterModal');
+                    starterModal.classList.remove('hidden');
+                    const starterList = document.getElementById('starterList');
+                    starterList.innerHTML = sentenceStarters.map(s => `<button class="starter-item w-full text-left bg-slate-700/50 p-3 rounded-md hover:bg-slate-600/50 transition-colors">${s}</button>`).join('');
+                    document.querySelectorAll('.starter-item').forEach(item => {
+                        item.addEventListener('click', () => {
+                             if (activeTextarea) {
+                                activeTextarea.value = item.textContent;
+                                activeTextarea.focus();
+                            }
+                            starterModal.classList.add('hidden');
+                            activeTextarea = null;
+                        });
+                    });
+                });
+            });
+            
+            document.querySelectorAll('.star-rating').forEach(c => c.addEventListener('click', handleStarClick));
+
+
+            // --- SCENARIO SOLVER LOGIC ---
+            // NEW, SECURE VERSION
+            async function checkSolutionWithAI(studentAnswer, solutionKeywords) {
+                hideLobey();
+                const apiUrl = '/api/check-solution'; // Our new secure server endpoint
+
+                try {
+                    const response = await fetch(apiUrl, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            studentAnswer: studentAnswer,
+                            solutionKeywords: solutionKeywords
+                        })
+                    });
+
+                    if (!response.ok) {
+                        throw new Error(`API call failed with status: ${response.status}`);
+                    }
+
+                    // Our server now does all the hard work and just gives us the result.
+                    return await response.json(); 
+
+                } catch (error) {
+                    console.error("Error calling backend API for solution check:", error);
+                    // Fallback to a simple keyword search if the server call fails.
+                    const isMatch = solutionKeywords.some(keyword => studentAnswer.toLowerCase().includes(keyword));
+                    return { match: isMatch, inappropriate: false };
+                }
+            }
+            
+            // NEW, SECURE VERSION
+            async function getScaffolding(studentAnswer) {
+                const apiUrl = '/api/get-scaffolding'; // Our new secure server endpoint
+
+                 try {
+                    const response = await fetch(apiUrl, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ studentAnswer: studentAnswer })
+                    });
+
+                    if (!response.ok) {
+                        throw new Error(`API call failed with status: ${response.status}`);
+                    }
+
+                    const data = await response.json();
+                    return data.scaffoldText || "Good start! How might someone else see this situation?";
+
+                } catch (error) {
+                    console.error("Error getting scaffolding from backend:", error);
+                    return "Good start! How might someone else see this situation?";
+                }
+            }
+
+
+
+            function shuffleScenario() {
+                let newIndex;
+                do { newIndex = Math.floor(Math.random() * scenarios.length); } while (newIndex === currentScenarioIndex);
+                currentScenarioIndex = newIndex;
+                scenarioProblemEl.innerHTML = scenarios[currentScenarioIndex].problem;
+            }
+
+            function resetScenario() {
+                sounds.click.play().catch(e => console.warn("Audio playback warning:", e));
+                shuffleScenarioBtn.disabled = false;
+                beginScenarioBtn.classList.remove('hidden');
+                submitScenarioBtn.classList.add('hidden');
+                submitEffectsBtn.classList.add('hidden');
+                resetScenarioBtn.textContent = "Play Again";
+                resetScenarioBtn.classList.add('hidden');
+                
+                document.querySelectorAll('#scenarioWorkspace .argument-card').forEach(card => {
+                    const textarea = card.querySelector('textarea');
+                    textarea.disabled = true;
+                    textarea.value = '';
+                    card.classList.remove('correct-match');
+
+                    const button = card.querySelector('.submit-solution-btn');
+                    if (button) {
+                        button.classList.add('hidden');
+                        button.disabled = true;
+                    }
+                });
+                
+                rippleEffectData = [ {solution: '', effect1: '', effect2: ''}, {solution: '', effect1: '', effect2: ''}, {solution: '', effect2: ''} ];
+                scenarioWorkspace.classList.remove('hidden');
+                rippleEffectWorkspace.classList.add('hidden');
+                scenarioReviewWorkspace.classList.add('hidden');
+                score = 0;
+                scoreEl.textContent = score;
+                updateProgressTracker(scenarioProgress, 1);
+            }
+            
+            async function handleSolutionCheck(button) {
+                const card = button.closest('.argument-card');
+                const textarea = card.querySelector('.scenario-input');
+                const studentAnswer = textarea.value.trim();
+                
+                if (studentAnswer === '') return;
+
+                button.textContent = 'Checking...';
+                button.disabled = true;
+
+                const { match, inappropriate } = await checkSolutionWithAI(studentAnswer, scenarios[currentScenarioIndex].solutions);
+                
+                button.textContent = 'Check Answer'; // Revert button text
+
+                if (inappropriate) {
+                    showLobey("Let's keep our answers on-topic and school-appropriate, please.", 'determined');
+                    button.disabled = false; // Allow re-try
+                    return;
+                }
+
+                if (match) {
+                    sounds.ding1.play().catch(e => console.warn("Audio playback warning:", e));
+                    card.classList.add('correct-match');
+                    score++;
+                    scoreEl.textContent = score;
+                    textarea.disabled = true;
+                    button.disabled = true;
+                } else {
+                    const question = await getScaffolding(studentAnswer);
+                    showLobeyScaffold(question);
+                    button.disabled = false; // Allow re-try
+                }
+            }
+
+
+            function startRippleEffect() {
+                sounds.click.play().catch(e => console.warn("Audio playback warning:", e));
+                document.getElementById('rippleIntroModal').classList.remove('hidden');
+            }
+
+            function proceedToRippleEffect() {
+                scenarioWorkspace.classList.add('hidden');
+                rippleEffectWorkspace.classList.remove('hidden');
+                submitScenarioBtn.classList.add('hidden');
+                submitEffectsBtn.classList.remove('hidden');
+                updateProgressTracker(scenarioProgress, 3);
+                showLobey("Great solutions! Now let's think about the consequences.", 'surprised');
+                renderRippleEffect();
+            }
+
+            function renderRippleEffect() {
+                rippleContainer.innerHTML = '';
+                scenarioInputs.forEach((input, index) => {
+                    rippleEffectData[index].solution = input.value;
+                    const solutionText = input.value || `Solution ${index + 1}`;
+                    const rippleHTML = `
+                        <div class="ripple-item">
+                            <div class="p-4 bg-slate-800/50 rounded-lg text-center">
+                                <p class="text-violet-400 font-bold">${solutionText}</p>
+                            </div>
+                            <div class="ripple-connector"><div class="ripple-arrow text-2xl">↓</div></div>
+                             <div class="argument-card">
+                                <textarea class="ripple-input-1 w-full p-3 bg-transparent text-slate-300 focus:outline-none" rows="2" placeholder="Because of this, what happens next?..." data-index="${index}"></textarea>
+                            </div>
+                            <div class="ripple-connector"><div class="ripple-arrow text-2xl">↓</div></div>
+                            <div class="argument-card">
+                                <textarea class="ripple-input-2 w-full p-3 bg-transparent text-slate-300 focus:outline-none" rows="2" placeholder="Then, as a result, what happens?..." data-index="${index}"></textarea>
+                            </div>
+                        </div>
+                    `;
+                    rippleContainer.innerHTML += rippleHTML;
+                });
+            }
+            
+            function showFinalReview() {
+                sounds.success.play().catch(e => console.warn("Audio playback warning:", e));
+                rippleEffectWorkspace.classList.add('hidden');
+                scenarioReviewWorkspace.classList.remove('hidden');
+                submitEffectsBtn.classList.add('hidden');
+                resetScenarioBtn.classList.remove('hidden'); // Show this button now
+                updateProgressTracker(scenarioProgress, 4);
+                
+                // Save final ripple data
+                document.querySelectorAll('.ripple-input-1').forEach(input => rippleEffectData[input.dataset.index].effect1 = input.value);
+                document.querySelectorAll('.ripple-input-2').forEach(input => rippleEffectData[input.dataset.index].effect2 = input.value);
+
+                let reviewHTML = `<div class="p-4 bg-slate-800/50 rounded-lg"><p class="font-bold text-amber-400">The Scenario:</p><p>${scenarios[currentScenarioIndex].problem}</p></div>`;
+                
+                rippleEffectData.forEach(data => {
+                    if(data.solution.trim() === '') return;
+                    reviewHTML += `
+                        <div class="mt-4 p-4 border border-slate-700 rounded-lg">
+                           <p><span class="font-bold text-violet-300">Your Choice:</span> ${data.solution}</p>
+                           <p class="pl-4">→ <span class="font-semibold text-slate-400">Leads to:</span> ${data.effect1 || '...'}</p>
+                           <p class="pl-8">→ <span class="font-semibold text-slate-400">Then:</span> ${data.effect2 || '...'}</p>
+                        </div>
+                    `;
+                });
+                finalRippleDisplay.innerHTML = reviewHTML;
+                 showLobey("Fantastic! You've thought through the effects. That's top-tier problem solving.", 'waving');
+            }
+
+
+            beginScenarioBtn.addEventListener('click', () => {
+                sounds.click.play().catch(e => console.warn("Audio playback warning:", e));
+                shuffleScenarioBtn.disabled = true;
+                beginScenarioBtn.classList.add('hidden');
+                resetScenarioBtn.classList.remove('hidden');
+                submitScenarioBtn.classList.remove('hidden');
+                document.querySelectorAll('#scenarioWorkspace .argument-card').forEach(card => {
+                    const textarea = card.querySelector('textarea');
+                    const button = card.querySelector('.submit-solution-btn');
+                    textarea.disabled = false;
+                    button.classList.remove('hidden');
+                    textarea.addEventListener('input', () => {
+                        button.disabled = textarea.value.trim() === '';
+                    });
+                });
+                updateProgressTracker(scenarioProgress, 2);
+                showLobey("Okay, let's figure this out. What are some solutions?", 'determined');
+            });
+            
+            document.querySelectorAll('.submit-solution-btn').forEach(button => {
+                button.addEventListener('click', () => handleSolutionCheck(button));
+            });
+            
+            submitScenarioBtn.addEventListener('click', startRippleEffect);
+            submitEffectsBtn.addEventListener('click', showFinalReview);
+            
+            // Modal Event Listeners
+            document.getElementById('watchRippleVideo').addEventListener('click', () => {
+                document.getElementById('rippleIntroModal').classList.add('hidden');
+                document.getElementById('videoModal').classList.remove('hidden');
+            });
+            document.getElementById('teacherExplainRipple').addEventListener('click', () => {
+                document.getElementById('rippleIntroModal').classList.add('hidden');
+                proceedToRippleEffect();
+            });
+            modalContainer.addEventListener('click', (e) => {
+                if (e.target.classList.contains('modal-close')) {
+                    e.target.closest('.fixed').classList.add('hidden');
+                     if (e.target.closest('#videoModal')) {
+                        document.getElementById('lobeyVideo').pause();
+                        proceedToRippleEffect();
+                    }
+                }
+            });
+
+
+            // --- INITIALIZE APP ---
+            shuffleDebateBtn.addEventListener('click', shuffleDebateTopic);
+            resetDebateBtn.addEventListener('click', resetDebate);
+            shuffleScenarioBtn.addEventListener('click', shuffleScenario);
+            resetScenarioBtn.addEventListener('click', resetScenario);
+            selectDebateTrainer.addEventListener('click', () => switchGameMode('debate'));
+            selectScenarioSolver.addEventListener('click', () => switchGameMode('scenario'));
+            
+            renderStars();
+            resetDebate(); 
+            shuffleDebateTopic();
+            shuffleScenario();
+            switchGameMode('debate'); 
+            showLobey("Hi! I'm Lobey. Let's get our brains warmed up and shift some perspectives!", 'waving', 6000);
+        });
+    </script>
+</body>
+</html>
+
