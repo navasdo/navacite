@@ -281,7 +281,7 @@ def handle_compliance_check():
     try:
         api_key = app.config['GEMINI_API_KEY_SLP'] 
         # FINAL FIX: Switched to the standard, stable 'gemini-pro' model.
-        google_api_url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key={api_key}"
+        google_api_url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key={api_key}"
         
         payload = {
             "contents": [{ "parts": [{ "text": f"Analyze the following text for potential PII and return the result as a JSON object: \"{user_input}\"" }] }],
@@ -316,7 +316,7 @@ def handle_generate_note():
     try:
         api_key = app.config['GEMINI_API_KEY_SLP']
         # FINAL FIX: Switched to the standard, stable 'gemini-pro' model.
-        google_api_url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key={api_key}"
+        google_api_url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key={api_key}"
         
         payload = {
             "contents": [{ "parts": [{ "text": f"Using the following glossary, please expand the shorthand note below into a professional therapy note.\n\nGlossary:\n{json.dumps(glossary, indent=2)}\n\nShorthand Note:\n\"{user_input}\"" }] }],
@@ -352,7 +352,7 @@ def handle_check_solution():
         # Securely uses the COGNITION key from your app config
         api_key = app.config['GEMINI_API_KEY_COGNITION']
         # FINAL FIX: Switched to the standard, stable 'gemini-pro' model.
-        google_api_url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key={api_key}"
+        google_api_url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key={api_key}"
         
         # This part runs two checks: one for inappropriate content and one for conceptual match
         inappropriate_prompt = f"Is the following text inappropriate, offensive, or off-topic for a school assignment? Answer only \"Yes\" or \"No\". Text: \"{student_answer}\""
@@ -392,7 +392,7 @@ def handle_get_scaffolding():
         # Securely uses the COGNITION key from your app config
         api_key = app.config['GEMINI_API_KEY_COGNITION']
         # FINAL FIX: Switched to the standard, stable 'gemini-pro' model.
-        google_api_url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key={api_key}"
+        google_api_url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key={api_key}"
 
         prompt = f"A student's answer isn't quite right: \"{student_answer}\". Provide a short, encouraging, one-sentence question to help them think of a better solution. Do not give the answer."
         payload = {"contents": [{"parts": [{"text": prompt}]}]}
