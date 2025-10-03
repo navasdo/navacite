@@ -403,4 +403,6 @@ def handle_get_scaffolding():
         return jsonify({"scaffoldText": "Good start! How might someone else see this situation?"})
 
 # --- This block should be the VERY LAST thing in your file ---
-    if __name__ == '__main__':
+if __name__ == '__main__':
+    # This line MUST be indented with 4 spaces
+                app.run(debug=True)
