@@ -297,8 +297,9 @@ def handle_compliance_check():
         response = requests.post(google_api_url, headers={"Content-Type": "application/json"}, data=json.dumps(payload))
         response.raise_for_status() # Check for errors
         
-        # Send Google's response back to the browser
-        return response.json()
+        # FIX: Explicitly use jsonify to create a Flask Response object.
+        # This ensures the response from Google is handled correctly by the server.
+        return jsonify(response.json())
 
     except Exception as e:
         return jsonify({"error": str(e)}), 500
@@ -328,8 +329,9 @@ def handle_generate_note():
         response = requests.post(google_api_url, headers={"Content-Type": "application/json"}, data=json.dumps(payload))
         response.raise_for_status() # Check for errors
         
-        # Send Google's response back to the browser
-        return response.json()
+        # FIX: Explicitly use jsonify here as well for consistency and robustness.
+        # This was the likely cause of the 500 error.
+        return jsonify(response.json())
 
     except Exception as e:
         return jsonify({"error": str(e)}), 500
@@ -408,3 +410,4 @@ def handle_get_scaffolding():
 if __name__ == '__main__':
     # This line MUST be indented with 4 spaces
     app.run(debug=True)
+
