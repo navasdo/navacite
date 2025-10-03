@@ -281,7 +281,7 @@ def handle_compliance_check():
 
     try:
         # Securely gets the key from your Render environment variables
-        api_key = app.config['SLP_KEY'] 
+        api_key = app.config['GEMINI_API_KEY_SLP'] 
         google_api_url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={api_key}"
         
         # This is the same payload your JavaScript was creating
@@ -316,7 +316,7 @@ def handle_generate_note():
 
     try:
         # Securely gets the key from your Render environment variables
-        api_key = app.config['SLP_KEY']
+        api_key = app.config['GEMINI_API_KEY_SLP']
         google_api_url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={api_key}"
         
         # This is the same payload your JavaScript was creating
