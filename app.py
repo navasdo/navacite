@@ -12,6 +12,9 @@ logging.basicConfig(level=logging.INFO)
 # --- Security Configuration ---
 # This securely reads your secret key from Render's environment variables.
 app.config['SECRET_KEY'] = os.environ.get('JWT_SECRET', 'a-very-secret-key-that-you-should-change')
+app.config['COGNITION_KEY'] = os.environ.get('GEMINI_API_KEY_COGNITION')
+app.config['SLP_KEY'] = os.environ.get('GEMINI_API_KEY_SLP')
+
 
 # --- User Management ---
 # This is where you add and remove users for your closed alpha.
