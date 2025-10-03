@@ -333,9 +333,11 @@ def handle_generate_note():
 
     except Exception as e:
         return jsonify({"error": str(e)}), 500
-    app.run(debug=True)
+    
+    # --- FIX ---
+    # The erroneous app.run(debug=True) call was here. It has been removed.
 
-    # MIND SHIFTER Waiter for checking a student's solution in Mind Shifter
+# MIND SHIFTER Waiter for checking a student's solution in Mind Shifter
 @app.route('/api/check-solution', methods=['POST'])
 def handle_check_solution():
     data = request.get_json()
@@ -405,4 +407,4 @@ def handle_get_scaffolding():
 # --- This block should be the VERY LAST thing in your file ---
 if __name__ == '__main__':
     # This line MUST be indented with 4 spaces
-                app.run(debug=True)
+    app.run(debug=True)
