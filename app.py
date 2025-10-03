@@ -275,35 +275,33 @@ def page_not_found(e):
 def handle_compliance_check():
     data = request.get_json()
     user_input = data.get('userInput')
-    
     if not user_input:
         return jsonify({"error": "No user input provided"}), 400
 
     try:
-        # Securely gets the key from your Render environment variables
         api_key = app.config['GEMINI_API_KEY_SLP'] 
         google_api_url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={api_key}"
         
-        # This is the same payload your JavaScript was creating
         payload = {
             "contents": [{ "parts": [{ "text": f"Analyze the following text for potential PII and return the result as a JSON object: \"{user_input}\"" }] }],
             "systemInstruction": { "parts": [{ "text": "You are a compliance-checking AI. Your task is to identify potential personally identifiable information (PII) or FERPA violations in a given text. Return a JSON object with a single key \"violations\" which is an array of strings. Each string in the array should be a word or phrase you've identified as a potential violation. Focus on names of people, specific non-school locations, or titles of works that could be misinterpreted as names. If there are no potential violations, return an empty array. Do not explain your reasoning, just return the JSON object." }] },
-            "generationConfig": {
-                "responseMimeType": "application/json",
-                "responseSchema": { "type": "OBJECT", "properties": { "violations": { "type": "ARRAY", "items": { "type": "STRING" } } } }
-            }
+            "generationConfig": { "responseMimeType": "application/json", "responseSchema": { "type": "OBJECT", "properties": { "violations": { "type": "ARRAY", "items": { "type": "STRING" } } } } }
         }
         
+        app.logger.info("Sending compliance-check payload to Google...")
         response = requests.post(google_api_url, headers={"Content-Type": "application/json"}, data=json.dumps(payload))
-        response.raise_for_status() # Check for errors
-        
-        # FIX: Explicitly use jsonify to create a Flask Response object.
-        # This ensures the response from Google is handled correctly by the server.
+        response.raise_for_status()
         return jsonify(response.json())
 
+    except requests.exceptions.HTTPError as http_err:
+        error_message = f"HTTP error occurred while calling Google API: {http_err}"
+        app.logger.error(error_message)
+        app.logger.error(f"Response Body: {http_err.response.text}")
+        return jsonify({"error": "The AI service returned an error.", "details": http_err.response.text}), 500
     except Exception as e:
-        return jsonify({"error": str(e)}), 500
-
+        error_message = f"An unexpected error occurred in compliance-check: {e}"
+        app.logger.error(error_message)
+        return jsonify({"error": "An unexpected internal error occurred.", "details": str(e)}), 500
 
 # Waiter #2: Handles generating the final note
 @app.route('/api/generate-note', methods=['POST'])
@@ -311,34 +309,33 @@ def handle_generate_note():
     data = request.get_json()
     user_input = data.get('userInput')
     glossary = data.get('glossary')
-
     if not user_input or not glossary:
         return jsonify({"error": "Missing user input or glossary"}), 400
 
     try:
-        # Securely gets the key from your Render environment variables
         api_key = app.config['GEMINI_API_KEY_SLP']
         google_api_url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={api_key}"
         
-        # This is the same payload your JavaScript was creating
         payload = {
             "contents": [{ "parts": [{ "text": f"Using the following glossary, please expand the shorthand note below into a professional therapy note.\n\nGlossary:\n{json.dumps(glossary, indent=2)}\n\nShorthand Note:\n\"{user_input}\"" }] }],
             "systemInstruction": { "parts": [{ "text": "You are a Speech-Language Pathologist’s assistant. Your only task is to take shorthand prompts (fragments, abbreviations, or incomplete sentences) and expand them into full, professional attendance notes for school-based therapy. Write in a clear, concise, professional tone appropriate for clinical documentation. Crucially, all notes must be de-identified. Always refer to individuals as \"the student\" or \"the students\" and use neutral pronouns (they/them/their) to ensure anonymity and FERPA compliance. Use the provided glossary to expand shorthand. For terms not in the glossary, expand them logically." }] }
         }
 
+        app.logger.info("Sending generate-note payload to Google...")
         response = requests.post(google_api_url, headers={"Content-Type": "application/json"}, data=json.dumps(payload))
-        response.raise_for_status() # Check for errors
-        
-        # FIX: Explicitly use jsonify here as well for consistency and robustness.
-        # This was the likely cause of the 500 error.
+        response.raise_for_status()
         return jsonify(response.json())
 
+    except requests.exceptions.HTTPError as http_err:
+        error_message = f"HTTP error occurred while calling Google API: {http_err}"
+        app.logger.error(error_message)
+        app.logger.error(f"Response Body: {http_err.response.text}")
+        return jsonify({"error": "The AI service returned an error.", "details": http_err.response.text}), 500
     except Exception as e:
-        return jsonify({"error": str(e)}), 500
+        error_message = f"An unexpected error occurred in generate-note: {e}"
+        app.logger.error(error_message)
+        return jsonify({"error": "An unexpected internal error occurred.", "details": str(e)}), 500
     
-    # --- FIX ---
-    # The erroneous app.run(debug=True) call was here. It has been removed.
-
 # MIND SHIFTER Waiter for checking a student's solution in Mind Shifter
 @app.route('/api/check-solution', methods=['POST'])
 def handle_check_solution():
