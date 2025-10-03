@@ -87,8 +87,16 @@
             Object.assign(state, newState);
             render();
         }
+        
+        // Helper function to handle API errors
+        async function handleApiError(response) {
+            const errorData = await response.json().catch(() => ({})); // Gracefully handle non-JSON responses
+            // The 'details' field may contain technical info from the server, which can be useful for debugging
+            const detailText = typeof errorData.details === 'string' ? ` Details: ${errorData.details}` : '';
+            throw new Error(errorData.error || `Server Error: ${response.statusText}${detailText}`);
+        }
 
-        // THIS IS THE NEW, SECURE VERSION of handleScribeClick
+        // IMPROVED VERSION of handleScribeClick with better error handling
         const handleScribeClick = async () => {
             if (!state.userInput.trim()) {
                 const timer = setTimeout(() => setState({ error: null }), 5000);
@@ -97,21 +105,21 @@
             }
             setState({ isLoading: true, error: null });
 
-            // The URL is now YOUR server, not Google's
-            const complianceApiUrl = '/api/compliance-check';
-
             try {
-                const response = await fetch(complianceApiUrl, {
+                const response = await fetch('/api/compliance-check', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    // We send the user's notes to our server
                     body: JSON.stringify({ userInput: state.userInput }) 
                 });
 
-                if (!response.ok) throw new Error(`Compliance Check Error: ${response.statusText}`);
+                if (!response.ok) {
+                    await handleApiError(response);
+                }
+                
                 const result = await response.json();
                 const jsonText = result.candidates?.[0]?.content?.parts?.[0]?.text;
                 
+                // If there's no JSON text in the response, assume it's compliant and proceed
                 if (!jsonText) {
                     await generateFinalNote();
                     return;
@@ -128,29 +136,29 @@
                 }
 
             } catch (err) {
-                const timer = setTimeout(() => setState({ error: null }), 5000);
-                setState({ isLoading: false, showComplianceModal: true, potentialViolations: ["Potential PII (auto-check failed)"], error: `Compliance check failed: ${err.message}. Please review carefully.`, errorTimer: timer });
+                const timer = setTimeout(() => setState({ error: null }), 8000); // Longer timer for reading complex errors
+                setState({ isLoading: false, error: err.message, errorTimer: timer });
             }
         };
 
-        // THIS IS THE NEW, SECURE VERSION of generateFinalNote
+        // IMPROVED VERSION of generateFinalNote with better error handling
         const generateFinalNote = async () => {
             setState({ isLoading: true, error: null, showComplianceModal: false });
 
-            // The URL is now YOUR server, not Google's
-            const generateNoteApiUrl = '/api/generate-note';
-
             try {
-                const response = await fetch(generateNoteApiUrl, {
+                const response = await fetch('/api/generate-note', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    // We send the notes and the glossary to our server
                     body: JSON.stringify({ 
                         userInput: state.userInput,
                         glossary: shorthandGlossary 
                     })
                 });
-                if (!response.ok) throw new Error(`API Error: ${response.statusText}`);
+
+                if (!response.ok) {
+                    await handleApiError(response);
+                }
+
                 const result = await response.json();
                 const note = result.candidates?.[0]?.content?.parts?.[0]?.text;
                 if (note) {
@@ -159,11 +167,12 @@
                     const datedNote = `${datePlaceholder}: ${note}`;
                     setState({ generatedNote: datedNote, screen: 'results', isLoading: false });
                 } else {
-                    throw new Error("Failed to generate a valid note.");
+                    // This can happen if the API returns a 200 OK but the content is empty/unexpected
+                    throw new Error("Failed to generate a valid note from the AI service. The response was empty.");
                 }
             } catch (err) {
-                const timer = setTimeout(() => setState({ error: null }), 5000);
-                setState({ error: err.message, isLoading: false, errorTimer: timer });
+                const timer = setTimeout(() => setState({ error: null }), 8000); // Longer timer for reading complex errors
+                setState({ isLoading: false, error: err.message, errorTimer: timer });
             }
         };
 
@@ -411,4 +420,3 @@
     </script>
 </body>
 </html>
-
