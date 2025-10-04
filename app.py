@@ -1,4 +1,5 @@
-from flask import Flask, render_template, request, make_response, redirect, url_for, abort, g
+import base64
+import re
 import jwt
 import os
 from functools import wraps
@@ -31,7 +32,18 @@ class User(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(80), unique=True, nullable=False)
     password = db.Column(db.String(120), nullable=False)
-    display_name = db.Column(db.String(100))
+    display_name = db.Column(db.String(100)) # This will now store the user's preferred display name
+    real_name = db.Column(db.String(100))
+    location = db.Column(db.String(100))
+    email = db.Column(db.String(120), unique=True)
+    profile_photo_url = db.Column(db.Text) # Changed to Text to accommodate base64 URLs
+    about_me = db.Column(db.Text)
+    fields = db.Column(db.JSON)
+    interests = db.Column(db.JSON)
+    hobbies = db.Column(db.JSON)
+    specializations = db.Column(db.JSON)
+    display_preference = db.Column(db.String(20), default='username') # NEW: 'username' or 'real_name'
+
     real_name = db.Column(db.String(100))
     location = db.Column(db.String(100))
     email = db.Column(db.String(120), unique=True)
@@ -127,12 +139,13 @@ def update_profile_api():
     data = request.get_json()
     user = g.user
 
+    # Forbidden content check
     forbidden_keywords = ['politics', 'religion', 'racism', 'bigotry']
     about_me_text = data.get('about_me', '').lower()
     if any(keyword in about_me_text for keyword in forbidden_keywords):
         return jsonify({"error": "Profile contains forbidden topics. Please revise."}), 400
 
-    user.display_name = data.get('display_name', user.display_name)
+    # Update standard fields
     user.real_name = data.get('real_name', user.real_name)
     user.location = data.get('location', user.location)
     user.email = data.get('email', user.email)
@@ -140,7 +153,21 @@ def update_profile_api():
     user.fields = data.get('fields', user.fields)
     user.interests = data.get('interests', user.interests)
     user.hobbies = data.get('hobbies', user.hobbies)
-    user.specializations = data.get('specializations', user.specializations) # UPDATED to match your database
+    user.specializations = data.get('specializations', user.specializations)
+    
+    # NEW: Update display preference and the display_name field itself
+    preference = data.get('display_preference', user.display_preference)
+    user.display_preference = preference
+    if preference == 'real_name':
+        user.display_name = data.get('real_name', user.username)
+    else: # Default to username
+        user.display_name = user.username
+
+    # NEW: Handle profile photo upload (Base64)
+    photo_b64 = data.get('profile_photo_b64')
+    if photo_b64:
+        # The string comes in as 'data:image/png;base64,iVBORw0KGgo...'. We need to keep this format.
+        user.profile_photo_url = photo_b64
     
     db.session.commit()
     return jsonify({"message": "Profile updated successfully"})
@@ -403,5 +430,6 @@ def page_not_found(e):
 # --- This block should be the VERY LAST thing in your file ---
 if __name__ == '__main__':
     app.run(debug=True)
+
 
 
