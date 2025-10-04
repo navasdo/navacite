@@ -40,7 +40,7 @@ class User(db.Model):
     fields = db.Column(db.JSON)
     interests = db.Column(db.JSON)
     hobbies = db.Column(db.JSON)
-    research_areas = db.Column(db.JSON)
+    specializations = db.Column(db.JSON) # Changed from research_areas
 
 # --- Custom CLI Command to Initialize DB ---
 @app.cli.command("init-db")
@@ -67,7 +67,6 @@ def load_logged_in_user():
         except Exception as e:
             g.user = None
 
-# ... (The rest of your app.py code remains the same) ...
 # --- Decorator for Token Authentication ---
 def token_required(f):
     @wraps(f)
@@ -118,7 +117,6 @@ def update_profile_api():
     data = request.get_json()
     user = g.user
 
-    # Forbidden content check
     forbidden_keywords = ['politics', 'religion', 'racism', 'bigotry']
     about_me_text = data.get('about_me', '').lower()
     if any(keyword in about_me_text for keyword in forbidden_keywords):
@@ -132,7 +130,7 @@ def update_profile_api():
     user.fields = data.get('fields', user.fields)
     user.interests = data.get('interests', user.interests)
     user.hobbies = data.get('hobbies', user.hobbies)
-    user.research_areas = data.get('research_areas', user.research_areas)
+    user.specializations = data.get('specializations', user.specializations) # Changed from research_areas
     
     db.session.commit()
     return jsonify({"message": "Profile updated successfully"})
@@ -215,11 +213,9 @@ def handle_check_solution():
         return jsonify({"error": "Missing required data"}), 400
 
     try:
-        # Securely uses the COGNITION key from your app config
         api_key = app.config['GEMINI_API_KEY_COGNITION']
         google_api_url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key={api_key}"
         
-        # This part runs two checks: one for inappropriate content and one for conceptual match
         inappropriate_prompt = f"Is the following text inappropriate, offensive, or off-topic for a school assignment? Answer only \"Yes\" or \"No\". Text: \"{student_answer}\""
         inappropriate_payload = {"contents": [{"parts": [{"text": inappropriate_prompt}]}]}
         inappropriate_response = requests.post(google_api_url, headers={"Content-Type": "application/json"}, data=json.dumps(inappropriate_payload))
@@ -239,7 +235,6 @@ def handle_check_solution():
         return jsonify({"match": is_match, "inappropriate": False})
 
     except Exception as e:
-        # A fallback in case the API call fails
         is_match = any(keyword in student_answer.lower() for keyword in solution_keywords)
         return jsonify({"match": is_match, "inappropriate": False})
 
@@ -254,7 +249,6 @@ def handle_get_scaffolding():
         return jsonify({"error": "Missing student answer"}), 400
         
     try:
-        # Securely uses the COGNITION key from your app config
         api_key = app.config['GEMINI_API_KEY_COGNITION']
         google_api_url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key={api_key}"
 
@@ -302,10 +296,31 @@ def logout():
 def library_page():
     return render_template('index.html')
 
+# --- Profile Routes ---
+# This route redirects /profile to the logged-in user's own profile page
 @app.route('/profile')
 @token_required
-def profile_page():
-    return render_template('profile.html', user=g.user)
+def my_profile_page():
+    if g.user:
+        return redirect(url_for('profile_page', username=g.user.username))
+    else:
+        # If for some reason there's no user, redirect to login
+        return redirect(url_for('login_page'))
+
+# This route handles viewing any user's profile, including your own
+@app.route('/profile/<username>')
+@token_required
+def profile_page(username):
+    # Fetch the user whose profile is being viewed
+    profile_user = User.query.filter_by(username=username).first_or_404()
+    
+    # Check if the logged-in user is viewing their own profile
+    is_own_profile = False
+    if g.user and g.user.id == profile_user.id:
+        is_own_profile = True
+        
+    return render_template('profile.html', user=profile_user, is_own_profile=is_own_profile)
+
 
 @app.route('/session-scribe')
 @token_required
@@ -377,9 +392,9 @@ def cognition_page(cognitionTools_slug):
 # --- Error Handling ---
 @app.errorhandler(404)
 def page_not_found(e):
-    return "This page was not found in the application.", 404
+    # It's better to render a 404 template, but a simple message is fine for now
+    return render_template('404.html'), 404
 
 # --- This block should be the VERY LAST thing in your file ---
 if __name__ == '__main__':
     app.run(debug=True)
-
