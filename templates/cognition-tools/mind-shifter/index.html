@@ -1,17 +1,12 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <a href="/cognition-tools" class="absolute top-4 right-4 z-20 p-1 rounded-full bg-gray-700/50 hover:bg-gray-600/50 transition" title="Back to PREVIOUS PAGE"><img src="https://raw.githubusercontent.com/navasdo/navacite/refs/heads/main/templates/static/navacite-images/Navacite-Main.png" alt="Navacite" class="w-10 h-10 rounded-full"/></a>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mind Shifter</title>
-    <script src="https://cdn.tailwindcss.com"></script>
+{% extends "base.html" %}
+
+{% block title %}Mind Shifter{% endblock %}
+
+{% block head %}
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <link rel="icon" type="https://raw.githubusercontent.com/navasdo/navacite/refs/heads/main/templates/static/ico/navacite.ico" href="https://raw.githubusercontent.com/navasdo/navacite/refs/heads/main/templates/static/ico/navacite.ico">
     <style>
         body {
             font-family: 'Inter', sans-serif;
-            background-color: #0c0a18;
         }
         .modal-enter, .lobey-enter { opacity: 0; }
         .modal-enter-active, .lobey-enter-active { opacity: 1; transition: opacity 300ms; }
@@ -120,9 +115,9 @@
             color: #a78bfa;
         }
     </style>
-</head>
-<body class="bg-[#0c0a18] text-slate-300 flex flex-col min-h-screen">
+{% endblock %}
 
+{% block content %}
     <!-- Lobey Mascot Popup -->
     <div id="lobeyPopup" class="hidden fixed bottom-6 right-6 z-40 flex items-end gap-4 lobey-enter">
         <div id="lobeyContainer" class="bg-slate-800 border border-violet-700/50 rounded-2xl shadow-2xl p-4 max-w-xs text-center">
@@ -332,11 +327,9 @@
             </div>
         </main>
     </div>
+{% endblock %}
 
-    <footer class="w-full max-w-3xl mx-auto mt-24 text-center text-sm text-slate-500 p-6 border-t border-slate-800/50">
-       <p class="mb-2">This tool is for educational purposes only. It is not a substitute for professional advice.</p>
-    </footer>
-
+{% block scripts %}
     <script>
         document.addEventListener('DOMContentLoaded', () => {
             // --- MODALS ---
@@ -930,3 +923,5 @@
 </body>
 </html>
 
+
+}
