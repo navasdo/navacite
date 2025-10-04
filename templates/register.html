@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+
+{% block title %}Register{% endblock %}
+
+{% block content %}
+<div class="flex items-center justify-center min-h-screen pt-16">
+    <div class="w-full max-w-md">
+        <form id="registerForm" class="bg-slate-900/40 border border-violet-900/80 shadow-lg rounded-2xl px-8 pt-6 pb-8 mb-4">
+            <h1 class="text-3xl font-bold mb-6 text-center text-violet-400">Create a Navacite Account</h1>
+            <div class="mb-4">
+                <label class="block text-slate-300 text-sm font-bold mb-2" for="username">
+                    Username
+                </label>
+                <input class="shadow appearance-none border border-slate-700 bg-slate-800/60 rounded w-full py-3 px-4 text-slate-300 leading-tight focus:outline-none focus:ring-2 focus:ring-violet-500" id="username" type="text" placeholder="Choose a username" required>
+            </div>
+            <div class="mb-6">
+                <label class="block text-slate-300 text-sm font-bold mb-2" for="password">
+                    Password
+                </label>
+                <input class="shadow appearance-none border border-slate-700 bg-slate-800/60 rounded w-full py-3 px-4 text-slate-300 mb-3 leading-tight focus:outline-none focus:ring-2 focus:ring-violet-500" id="password" type="password" placeholder="******************" required>
+            </div>
+            <div class="flex items-center justify-between">
+                <button class="bg-violet-600 hover:bg-violet-700 text-white font-bold py-2 px-4 rounded-lg focus:outline-none focus:shadow-outline transition-colors" type="submit">
+                    Register
+                </button>
+                <a class="inline-block align-baseline font-bold text-sm text-violet-400 hover:text-violet-300" href="{{ url_for('login_page') }}">
+                    Already have an account?
+                </a>
+            </div>
+            <p id="error-message" class="text-red-400 text-xs italic mt-4 text-center"></p>
+        </form>
+    </div>
+</div>
+
+<script>
+    document.getElementById('registerForm').addEventListener('submit', async function(event) {
+        event.preventDefault();
+        const username = document.getElementById('username').value;
+        const password = document.getElementById('password').value;
+        const errorMessage = document.getElementById('error-message');
+        errorMessage.textContent = '';
+
+        const response = await fetch('/api/register', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ username, password }),
+        });
+
+        const result = await response.json();
+
+        if (response.ok) {
+            // Redirect to login page on successful registration
+            window.location.href = '/login';
+        } else {
+            // Display error message
+            errorMessage.textContent = result.error || 'An error occurred.';
+        }
+    });
+</script>
+{% endblock %}
+
