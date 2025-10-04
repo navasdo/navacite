@@ -1,5 +1,17 @@
 {% extends "base.html" %}
 {% block content %}
+<style>
+    .achievement-badge .tooltip-text {
+        visibility: hidden;
+        opacity: 0;
+        transition: opacity 0.3s ease-in-out;
+        pointer-events: none; /* Prevent the tooltip from interfering with mouse events */
+    }
+    .achievement-badge:hover .tooltip-text {
+        visibility: visible;
+        opacity: 1;
+    }
+</style>
 <div class="container mx-auto p-4 sm:p-6 lg:p-8 max-w-7xl">
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
             <!-- Left Column -->
@@ -85,15 +97,15 @@
                              <div id="interests-container" class="flex flex-wrap gap-2"></div>
                              <input type="text" id="interests-input" class="hidden w-full bg-slate-800/60 border border-slate-700 rounded-lg p-2 mt-2" placeholder="Add an interest and press Enter...">
                          </div>
-                         <div>
+                          <div>
                             <h4 class="font-semibold text-slate-200 mb-2">Hobbies</h4>
                              <div id="hobbies-container" class="flex flex-wrap gap-2"></div>
                               <input type="text" id="hobbies-input" class="hidden w-full bg-slate-800/60 border border-slate-700 rounded-lg p-2 mt-2" placeholder="Add a hobby and press Enter...">
                          </div>
                          <div>
-                            <h4 class="font-semibold text-slate-200 mb-2">Research Areas</h4>
-                             <div id="research-container" class="flex flex-wrap gap-2"></div>
-                             <input type="text" id="research-input" class="hidden w-full bg-slate-800/60 border border-slate-700 rounded-lg p-2 mt-2" placeholder="Add a research area and press Enter...">
+                            <h4 class="font-semibold text-slate-200 mb-2">Specializations</h4>
+                             <div id="specializations-container" class="flex flex-wrap gap-2"></div>
+                             <input type="text" id="specializations-input" class="hidden w-full bg-slate-800/60 border border-slate-700 rounded-lg p-2 mt-2" placeholder="Add a specialization and press Enter...">
                          </div>
                      </div>
                 </div>
@@ -169,8 +181,7 @@
             // Initialize all bubble inputs
             setupBubbleInput('interests-input', 'interests-container');
             setupBubbleInput('hobbies-input', 'hobbies-container');
-            setupBubbleInput('research-input', 'research-container');
-
+            setupBubbleInput('specializations-input', 'specializations-container');
 
             // --- Edit Mode Toggle ---
             if (editBtn) {
@@ -204,13 +215,13 @@
                     }
                 }
 
-                // Toggle visibility of input fields for bubbles
+               // Toggle visibility of input fields for bubbles
                 document.getElementById('interests-input').classList.toggle('hidden', !editing);
                 document.getElementById('hobbies-input').classList.toggle('hidden', !editing);
-                document.getElementById('research-input').classList.toggle('hidden', !editing);
+                document.getElementById('specializations-input').classList.toggle('hidden', !editing);
             }
-
-            // --- 'About Me' Validation ---
+                
+           // --- 'About Me' Validation ---
             function validateAboutText(text) {
                 const forbiddenWords = ['politics', 'religion', 'racism', 'bigotry', /* add more as needed */];
                 const lowerText = text.toLowerCase();
