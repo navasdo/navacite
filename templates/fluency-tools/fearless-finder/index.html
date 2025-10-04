@@ -1,19 +1,14 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-      <a href"/fluency-tools" class="absolute top-4 right-4 z-10 p-1 rounded-full bg-gray-700/50 hover:bg-gray-600/50 transition" title="Back to Fluency tools"><img src="https://raw.githubusercontent.com/navasdo/oliver/main/navacite/gems/Navacite-Main.png" alt="Navacite Homepage" class="w-10 h-10 rounded-full"/></a>
-     <link rel="icon" type="https://raw.githubusercontent.com/navasdo/navacite/refs/heads/main/templates/static/ico/navacite.ico" href="https://raw.githubusercontent.com/navasdo/navacite/refs/heads/main/templates/static/ico/navacite.ico">
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Fearless Finder</title>
-    <script src="https://cdn.tailwindcss.com"></script>
+{% extends "base.html" %}
+
+{% block title %}Fearless Finder{% endblock %}
+
+{% block head %}
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&family=Rock+Salt&display=swap" rel="stylesheet">
     <style>
-        html { scroll-behavior: smooth; }
         body { font-family: 'Inter', sans-serif; }
 
         /* App Suite Style Guide Requirements */
@@ -41,12 +36,6 @@
             transform: scale(1.05);
         }
 
-        /* Modal Animation Styles */
-        .modal-enter { opacity: 0; }
-        .modal-enter-active { opacity: 1; transition: opacity 300ms; }
-        .modal-content-enter { opacity: 0; transform: scale(0.95); }
-        .modal-content-enter-active { opacity: 1; transform: scale(1); transition: opacity 300ms, transform 300ms; }
-        
         /* New Exit Animation Styles */
         .modal-exit { opacity: 0; transition: opacity 300ms; }
         .modal-content-exit { opacity: 0; transform: scale(0.95); transition: opacity 300ms, transform 300ms; }
@@ -82,7 +71,6 @@
             animation: slide-up 0.5s ease-out forwards;
         }
 
-
         /* Print-specific styles for exporting certificates */
         @media print {
             body * {
@@ -105,34 +93,14 @@
             }
         }
     </style>
-</head>
-<body class="bg-[#0c0a18] min-h-screen font-sans text-slate-300 flex flex-col items-center p-4 sm:p-6 lg:p-8 overflow-x-hidden">
+{% endblock %}
 
+{% block content %}
     <!-- Hidden element for capturing signature -->
     <div id="signature-capture" class="absolute -left-full text-black p-2 bg-white">
         <span style="font-family: 'Rock Salt', cursive; font-size: 22px;">Dennis</span>
     </div>
 
-    <!-- Terms & Disclaimer Modal -->
-    <div id="termsModal" class="hidden fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-[70] p-4 modal-enter">
-        <div class="bg-slate-800 border border-violet-700/50 rounded-2xl shadow-2xl shadow-violet-500/10 p-6 sm:p-8 max-w-2xl w-full max-h-[90vh] overflow-y-auto modal-content-enter">
-            <div class="flex justify-between items-center mb-6">
-                <h2 class="text-3xl font-bold text-slate-100">Terms & Disclaimer</h2>
-                <button id="closeTermsModal" class="text-slate-400 hover:text-white transition-colors">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
-                    </svg>
-                </button>
-            </div>
-            <div class="space-y-6 text-slate-300 text-left text-sm">
-                 <div>
-                    <h3 class="text-xl font-semibold text-violet-400 mb-2">Disclaimer</h3>
-                    <p>Navacite tools are provided “as is” and are not intended to diagnose, prevent, or cure any speech-language disorder. They are designed as supplemental engagement supports to be used by qualified professionals. Navacite makes no warranties, expressed or implied, and hereby disclaims and negates all other warranties, including without limitation, implied warranties of merchantability, fitness for a particular purpose, and non-infringement of intellectual property or other rights. Navacite does not warrant or make any representations concerning the accuracy, likely results, or reliability of the materials on this site or on any sites linked to it.</p>
-                </div>
-            </div>
-        </div>
-    </div>
-    
     <!-- Privacy Modal -->
     <div id="privacyModal" class="hidden fixed inset-0 bg-black bg-opacity-75 backdrop-filter backdrop-blur-sm flex items-center justify-center z-[70] p-4 modal-enter">
         <div class="bg-slate-800 border border-violet-700/50 rounded-2xl shadow-2xl shadow-violet-500/10 p-6 sm:p-8 max-w-2xl w-full max-h-[90vh] overflow-y-auto modal-content-enter">
@@ -178,7 +146,6 @@
             <button id="start-challenge-btn" class="mt-6 bg-violet-600 hover:bg-violet-700 text-white font-bold py-2 px-6 rounded-lg transition">Let's Go!</button>
         </div>
     </div>
-
 
     <!-- Main App Container -->
     <div class="w-full max-w-5xl mx-auto flex-grow">
@@ -385,15 +352,10 @@
         </div>
     </div>
     <audio id="tutorial-audio"></audio>
+{% endblock %}
 
-    <footer class="w-full max-w-3xl mx-auto mt-24 text-center text-sm text-slate-500 p-6 border-t border-slate-800/50 no-print">
-        <p class="font-bold text-violet-400">&copy; 2025 Navacite | All Rights Reserved</p>
-        <p class="mt-4 text-xs text-slate-500">
-            Navacite tools are provided ‘as is’ and are not intended to diagnose. Use requires professional judgment. <br><br>
-            <a href="#" id="openTermsModal" class="underline hover:text-violet-400 transition-colors">Terms & Disclaimer</a>
-        </p>
-    </footer>
 
+{% block scripts %}
     <script>
     document.addEventListener('DOMContentLoaded', () => {
         // --- State Management ---
@@ -508,9 +470,6 @@
         const alertMessage = document.getElementById('alert-message');
         const alertOkBtn = document.getElementById('alert-ok-btn');
         const closeVideoModalBtn = document.getElementById('close-video-modal');
-        const openTermsBtn = document.getElementById('openTermsModal');
-        const closeTermsBtn = document.getElementById('closeTermsModal');
-        const termsModal = document.getElementById('termsModal');
         const openPrivacyBtn = document.getElementById('openPrivacyModal');
         const closePrivacyBtn = document.getElementById('closePrivacyModal');
         const privacyModal = document.getElementById('privacyModal');
@@ -622,11 +581,7 @@
             closeCertBtn.addEventListener('click', () => closeModal(certificateModal));
             noCluesOkBtn.addEventListener('click', () => closeModal(noCluesModal));
 
-            // Terms & Privacy Modals
-            openTermsBtn.addEventListener('click', (e) => { e.preventDefault(); openModal(termsModal); });
-            closeTermsBtn.addEventListener('click', () => closeModal(termsModal));
-            termsModal.addEventListener('click', (e) => { if(e.target === termsModal) closeModal(termsModal); });
-
+            // Privacy Modal (already inherits terms, just need privacy)
             openPrivacyBtn.addEventListener('click', (e) => { e.preventDefault(); openModal(privacyModal); });
             closePrivacyBtn.addEventListener('click', () => closeModal(privacyModal));
             privacyModal.addEventListener('click', (e) => { if(e.target === privacyModal) closeModal(privacyModal); });
