@@ -40,7 +40,7 @@ class User(db.Model):
     fields = db.Column(db.JSON)
     interests = db.Column(db.JSON)
     hobbies = db.Column(db.JSON)
-    specializations = db.Column(db.JSON) # Changed from research_areas
+    specializations = db.Column(db.JSON) # UPDATED to match your database
 
 # --- Custom CLI Command to Initialize DB ---
 @app.cli.command("init-db")
@@ -55,7 +55,12 @@ def shutdown_session(exception=None):
     db.session.remove()
 
 # --- App Context Processor ---
-# This runs before every request to check for a user
+# Makes the current user available to all templates
+@app.context_processor
+def inject_user():
+    return dict(current_user=g.user)
+
+# --- App Context Processor ---
 @app.before_request
 def load_logged_in_user():
     token = request.cookies.get('token')
@@ -135,12 +140,12 @@ def update_profile_api():
     user.fields = data.get('fields', user.fields)
     user.interests = data.get('interests', user.interests)
     user.hobbies = data.get('hobbies', user.hobbies)
-    user.specializations = data.get('specializations', user.specializations) # Changed from research_areas
+    user.specializations = data.get('specializations', user.specializations) # UPDATED to match your database
     
     db.session.commit()
     return jsonify({"message": "Profile updated successfully"})
 
-# ... (Your other API routes for Session Scribe, etc. go here) ...
+# ... (The rest of your app.py file remains the same) ...
 # SESSION SCRIBE --- Waiter #1: Handles the compliance check
 @app.route('/api/compliance-check', methods=['POST'])
 def handle_compliance_check():
@@ -302,24 +307,19 @@ def library_page():
     return render_template('index.html')
 
 # --- Profile Routes ---
-# This route redirects /profile to the logged-in user's own profile page
 @app.route('/profile')
 @token_required
 def my_profile_page():
     if g.user:
         return redirect(url_for('profile_page', username=g.user.username))
     else:
-        # If for some reason there's no user, redirect to login
         return redirect(url_for('login_page'))
 
-# This route handles viewing any user's profile, including your own
 @app.route('/profile/<username>')
 @token_required
 def profile_page(username):
-    # Fetch the user whose profile is being viewed
     profile_user = User.query.filter_by(username=username).first_or_404()
     
-    # Check if the logged-in user is viewing their own profile
     is_own_profile = False
     if g.user and g.user.id == profile_user.id:
         is_own_profile = True
@@ -332,7 +332,7 @@ def profile_page(username):
 def session_scribe():
     return render_template('session-scribe/index.html')
 
-# ... (Your other tool pages like /articulation-tools, etc. go here) ...
+# ... (The rest of your tool routes remain the same) ...
 # --- Articulation Tools ---
 @app.route('/articulation-tools')
 @token_required
@@ -397,10 +397,11 @@ def cognition_page(cognitionTools_slug):
 # --- Error Handling ---
 @app.errorhandler(404)
 def page_not_found(e):
-    # It's better to render a 404 template, but a simple message is fine for now
+    # Note: We are now rendering a real template for 404 errors
     return render_template('404.html'), 404
 
 # --- This block should be the VERY LAST thing in your file ---
 if __name__ == '__main__':
     app.run(debug=True)
+
 
