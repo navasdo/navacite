@@ -99,17 +99,22 @@ def login_api():
     if not data or not data.get('username') or not data.get('password'):
         return {"error": "Username and password are required"}, 400
     
-    user = User.query.filter_by(username=data.get('username')).first()
-    if user and bcrypt.check_password_hash(user.password, data.get('password')):
-        token = jwt.encode({
-            'user': user.username,
-            'exp': datetime.utcnow() + timedelta(hours=24)
-        }, app.config['SECRET_KEY'], algorithm="HS256")
-        response = make_response(jsonify({"message": "Login successful"}))
-        response.set_cookie('token', token, httponly=True, secure=True, samesite='Lax')
-        return response
-    else:
-        return jsonify({"error": "Invalid credentials"}), 401
+    try:
+        user = User.query.filter_by(username=data.get('username')).first()
+        if user and bcrypt.check_password_hash(user.password, data.get('password')):
+            token = jwt.encode({
+                'user': user.username,
+                'exp': datetime.utcnow() + timedelta(hours=24)
+            }, app.config['SECRET_KEY'], algorithm="HS256")
+            response = make_response(jsonify({"message": "Login successful"}))
+            response.set_cookie('token', token, httponly=True, secure=True, samesite='Lax')
+            return response
+        else:
+            return jsonify({"error": "Invalid credentials"}), 401
+    except Exception as e:
+        db.session.rollback()
+        app.logger.error(f"Database error during login: {e}")
+        return jsonify({"error": "A server error occurred during login. Please try again."}), 500
 
 @app.route('/api/profile', methods=['POST'])
 @token_required
@@ -398,3 +403,4 @@ def page_not_found(e):
 # --- This block should be the VERY LAST thing in your file ---
 if __name__ == '__main__':
     app.run(debug=True)
+
