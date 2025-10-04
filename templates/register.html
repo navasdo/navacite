@@ -4,60 +4,249 @@
 
 {% block content %}
 <div class="flex items-center justify-center min-h-screen pt-16">
-    <div class="w-full max-w-md">
-        <form id="registerForm" class="bg-slate-900/40 border border-violet-900/80 shadow-lg rounded-2xl px-8 pt-6 pb-8 mb-4">
+    <div class="w-full max-w-lg">
+        <div id="register-form-container" class="bg-slate-900/40 border border-violet-900/80 shadow-lg rounded-2xl px-8 pt-6 pb-8 mb-4">
             <h1 class="text-3xl font-bold mb-6 text-center text-violet-400">Create a Navacite Account</h1>
-            <div class="mb-4">
-                <label class="block text-slate-300 text-sm font-bold mb-2" for="username">
-                    Username
-                </label>
-                <input class="shadow appearance-none border border-slate-700 bg-slate-800/60 rounded w-full py-3 px-4 text-slate-300 leading-tight focus:outline-none focus:ring-2 focus:ring-violet-500" id="username" type="text" placeholder="Choose a username" required>
+            
+            <!-- Step 1: Basic Information -->
+            <div id="step-1">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                    <div>
+                        <label class="block text-slate-300 text-sm font-bold mb-2" for="firstName">First Name</label>
+                        <input class="shadow appearance-none border border-slate-700 bg-slate-800/60 rounded w-full py-3 px-4 text-slate-300" id="firstName" type="text" placeholder="Jane" required>
+                    </div>
+                    <div>
+                        <label class="block text-slate-300 text-sm font-bold mb-2" for="lastName">Last Name</label>
+                        <input class="shadow appearance-none border border-slate-700 bg-slate-800/60 rounded w-full py-3 px-4 text-slate-300" id="lastName" type="text" placeholder="Doe" required>
+                    </div>
+                </div>
+                <div class="mb-4">
+                    <label class="block text-slate-300 text-sm font-bold mb-2" for="email">Email Address</label>
+                    <input class="shadow appearance-none border border-slate-700 bg-slate-800/60 rounded w-full py-3 px-4 text-slate-300" id="email" type="email" placeholder="you@example.com" required>
+                </div>
+                <div class="mb-4">
+                    <label class="block text-slate-300 text-sm font-bold mb-2" for="username">Username</label>
+                    <input class="shadow appearance-none border border-slate-700 bg-slate-800/60 rounded w-full py-3 px-4 text-slate-300" id="username" type="text" placeholder="Must be appropriate" required>
+                </div>
+                <div class="mb-6">
+                    <label class="block text-slate-300 text-sm font-bold mb-2" for="password">Password</label>
+                    <input class="shadow appearance-none border border-slate-700 bg-slate-800/60 rounded w-full py-3 px-4 text-slate-300" id="password" type="password" placeholder="******************" required>
+                    <div id="password-strength" class="mt-2 text-xs text-slate-500"></div>
+                </div>
+                <div class="flex items-center justify-end">
+                    <button id="next-step-1" class="bg-violet-600 hover:bg-violet-700 text-white font-bold py-2 px-4 rounded-lg focus:outline-none focus:shadow-outline transition-colors" type="button">
+                        Next &rarr;
+                    </button>
+                </div>
             </div>
-            <div class="mb-6">
-                <label class="block text-slate-300 text-sm font-bold mb-2" for="password">
-                    Password
-                </label>
-                <input class="shadow appearance-none border border-slate-700 bg-slate-800/60 rounded w-full py-3 px-4 text-slate-300 mb-3 leading-tight focus:outline-none focus:ring-2 focus:ring-violet-500" id="password" type="password" placeholder="******************" required>
+
+            <!-- Step 2: Terms and Conditions -->
+            <div id="step-2" style="display: none;">
+                <h2 class="text-xl font-semibold mb-4 text-center text-slate-200">Terms of Service</h2>
+                <div class="h-48 overflow-y-auto p-3 mb-4 bg-slate-800/50 border border-slate-700 rounded-lg text-slate-400 text-sm">
+                    <p class="font-bold mb-2">Disclaimer & Professional Responsibility:</p>
+                    <p class="mb-3">Navacite tools are provided “as is” and are not intended to diagnose. The responsibility for all clinical decisions rests solely with the licensed professional. Navacite assumes no liability for outcomes resulting from the use of these materials.</p>
+                    
+                    <p class="font-bold mb-2">Intellectual Property & Content Contribution:</p>
+                    <p class="mb-3">All content on this site is the property of Navacite. You agree not to copy, distribute, or otherwise repurpose site content without permission. By submitting suggestions, bug reports, or any other feedback ("Contribution"), you irrevocably assign all rights, title, and interest in the Contribution to Navacite. You acknowledge that you will receive no monetary compensation for any Contribution, and Navacite is under no obligation to use it.</p>
+                    
+                    <p class="font-bold mb-2">Prohibited Use & 'Work for Hire' Acknowledgment:</p>
+                    <p class="mb-3">You affirm that this account is not being created for the purpose of pursuing legal action against, or assisting a third party in pursuing action against, Navacite's creator or its collaborators in relation to any institution's 'Work for Hire' policy. You agree that if your account is found to have been used to aid or abet in such a pursuance, you will be held liable for all resulting damages, including but not limited to lost wages and legal fees, as traceable through access logs and other data.</p>
+                    
+                    <p class="font-bold mb-2">General Terms:</p>
+                    <p>Navacite may revise these terms at any time. Any claim shall be governed by the laws of the State of Nebraska, USA.</p>
+                </div>
+                <div class="space-y-4">
+                    <label class="flex items-start">
+                        <input type="checkbox" id="agree-terms" class="form-checkbox mt-1 bg-slate-700 border-slate-600 text-violet-500 focus:ring-violet-500">
+                        <span class="ml-2 text-slate-300 text-sm">I have read and agree to the full Terms of Service.</span>
+                    </label>
+                    <label class="flex items-start">
+                        <input type="checkbox" id="agree-contribution" class="form-checkbox mt-1 bg-slate-700 border-slate-600 text-violet-500 focus:ring-violet-500">
+                        <span class="ml-2 text-slate-300 text-sm">I agree that any ideas or feedback I provide become the property of Navacite without compensation.</span>
+                    </label>
+                    <label class="flex items-start">
+                        <input type="checkbox" id="agree-wfh" class="form-checkbox mt-1 bg-slate-700 border-slate-600 text-violet-500 focus:ring-violet-500">
+                        <span class="ml-2 text-slate-300 text-sm">I affirm this account will not be used to pursue 'Work for Hire' claims and accept liability if this term is violated.</span>
+                    </label>
+                </div>
+
+                <div class="mt-6">
+                    <!-- Placeholder for CAPTCHA -->
+                    <div id="captcha-placeholder" class="bg-slate-700/50 border border-dashed border-slate-600 rounded-lg h-20 flex items-center justify-center text-slate-500">
+                        CAPTCHA will be implemented here
+                    </div>
+                </div>
+
+                <div class="flex items-center justify-between mt-6">
+                    <button id="prev-step-2" class="text-slate-400 hover:text-white font-bold py-2 px-4 rounded-lg" type="button">&larr; Back</button>
+                    <button id="register-btn" class="bg-violet-600 hover:bg-violet-700 text-white font-bold py-2 px-4 rounded-lg focus:outline-none focus:shadow-outline transition-colors" type="submit" disabled>
+                        Register
+                    </button>
+                </div>
             </div>
-            <div class="flex items-center justify-between">
-                <button class="bg-violet-600 hover:bg-violet-700 text-white font-bold py-2 px-4 rounded-lg focus:outline-none focus:shadow-outline transition-colors" type="submit">
-                    Register
+            
+            <!-- Step 3: Email Verification (Placeholder) -->
+            <div id="step-3" style="display: none;" class="text-center">
+                <h2 class="text-2xl font-semibold mb-4 text-slate-100">Verify Your Email</h2>
+                <p class="text-slate-400 mb-6">A verification code has been sent to the email address you provided. Please enter it below.</p>
+                <div class="mb-4">
+                    <input class="shadow appearance-none text-center tracking-widest text-2xl border border-slate-700 bg-slate-800/60 rounded w-full py-3 px-4 text-slate-300" id="verification-code" type="text" placeholder="_ _ _ _ _ _" required>
+                </div>
+                 <button class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-lg" type="button">
+                    Complete Registration
                 </button>
-                <a class="inline-block align-baseline font-bold text-sm text-violet-400 hover:text-violet-300" href="{{ url_for('login_page') }}">
+                <p class="text-xs text-slate-500 mt-4">Email verification is not yet active. This is a placeholder for the next development step.</p>
+            </div>
+
+            <p id="error-message" class="text-red-400 text-xs italic mt-4 text-center"></p>
+             <p class="text-center text-sm mt-6">
+                <a class="inline-block align-baseline font-bold text-violet-400 hover:text-violet-300" href="{{ url_for('login_page') }}">
                     Already have an account?
                 </a>
-            </div>
-            <p id="error-message" class="text-red-400 text-xs italic mt-4 text-center"></p>
-        </form>
+            </p>
+        </div>
     </div>
 </div>
 
 <script>
-    document.getElementById('registerForm').addEventListener('submit', async function(event) {
+document.addEventListener('DOMContentLoaded', function() {
+    const step1 = document.getElementById('step-1');
+    const step2 = document.getElementById('step-2');
+    const step3 = document.getElementById('step-3'); // Placeholder step
+
+    const nextBtn1 = document.getElementById('next-step-1');
+    const prevBtn2 = document.getElementById('prev-step-2');
+    const registerBtn = document.getElementById('register-btn');
+    
+    const passwordInput = document.getElementById('password');
+    const passwordStrengthDiv = document.getElementById('password-strength');
+
+    const agreeTerms = document.getElementById('agree-terms');
+    const agreeContribution = document.getElementById('agree-contribution');
+    const agreeWFH = document.getElementById('agree-wfh');
+    
+    // --- Step Navigation ---
+    nextBtn1.addEventListener('click', () => {
+        // Basic validation before proceeding
+        const inputs = step1.querySelectorAll('input[required]');
+        let allValid = true;
+        inputs.forEach(input => {
+            if (!input.value) {
+                allValid = false;
+                input.classList.add('border-red-500');
+            } else {
+                input.classList.remove('border-red-500');
+            }
+        });
+
+        if (allValid && isPasswordStrong(passwordInput.value)) {
+            step1.style.display = 'none';
+            step2.style.display = 'block';
+        } else if (!isPasswordStrong(passwordInput.value)) {
+             document.getElementById('error-message').textContent = 'Please choose a stronger password.';
+        } else {
+             document.getElementById('error-message').textContent = 'Please fill out all required fields.';
+        }
+    });
+
+    prevBtn2.addEventListener('click', () => {
+        step2.style.display = 'none';
+        step1.style.display = 'block';
+    });
+    
+    // --- Form Submission ---
+    registerBtn.form.addEventListener('submit', async function(event) {
         event.preventDefault();
-        const username = document.getElementById('username').value;
-        const password = document.getElementById('password').value;
         const errorMessage = document.getElementById('error-message');
         errorMessage.textContent = '';
+        registerBtn.disabled = true;
+        registerBtn.textContent = 'Registering...';
+
+        const formData = {
+            firstName: document.getElementById('firstName').value,
+            lastName: document.getElementById('lastName').value,
+            email: document.getElementById('email').value,
+            username: document.getElementById('username').value,
+            password: passwordInput.value
+        };
 
         const response = await fetch('/api/register', {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ username, password }),
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(formData),
         });
 
         const result = await response.json();
 
         if (response.ok) {
-            // Redirect to login page on successful registration
-            window.location.href = '/login';
+            // On success, show the (placeholder) email verification step
+            step2.style.display = 'none';
+            step3.style.display = 'block';
+             document.getElementById('error-message').textContent = '';
         } else {
-            // Display error message
-            errorMessage.textContent = result.error || 'An error occurred.';
+            errorMessage.textContent = result.error || 'An error occurred during registration.';
+            registerBtn.disabled = false;
+            registerBtn.textContent = 'Register';
         }
     });
+
+    // --- Real-time Validation ---
+    function checkAgreements() {
+        if (agreeTerms.checked && agreeContribution.checked && agreeWFH.checked) {
+            registerBtn.disabled = false;
+        } else {
+            registerBtn.disabled = true;
+        }
+    }
+    
+    [agreeTerms, agreeContribution, agreeWFH].forEach(cb => cb.addEventListener('change', checkAgreements));
+
+    function isPasswordStrong(password) {
+        // At least 8 chars, 1 uppercase, 1 lowercase, 1 number, 1 symbol
+        const strongRegex = new RegExp("^(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[!@#\\$%\\^&\\*])(?=.{8,})");
+        return strongRegex.test(password);
+    }
+
+    passwordInput.addEventListener('input', () => {
+        const password = passwordInput.value;
+        let strengthText = 'Password must contain at least: <ul>';
+        let conditionsMet = 0;
+        
+        if (password.length >= 8) {
+            strengthText += '<li class="text-green-400">8 characters</li>';
+            conditionsMet++;
+        } else {
+            strengthText += '<li class="text-slate-500">8 characters</li>';
+        }
+        if (/[A-Z]/.test(password)) {
+            strengthText += '<li class="text-green-400">1 uppercase letter</li>';
+            conditionsMet++;
+        } else {
+            strengthText += '<li class="text-slate-500">1 uppercase letter</li>';
+        }
+        if (/[a-z]/.test(password)) {
+            strengthText += '<li class="text-green-400">1 lowercase letter</li>';
+            conditionsMet++;
+        } else {
+            strengthText += '<li class="text-slate-500">1 lowercase letter</li>';
+        }
+        if (/[0-9]/.test(password)) {
+            strengthText += '<li class="text-green-400">1 number</li>';
+            conditionsMet++;
+        } else {
+            strengthText += '<li class="text-slate-500">1 number</li>';
+        }
+        if (/[!@#$%^&*]/.test(password)) {
+            strengthText += '<li class="text-green-400">1 symbol</li>';
+            conditionsMet++;
+        } else {
+            strengthText += '<li class="text-slate-500">1 symbol</li>';
+        }
+        
+        strengthText += '</ul>';
+        passwordStrengthDiv.innerHTML = strengthText;
+    });
+});
 </script>
 {% endblock %}
-
