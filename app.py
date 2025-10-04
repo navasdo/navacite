@@ -1,5 +1,7 @@
 import base64
 import re
+from sqlalchemy import desc # Import `desc` for ordering
+
 import jwt
 import os
 from functools import wraps
@@ -32,7 +34,32 @@ class User(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(80), unique=True, nullable=False)
     password = db.Column(db.String(120), nullable=False)
-    display_name = db.Column(db.String(100)) # This will now store the user's preferred display name
+    display_name = db.Column(db.String(100)) 
+    real_name = db.Column(db.String(100))
+    location = db.Column(db.String(100))
+    email = db.Column(db.String(120), unique=True)
+    profile_photo_url = db.Column(db.Text) 
+    about_me = db.Column(db.Text)
+    fields = db.Column(db.JSON)
+    interests = db.Column(db.JSON)
+    hobbies = db.Column(db.JSON)
+    specializations = db.Column(db.JSON)
+    display_preference = db.Column(db.String(20), default='username')
+    
+    # NEW: Relationship to notifications
+    notifications_received = db.relationship('Notification', foreign_keys='Notification.recipient_id', backref='recipient', lazy='dynamic')
+
+# NEW: Notification Database Model
+class Notification(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    recipient_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    sender_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    type = db.Column(db.String(50), nullable=False) # e.g., 'collaboration_request'
+    is_read = db.Column(db.Boolean, default=False, nullable=False)
+    timestamp = db.Column(db.DateTime, default=datetime.utcnow)
+    
+    sender = db.relationship('User', foreign_keys=[sender_id])
+
     real_name = db.Column(db.String(100))
     location = db.Column(db.String(100))
     email = db.Column(db.String(120), unique=True)
@@ -67,7 +94,14 @@ def shutdown_session(exception=None):
     db.session.remove()
 
 # --- App Context Processor ---
-# Makes the current user available to all templates
+# Makes the current user and notification count available to all templates
+@app.context_processor
+def inject_user_and_notifications():
+    notification_count = 0
+    if g.user:
+        notification_count = Notification.query.filter_by(recipient_id=g.user.id, is_read=False).count()
+    return dict(current_user=g.user, notification_count=notification_count)
+
 @app.context_processor
 def inject_user():
     return dict(current_user=g.user)
@@ -166,7 +200,77 @@ def update_profile_api():
     # NEW: Handle profile photo upload (Base64)
     photo_b64 = data.get('profile_photo_b64')
     if photo_b64:
-        # The string comes in as 'data:image/png;base64,iVBORw0KGgo...'. We need to keep this format.
+        user.profile_photo_url = photo_b64
+    
+    db.session.commit()
+    return jsonify({"message": "Profile updated successfully"})
+
+# --- NEW: Notification API Routes ---
+@app.route('/api/collaborate', methods=['POST'])
+@token_required
+def request_collaboration():
+    data = request.get_json()
+    recipient_username = data.get('recipient_username')
+    if not recipient_username:
+        return jsonify({"error": "Recipient username is required"}), 400
+
+    recipient = User.query.filter_by(username=recipient_username).first()
+    if not recipient:
+        return jsonify({"error": "Recipient not found"}), 404
+    
+    # Prevent sending a request to yourself
+    if recipient.id == g.user.id:
+        return jsonify({"error": "You cannot send a collaboration request to yourself."}), 400
+
+    # Check if a request already exists
+    existing_notification = Notification.query.filter_by(
+        sender_id=g.user.id,
+        recipient_id=recipient.id,
+        type='collaboration_request'
+    ).first()
+
+    if existing_notification:
+        return jsonify({"message": "Collaboration request already sent."}), 200
+
+    new_notification = Notification(
+        recipient_id=recipient.id,
+        sender_id=g.user.id,
+        type='collaboration_request'
+    )
+    db.session.add(new_notification)
+    db.session.commit()
+    
+    return jsonify({"message": "Collaboration request sent successfully."}), 201
+
+@app.route('/api/notifications', methods=['GET'])
+@token_required
+def get_notifications():
+    notifications = Notification.query.filter_by(recipient_id=g.user.id).order_by(desc(Notification.timestamp)).all()
+    
+    output = []
+    for notification in notifications:
+        output.append({
+            'id': notification.id,
+            'sender_username': notification.sender.username,
+            'sender_photo': notification.sender.profile_photo_url or f"https://placehold.co/40x40/1e293b/a78bfa?text={notification.sender.username[0].upper()}",
+            'type': notification.type,
+            'is_read': notification.is_read,
+            'timestamp': notification.timestamp.isoformat() + "Z" # ISO 8601 format
+        })
+    return jsonify(output)
+
+@app.route('/api/notifications/mark-read', methods=['POST'])
+@token_required
+def mark_notifications_as_read():
+    try:
+        Notification.query.filter_by(recipient_id=g.user.id, is_read=False).update({'is_read': True})
+        db.session.commit()
+        return jsonify({"message": "Notifications marked as read."}), 200
+    except Exception as e:
+        db.session.rollback()
+        app.logger.error(f"Error marking notifications as read: {e}")
+        return jsonify({"error": "An internal error occurred."}), 500
+
         user.profile_photo_url = photo_b64
     
     db.session.commit()
@@ -430,6 +534,7 @@ def page_not_found(e):
 # --- This block should be the VERY LAST thing in your file ---
 if __name__ == '__main__':
     app.run(debug=True)
+
 
 
 
