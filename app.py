@@ -41,6 +41,12 @@ class User(db.Model):
     hobbies = db.Column(db.JSON)
     research_areas = db.Column(db.JSON)
 
+# --- Session Management ---
+# This ensures that the database session is properly handled after each request.
+@app.teardown_appcontext
+def shutdown_session(exception=None):
+    db.session.remove()
+
 # --- App Context Processor ---
 # This runs before every request to check for a user
 @app.before_request
