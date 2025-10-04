@@ -10,6 +10,9 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
         body { font-family: 'Inter', sans-serif; }
+        /* Hide scrollbar for notification dropdown */
+        #notifications-panel::-webkit-scrollbar { display: none; }
+        #notifications-panel { -ms-overflow-style: none; scrollbar-width: none; }
     </style>
 </head>
 <body class="h-full">
@@ -26,17 +29,30 @@
                     {% if current_user %}
                     <a href="{{ url_for('profile_page', username=current_user.username) }}" class="text-slate-300 hover:text-violet-400 px-3 py-2 rounded-md text-sm font-medium transition-colors">Profile</a>
                     
-                    <!-- NEW: Notifications Icon -->
-                    <button class="relative text-slate-300 hover:text-violet-400 p-2 rounded-full focus:outline-none">
-                        <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6 6 0 10-12 0v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
-                        </svg>
-                        <!-- Notification bubble -->
-                        <span class="absolute top-0 right-0 block h-4 w-4 transform -translate-y-1/2 translate-x-1/2">
-                            <span class="absolute inline-flex h-full w-full rounded-full bg-red-500 opacity-75 animate-ping"></span>
-                            <span class="relative inline-flex rounded-full h-4 w-4 bg-red-600 items-center justify-center text-xs font-bold text-white">3</span>
-                        </span>
-                    </button>
+                    <!-- UPDATED: Notifications Icon with Dropdown -->
+                    <div class="relative">
+                        <button id="notifications-btn" class="relative text-slate-300 hover:text-violet-400 p-2 rounded-full focus:outline-none">
+                            <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6 6 0 10-12 0v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+                            </svg>
+                            {% if notification_count > 0 %}
+                            <span id="notifications-bubble" class="absolute top-0 right-0 block h-4 w-4 transform -translate-y-1/2 translate-x-1/2">
+                                <span class="absolute inline-flex h-full w-full rounded-full bg-red-500 opacity-75 animate-ping"></span>
+                                <span class="relative inline-flex rounded-full h-4 w-4 bg-red-600 items-center justify-center text-xs font-bold text-white">{{ notification_count }}</span>
+                            </span>
+                            {% endif %}
+                        </button>
+                        <!-- Notifications Panel -->
+                        <div id="notifications-panel" class="hidden absolute right-0 mt-2 w-80 max-h-96 overflow-y-auto bg-slate-800 border border-violet-700 rounded-lg shadow-xl">
+                            <div class="p-3 border-b border-violet-700/50">
+                                <h3 class="text-lg font-semibold text-white">Notifications</h3>
+                            </div>
+                            <div id="notifications-list">
+                                <!-- Notifications will be injected here by JavaScript -->
+                                <p class="text-slate-400 text-center p-4">Loading...</p>
+                            </div>
+                        </div>
+                    </div>
 
                     <a href="{{ url_for('logout') }}" class="text-slate-300 hover:text-violet-400 px-3 py-2 rounded-md text-sm font-medium transition-colors">Logout</a>
                     {% endif %}
@@ -53,5 +69,89 @@
         <p class="text-xs text-slate-500">&copy; 2025 Navacite | All Rights Reserved</p>
         <p class="text-xs text-slate-600 mt-1">Navacite tools are provided 'as is' and are not intended to diagnose. Use requires professional judgment.</p>
     </footer>
+    
+    {% if current_user %}
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const notificationsBtn = document.getElementById('notifications-btn');
+            const notificationsPanel = document.getElementById('notifications-panel');
+            const notificationsList = document.getElementById('notifications-list');
+            const notificationsBubble = document.getElementById('notifications-bubble');
+            let isPanelOpen = false;
+
+            notificationsBtn.addEventListener('click', async () => {
+                isPanelOpen = !isPanelOpen;
+                notificationsPanel.classList.toggle('hidden', !isPanelOpen);
+
+                if (isPanelOpen) {
+                    await fetchAndDisplayNotifications();
+                    if(notificationsBubble) {
+                        markNotificationsAsRead();
+                    }
+                }
+            });
+
+            async function fetchAndDisplayNotifications() {
+                try {
+                    const response = await fetch('/api/notifications');
+                    if (!response.ok) throw new Error('Failed to fetch notifications');
+                    const notifications = await response.json();
+
+                    notificationsList.innerHTML = ''; // Clear current list
+
+                    if (notifications.length === 0) {
+                        notificationsList.innerHTML = '<p class="text-slate-400 text-center p-4">No new notifications.</p>';
+                        return;
+                    }
+
+                    notifications.forEach(n => {
+                        const notificationEl = document.createElement('div');
+                        notificationEl.className = `p-3 flex items-start gap-3 border-b border-violet-900/50 ${n.is_read ? '' : 'bg-violet-900/20'}`;
+                        
+                        let message = '';
+                        if (n.type === 'collaboration_request') {
+                            message = `<span class="font-bold text-slate-100">${n.sender_username}</span> wants to collaborate.`;
+                        } else {
+                            message = 'You have a new notification.';
+                        }
+
+                        notificationEl.innerHTML = `
+                            <img src="${n.sender_photo}" alt="${n.sender_username}" class="w-10 h-10 rounded-full object-cover">
+                            <div class="flex-1">
+                                <p class="text-slate-300 text-sm">${message}</p>
+                                <div class="text-xs text-slate-500 mt-1">${new Date(n.timestamp).toLocaleString()}</div>
+                            </div>
+                        `;
+                        notificationsList.appendChild(notificationEl);
+                    });
+                } catch (error) {
+                    console.error('Error fetching notifications:', error);
+                    notificationsList.innerHTML = '<p class="text-red-400 text-center p-4">Could not load notifications.</p>';
+                }
+            }
+            
+            async function markNotificationsAsRead() {
+                 try {
+                    await fetch('/api/notifications/mark-read', { method: 'POST' });
+                    // Hide the bubble visually after it's been seen
+                    if (notificationsBubble) {
+                       notificationsBubble.style.display = 'none';
+                    }
+                } catch (error) {
+                    console.error('Error marking notifications as read:', error);
+                }
+            }
+            
+            // Close the panel if clicking outside of it
+            document.addEventListener('click', function(event) {
+                if (!notificationsBtn.contains(event.target) && !notificationsPanel.contains(event.target)) {
+                    isPanelOpen = false;
+                    notificationsPanel.classList.add('hidden');
+                }
+            });
+        });
+    </script>
+    {% endif %}
 </body>
 </html>
+
