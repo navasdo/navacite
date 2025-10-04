@@ -70,7 +70,7 @@
             {% if g.user %}
                 <!-- Links for LOGGED IN users -->
                 <a href="{{ url_for('library_page') }}" class="text-slate-300 hover:text-violet-400 px-3 py-2 rounded-md text-sm font-medium transition-colors">Library</a>
-                <a href="{{ url_for('profile_page') }}" class="text-slate-300 hover:text-violet-400 px-3 py-2 rounded-md text-sm font-medium transition-colors">Profile</a>
+                 <a href="{{ url_for('profile_page', username=current_user.username) }}" class="text-slate-300 hover:text-violet-400 px-3 py-2 rounded-md text-sm font-medium transition-colors">Profile</a>
                 <a href="{{ url_for('logout') }}" class="text-slate-300 hover:text-violet-400 px-3 py-2 rounded-md text-sm font-medium transition-colors">Logout</a>
             {% else %}
                 <!-- Links for LOGGED OUT users -->
