@@ -8,30 +8,19 @@
     <link rel="icon" type="image/x-icon" href="https://raw.githubusercontent.com/navasdo/navacite/refs/heads/main/templates/static/ico/navacite.ico">
     <style>
         /* Style for the modal backdrop to animate in */
-        .modal-enter {
-            opacity: 0;
-        }
-        .modal-enter-active {
-            opacity: 1;
-            transition: opacity 300ms;
-        }
+        .modal-enter { opacity: 0; }
+        .modal-enter-active { opacity: 1; transition: opacity 300ms; }
         /* Style for the modal content to animate in */
-        .modal-content-enter {
-            opacity: 0;
-            transform: scale(0.95);
-        }
-        .modal-content-enter-active {
-            opacity: 1;
-            transform: scale(1);
-            transition: opacity 300ms, transform 300ms;
-        }
+        .modal-content-enter { opacity: 0; transform: scale(0.95); }
+        .modal-content-enter-active { opacity: 1; transform: scale(1); transition: opacity 300ms, transform 300ms; }
     </style>
     {% block head %}{% endblock %}
 </head>
 <body class="bg-[#0c0a18] text-slate-300 font-sans">
 
     <!-- Terms & Disclaimer Modal -->
-    <div id="termsModal" class="hidden fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4 modal-enter">
+    <div id="termsModal" class="hidden fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4 modal-enter" style="backdrop-filter: blur(8px);">
+        <!-- ... Modal content remains the same ... -->
         <div class="bg-slate-800 border border-violet-700/50 rounded-2xl shadow-2xl shadow-violet-500/10 p-6 sm:p-8 max-w-2xl w-full max-h-[90vh] overflow-y-auto modal-content-enter">
             <div class="flex justify-between items-center mb-6">
                 <h2 class="text-3xl font-bold text-slate-100">Terms & Disclaimer</h2>
@@ -60,7 +49,7 @@
                 </div>
                 <div>
                     <h3 class="text-xl font-semibold text-violet-400 mb-2">Conflict of Interest Disclaimer</h3>
-                    <p>Navacite is an independent project created in a personal capacity by its author. It is not a product of, nor is it affiliated with, endorsed by, or representative of any school district, university, or employer. All intellectual property, design, and code on this site were developed as an independent effort, outside the scope of employment. Use of Navacite does not imply involvement, approval, or responsibility by any employer, past or present.</p>
+                    <p>Navacite is an an independent project created in a personal capacity by its author. It is not a product of, nor is it affiliated with, endorsed by, or representative of any school district, university, or employer. All intellectual property, design, and code on this site were developed as an independent effort, outside the scope of employment. Use of Navacite does not imply involvement, approval, or responsibility by any employer, past or present.</p>
                 </div>
                 <div>
                     <h3 class="text-xl font-semibold text-violet-400 mb-2">Limitation of Liability</h3>
@@ -74,13 +63,22 @@
         </div>
     </div>
     
-    <!-- Shared Navigation Bar -->
+    <!-- CONDITIONAL Navigation Bar -->
     <nav class="bg-slate-900/40 border-b border-violet-900/80 p-4 flex justify-between items-center sticky top-0 z-50 backdrop-blur-sm">
-        <a href="{{ url_for('library_page') }}" class="text-2xl font-bold text-violet-400">Navacite</a>
+        <a href="{{ url_for('landing_page') }}" class="text-2xl font-bold text-violet-400">Navacite</a>
         <div>
-            <a href="{{ url_for('library_page') }}" class="text-slate-300 hover:text-violet-400 px-3 py-2 rounded-md text-sm font-medium transition-colors">Library</a>
-            <a href="{{ url_for('profile_page') }}" class="text-slate-300 hover:text-violet-400 px-3 py-2 rounded-md text-sm font-medium transition-colors">Profile</a>
-            <a href="{{ url_for('logout') }}" class="text-slate-300 hover:text-violet-400 px-3 py-2 rounded-md text-sm font-medium transition-colors">Logout</a>
+            {% if g.user %}
+                <!-- Links for LOGGED IN users -->
+                <a href="{{ url_for('library_page') }}" class="text-slate-300 hover:text-violet-400 px-3 py-2 rounded-md text-sm font-medium transition-colors">Library</a>
+                <a href="{{ url_for('profile_page') }}" class="text-slate-300 hover:text-violet-400 px-3 py-2 rounded-md text-sm font-medium transition-colors">Profile</a>
+                <a href="{{ url_for('logout') }}" class="text-slate-300 hover:text-violet-400 px-3 py-2 rounded-md text-sm font-medium transition-colors">Logout</a>
+            {% else %}
+                <!-- Links for LOGGED OUT users -->
+                <div class="flex items-center gap-3">
+                    <a href="{{ url_for('login_page') }}" class="px-5 py-2 text-sm font-semibold text-slate-300 hover:text-white bg-slate-800/60 border border-slate-700 rounded-lg transition-all">Login</a>
+                    <a href="{{ url_for('register_page') }}" class="px-5 py-2 text-sm font-bold text-white bg-violet-600 hover:bg-violet-700 rounded-lg transition-colors shadow-lg shadow-violet-500/20">Apply for Account</a>
+                </div>
+            {% endif %}
         </div>
     </nav>
 
@@ -91,6 +89,7 @@
 
     <!-- Footer with Terms & Disclaimer Link -->
     <footer class="w-full max-w-3xl mx-auto mt-24 text-center text-sm text-slate-500 p-6 border-t border-slate-800/50">
+        <!-- ... Footer content remains the same ... -->
         <p class="font-bold text-violet-400">
             &copy; 2025 Navacite | All Rights Reserved
         </p>
@@ -138,6 +137,7 @@
         }
     });
     </script>
+    {% block scripts %}{% endblock %}
 </body>
 </html>
 
