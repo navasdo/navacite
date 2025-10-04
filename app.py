@@ -9,6 +9,7 @@ import json
 from flask import jsonify
 from flask_sqlalchemy import SQLAlchemy
 from flask_bcrypt import Bcrypt
+import click
 
 # --- Basic Configuration ---
 app = Flask(__name__, template_folder='templates', static_folder='static')
@@ -41,8 +42,14 @@ class User(db.Model):
     hobbies = db.Column(db.JSON)
     research_areas = db.Column(db.JSON)
 
+# --- Custom CLI Command to Initialize DB ---
+@app.cli.command("init-db")
+def init_db_command():
+    """Creates the database tables."""
+    db.create_all()
+    print("Initialized the database.")
+
 # --- Session Management ---
-# This ensures that the database session is properly handled after each request.
 @app.teardown_appcontext
 def shutdown_session(exception=None):
     db.session.remove()
@@ -58,8 +65,9 @@ def load_logged_in_user():
             data = jwt.decode(token, app.config['SECRET_KEY'], algorithms=["HS256"])
             g.user = User.query.filter_by(username=data['user']).first()
         except Exception as e:
-            g.user = None # Token is invalid or expired
+            g.user = None
 
+# ... (The rest of your app.py code remains the same) ...
 # --- Decorator for Token Authentication ---
 def token_required(f):
     @wraps(f)
