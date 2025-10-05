@@ -54,9 +54,19 @@ class User(db.Model):
     specializations = db.Column(db.JSON)
     display_preference = db.Column(db.String(20), default='username')
     
-    # UPDATED: Explicitly defined relationships to resolve ambiguity
-    notifications_received = db.relationship('Notification', foreign_keys='Notification.recipient_id', back_populates='recipient', lazy='dynamic')
-    notifications_sent = db.relationship('Notification', foreign_keys='Notification.sender_id', back_populates='sender', lazy='dynamic')
+    # UPDATED: Using primaryjoin for unambiguous relationships
+    notifications_received = db.relationship(
+        'Notification',
+        primaryjoin="User.id == Notification.recipient_id",
+        back_populates='recipient',
+        lazy='dynamic'
+    )
+    notifications_sent = db.relationship(
+        'Notification',
+        primaryjoin="User.id == Notification.sender_id",
+        back_populates='sender',
+        lazy='dynamic'
+    )
 
 
 class Notification(db.Model):
@@ -67,9 +77,17 @@ class Notification(db.Model):
     is_read = db.Column(db.Boolean, default=False, nullable=False)
     timestamp = db.Column(db.DateTime, default=datetime.utcnow)
     
-    # UPDATED: Explicitly defined relationships to resolve ambiguity
-    sender = db.relationship('User', foreign_keys=[sender_id], back_populates='notifications_sent')
-    recipient = db.relationship('User', foreign_keys=[recipient_id], back_populates='notifications_received')
+    # UPDATED: Using primaryjoin for unambiguous relationships
+    sender = db.relationship(
+        'User',
+        primaryjoin="Notification.sender_id == User.id",
+        back_populates='notifications_sent'
+    )
+    recipient = db.relationship(
+        'User',
+        primaryjoin="Notification.recipient_id == User.id",
+        back_populates='notifications_received'
+    )
 
 # --- Custom CLI Command to Initialize DB ---
 @app.cli.command("init-db")
@@ -392,3 +410,4 @@ def page_not_found(e):
 # --- This block should be the VERY LAST thing in your file ---
 if __name__ == '__main__':
     app.run(debug=True)
+
