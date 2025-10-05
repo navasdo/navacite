@@ -11,9 +11,11 @@
     <style>
         body { font-family: 'Inter', sans-serif; }
         #notifications-panel::-webkit-scrollbar,
-        #modal-content::-webkit-scrollbar { display: none; }
+        #modal-content::-webkit-scrollbar,
+        #termsModal .overflow-y-auto::-webkit-scrollbar { display: none; }
         #notifications-panel,
-        #modal-content { -ms-overflow-style: none; scrollbar-width: none; }
+        #modal-content,
+        #termsModal .overflow-y-auto { -ms-overflow-style: none; scrollbar-width: none; }
     </style>
 </head>
 <body class="h-full flex flex-col">
@@ -75,18 +77,18 @@
         <p class="text-xs text-slate-600 mt-1">Navacite tools are provided 'as is' and are not intended to diagnose. Use requires professional judgment.</p>
     </footer>
 
-    <!-- MODAL CONTAINER -->
+    <!-- PRIVACY POLICY MODAL -->
     <div id="privacy-modal" class="hidden fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4">
         <div class="bg-slate-800 border border-violet-700 rounded-lg shadow-xl w-full max-w-3xl flex flex-col max-h-[90vh]">
             <div class="flex justify-between items-center p-4 border-b border-violet-700/50 sticky top-0 bg-slate-800">
                 <h2 class="text-xl font-bold text-violet-400">Privacy Policy</h2>
-                <button id="close-modal-btn" class="text-2xl text-slate-400 hover:text-white">&times;</button>
+                <button id="close-privacy-modal-btn" class="text-2xl text-slate-400 hover:text-white">&times;</button>
             </div>
             <div id="modal-content" class="p-6 overflow-y-auto text-slate-300 space-y-4 text-sm">
+                 <!-- Full privacy policy text goes here... -->
                 <p class="text-xs text-slate-500">Last updated: October 04, 2025</p>
                 <p>This Privacy Notice for Navacite ("we," "us," or "our"), describes how and why we might access, collect, store, use, and/or share ("process") your personal information when you use our services ("Services"), including when you visit our website or engage with us in other related ways, including any sales, marketing, or events.</p>
                 <p><strong>Questions or concerns?</strong> Reading this Privacy Notice will help you understand your privacy rights and choices. If you do not agree with our policies and practices, please do not use our Services. If you still have any questions or concerns, please contact us at <a href="mailto:PLACEHOLDER@navacite.com" class="text-violet-400 hover:underline">PLACEHOLDER@navacite.com</a>.</p>
-                
                 <h3 class="text-xl font-semibold text-slate-100 pt-4">SUMMARY OF KEY POINTS</h3>
                 <p class="italic text-slate-400">This summary provides key points from our Privacy Notice. For more details, please review the full notice below.</p>
                 <ul class="list-disc list-inside space-y-2 pl-2">
@@ -96,39 +98,28 @@
                     <li><strong>In what situations do we share personal information?</strong> We may share information in specific situations, such as business transfers or when you post public content.</li>
                     <li><strong>How do we keep your information safe?</strong> We have organizational and technical processes in place to protect your personal information. However, no electronic transmission can be guaranteed to be 100% secure.</li>
                 </ul>
-            
                 <h3 class="text-xl font-semibold text-slate-100 pt-4">1. WHAT INFORMATION DO WE COLLECT?</h3>
                 <p>We collect personal information that you voluntarily provide to us when you register on the Services, express an interest in obtaining information about us or our products and Services, when you participate in activities on the Services, or otherwise when you contact us. The personal information we collect may include: names, email addresses, usernames, passwords, and IP addresses. All personal information that you provide must be true, complete, and accurate.</p>
                 <h4 class="text-lg font-semibold text-slate-200 mt-2">Google API</h4>
                 <p>Our use of information received from Google APIs will adhere to the <a href="https://developers.google.com/terms/api-services-user-data-policy" class="text-violet-400 hover:underline" target="_blank" rel="noopener noreferrer">Google API Services User Data Policy</a>, including the Limited Use requirements.</p>
-
                 <h3 class="text-xl font-semibold text-slate-100 pt-4">2. HOW DO WE PROCESS YOUR INFORMATION?</h3>
                 <p>We process your information to provide, improve, and administer our Services, communicate with you, for security and fraud prevention, and to comply with law. We process your information for a variety of reasons, including to facilitate account creation, deliver services, respond to inquiries, send administrative information, enable user-to-user communications, request feedback, and protect our Services.</p>
-
                 <h3 class="text-xl font-semibold text-slate-100 pt-4">3. WHAT LEGAL BASES DO WE RELY ON TO PROCESS YOUR PERSONAL INFORMATION?</h3>
                 <p>We only process your personal information when we believe it is necessary and we have a valid legal reason to do so under applicable law, like with your consent, to comply with laws, to provide you with services, to fulfill our contractual obligations, to protect your rights, or to fulfill our legitimate business interests.</p>
-
                 <h3 class="text-xl font-semibold text-slate-100 pt-4">4. WHEN AND WITH WHOM DO WE SHARE YOUR PERSONAL INFORMATION?</h3>
                 <p>We may share information in specific situations, including: Business Transfers (in connection with any merger or sale of company assets) and with Other Users (when you share personal information in public areas of the Services).</p>
-
                 <h3 class="text-xl font-semibold text-slate-100 pt-4">5. DO WE OFFER ARTIFICIAL INTELLIGENCE-BASED PRODUCTS?</h3>
                 <p>Yes. We offer products powered by AI through third-party service providers like Google Cloud AI. Your input, output, and personal information will be shared with and processed by these providers to enable your use of our AI Products. You must not use the AI Products in any way that violates the terms of any AI Service Provider.</p>
-
                 <h3 class="text-xl font-semibold text-slate-100 pt-4">6. HOW LONG DO WE KEEP YOUR INFORMATION?</h3>
                 <p>We keep your information for as long as necessary to fulfill the purposes outlined in this Privacy Notice unless otherwise required by law. Generally, this means for as long as you have an account with us. When we have no ongoing legitimate business need to process your information, we will delete or anonymize it.</p>
-
                 <h3 class="text-xl font-semibold text-slate-100 pt-4">7. HOW DO WE KEEP YOUR INFORMATION SAFE?</h3>
                 <p>We have implemented appropriate technical and organizational security measures designed to protect the security of any personal information we process. However, no electronic transmission over the Internet or information storage technology can be guaranteed to be 100% secure. Transmission of personal information to and from our Services is at your own risk.</p>
-
                 <h3 class="text-xl font-semibold text-slate-100 pt-4">8. DO WE COLLECT INFORMATION FROM MINORS?</h3>
                 <p>We do not knowingly collect data from or market to children under 18 years of age. By using the Services, you represent that you are at least 18. If we learn that personal information from users less than 18 has been collected, we will deactivate the account and take reasonable measures to delete such data.</p>
-
                 <h3 class="text-xl font-semibold text-slate-100 pt-4">9. WHAT ARE YOUR PRIVACY RIGHTS?</h3>
                 <p>Depending on your location, you have rights that allow you greater access to and control over your personal information. You may review, change, or terminate your account at any time. If you are in regions like the EEA, UK, Switzerland, or Canada, these rights may include the right to request access, rectification, erasure, and data portability.</p>
-
                 <h3 class="text-xl font-semibold text-slate-100 pt-4">10. CONTROLS FOR DO-NOT-TRACK FEATURES</h3>
                 <p>Most web browsers include a Do-Not-Track ("DNT") feature. At this stage, no uniform technology standard for recognizing and implementing DNT signals has been finalized. As such, we do not currently respond to DNT browser signals.</p>
-
                 <h3 class="text-xl font-semibold text-slate-100 pt-4">11. DO UNITED STATES RESIDENTS HAVE SPECIFIC PRIVACY RIGHTS?</h3>
                 <p>If you are a resident of certain US states (e.g., Nebraska), you may have the right to request access to and receive details about the personal information we maintain about you, correct inaccuracies, get a copy of, or delete your personal information. We have collected the following categories of personal information in the past twelve (12) months:</p>
                 <div class="overflow-x-auto">
@@ -164,47 +155,89 @@
                     </table>
                 </div>
                 <p class="mt-2">We have not disclosed, sold, or shared any personal information to third parties for a business or commercial purpose in the preceding twelve (12) months and will not do so in the future.</p>
-                
                 <h3 class="text-xl font-semibold text-slate-100 pt-4">12. DO WE MAKE UPDATES TO THIS NOTICE?</h3>
                 <p>Yes, we will update this notice as necessary to stay compliant with relevant laws. The updated version will be indicated by the "Last updated" date at the top.</p>
-
                 <h3 class="text-xl font-semibold text-slate-100 pt-4">13. HOW CAN YOU CONTACT US ABOUT THIS NOTICE?</h3>
                 <p>If you have questions or comments, you may email us at <a href="mailto:PLACEHOLDER@navacite.com" class="text-violet-400 hover:underline">PLACEHOLDER@navacite.com</a>.</p>
-
                 <h3 class="text-xl font-semibold text-slate-100 pt-4">14. HOW CAN YOU REVIEW, UPDATE, OR DELETE THE DATA WE COLLECT FROM YOU?</h3>
                 <p>Based on the applicable laws of your country or state, you may have the right to request access to, correct, or delete your personal information. To do so, please visit your <a href="http://www.navacite.com/profile" class="text-violet-400 hover:underline" target="_blank" rel="noopener noreferrer">profile page</a> or contact us.</p>
             </div>
         </div>
     </div>
+
+    <!-- TERMS & DISCLAIMER MODAL -->
+    <div id="terms-modal" class="hidden fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4">
+        <div class="bg-slate-800 border border-violet-700/50 rounded-2xl shadow-2xl shadow-violet-500/10 w-full max-w-2xl flex flex-col max-h-[90vh]">
+             <div class="flex justify-between items-center p-4 border-b border-violet-700/50 sticky top-0 bg-slate-800">
+                <h2 class="text-xl font-bold text-violet-400">Terms & Disclaimer</h2>
+                <button id="close-terms-modal-btn" class="text-2xl text-slate-400 hover:text-white">&times;</button>
+            </div>
+            <div class="p-6 overflow-y-auto text-slate-300 space-y-6 text-sm">
+                <div>
+                    <h3 class="text-lg font-semibold text-slate-100 mb-2">Disclaimer</h3>
+                    <p>Navacite tools are provided “as is” and are not intended to diagnose, prevent, or cure any speech-language disorder. They are designed as supplemental engagement supports to be used by qualified professionals. Navacite makes no warranties, expressed or implied, and hereby disclaims and negates all other warranties, including without limitation, implied warranties of merchantability, fitness for a particular purpose, and non-infringement of intellectual property or other rights. Navacite does not warrant or make any representations concerning the accuracy, likely results, or reliability of the materials on this site or on any sites linked to it.</p>
+                </div>
+                <div>
+                    <h3 class="text-lg font-semibold text-slate-100 mb-2">Professional Responsibility</h3>
+                    <p>The responsibility for all clinical decisions, interpretations, and applications of Navacite tools rests solely with the licensed professional using them. Navacite assumes no liability for misuse, misapplication, or outcomes resulting from the use of these materials.</p>
+                </div>
+                <div>
+                    <h3 class="text-lg font-semibold text-slate-100 mb-2">Revisions and Errata</h3>
+                    <p>The materials appearing on Navacite’s web site may include technical, typographical, or content errors. Navacite does not warrant that any of the materials are accurate, complete, or current. Navacite may make changes to the materials contained on its site at any time without notice, but makes no commitment to update them.</p>
+                </div>
+                <div>
+                    <h3 class="text-lg font-semibold text-slate-100 mb-2">Terms of Use Modifications</h3>
+                    <p>Navacite may revise these terms of use at any time without notice. By using this site you agree to be bound by the then-current version of these Terms & Disclaimer provisions.</p>
+                </div>
+                <div>
+                    <h3 class="text-lg font-semibold text-slate-100 mb-2">Conflict of Interest Disclaimer</h3>
+                    <p>Navacite is an independent project created in a personal capacity by its author. It is not a product of, nor is it affiliated with, endorsed by, or representative of any school district, university, or employer. All intellectual property, design, and code on this site were developed as an independent effort, outside the scope of employment. Use of Navacite does not imply involvement, approval, or responsibility by any employer, past or present.</p>
+                </div>
+                <div>
+                    <h3 class="text-lg font-semibold text-slate-100 mb-2">Limitation of Liability</h3>
+                    <p>In no event shall Navacite or its creator be liable for any damages (including, without limitation, damages for loss of data, income, or clinical outcomes) arising out of the use or inability to use the materials on this site, even if Navacite has been notified of the possibility of such damages.</p>
+                </div>
+                <div>
+                    <h3 class="text-lg font-semibold text-slate-100 mb-2">Governing Law</h3>
+                    <p>Any claim relating to Navacite’s web site shall be governed by the laws of the State of Nebraska (USA), without regard to its conflict of law provisions.</p>
+                </div>
+            </div>
+        </div>
+    </div>
     
     <script>
-        // --- Modal Logic ---
+        // --- Combined Modal Logic ---
         document.addEventListener('DOMContentLoaded', function() {
+            // Privacy Modal Elements
             const privacyModal = document.getElementById('privacy-modal');
             const privacyLink = document.getElementById('privacy-link');
-            const closeModalBtn = document.getElementById('close-modal-btn');
-            // const termsLink = document.getElementById('terms-link'); // For future use
+            const closePrivacyBtn = document.getElementById('close-privacy-modal-btn');
 
-            const openModal = () => privacyModal.classList.remove('hidden');
-            const closeModal = () => privacyModal.classList.add('hidden');
+            // Terms Modal Elements
+            const termsModal = document.getElementById('terms-modal');
+            const termsLink = document.getElementById('terms-link');
+            const closeTermsBtn = document.getElementById('close-terms-modal-btn');
 
-            if (privacyLink) {
-                privacyLink.addEventListener('click', (e) => {
-                    e.preventDefault();
-                    openModal();
-                });
-            }
-            if (closeModalBtn) {
-                closeModalBtn.addEventListener('click', closeModal);
-            }
-            privacyModal.addEventListener('click', (e) => {
-                if (e.target === privacyModal) {
-                    closeModal();
-                }
-            });
+            // Generic function to open a modal
+            const openModal = (modal) => modal.classList.remove('hidden');
+            // Generic function to close a modal
+            const closeModal = (modal) => modal.classList.add('hidden');
+
+            // Event Listeners for Privacy Modal
+            if (privacyLink) privacyLink.addEventListener('click', (e) => { e.preventDefault(); openModal(privacyModal); });
+            if (closePrivacyBtn) closePrivacyBtn.addEventListener('click', () => closeModal(privacyModal));
+            if (privacyModal) privacyModal.addEventListener('click', (e) => { if (e.target === privacyModal) closeModal(privacyModal); });
+
+            // Event Listeners for Terms Modal
+            if (termsLink) termsLink.addEventListener('click', (e) => { e.preventDefault(); openModal(termsModal); });
+            if (closeTermsBtn) closeTermsBtn.addEventListener('click', () => closeModal(termsModal));
+            if (termsModal) termsModal.addEventListener('click', (e) => { if (e.target === termsModal) closeModal(termsModal); });
+
+            // Keyboard listener for both modals
             document.addEventListener('keydown', (e) => {
-                if (e.key === "Escape" && !privacyModal.classList.contains('hidden')) {
-                    closeModal();
+                if (e.key === "Escape") {
+                    if (privacyModal && !privacyModal.classList.contains('hidden')) closeModal(privacyModal);
+                    if (termsModal && !termsModal.classList.contains('hidden')) closeModal(termsModal);
                 }
             });
         });
@@ -274,7 +307,7 @@
             }
             
             document.addEventListener('click', function(event) {
-                if (!notificationsBtn.contains(event.target) && !notificationsPanel.contains(event.target)) {
+                if (notificationsBtn && !notificationsBtn.contains(event.target) && notificationsPanel && !notificationsPanel.contains(event.target)) {
                     isPanelOpen = false;
                     notificationsPanel.classList.add('hidden');
                 }
