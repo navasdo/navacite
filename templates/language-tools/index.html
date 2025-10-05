@@ -1,13 +1,9 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <link rel="icon" type="https://raw.githubusercontent.com/navasdo/navacite/refs/heads/main/templates/static/ico/navacite.ico" href="https://raw.githubusercontent.com/navasdo/navacite/refs/heads/main/templates/static/ico/navacite.ico">
-    <a href="https://navacite.com/library" class="absolute top-4 right-4 z-10 p-1 rounded-full bg-gray-700/50 hover:bg-gray-600/50 transition" title="Back to Homepage"><img src="https://raw.githubusercontent.com/navasdo/oliver/main/navacite/gems/Navacite-Main.png" alt="Navacite Homepage" class="w-10 h-10 rounded-full"/></a>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Navacite Library: Language</title>
-    <!-- Direct link to Tailwind CSS CDN -->
-    <script src="https://cdn.tailwindcss.com"></script>
+{% extends "base.html" %}
+
+{% block title %}Navacite Library: Language{% endblock %}
+
+{% block head %}
+    {{ super() }}
     <style>
         /* Smooth scrolling behavior */
         html {
@@ -32,72 +28,10 @@
         input[type="checkbox"] {
             display: none;
         }
-        /* Style for the modal backdrop to animate in */
-.modal-enter {
-    opacity: 0;
-}
-.modal-enter-active {
-    opacity: 1;
-    transition: opacity 300ms;
-}
-/* Style for the modal content to animate in */
-.modal-content-enter {
-    opacity: 0;
-    transform: scale(0.95);
-}
-.modal-content-enter-active {
-    opacity: 1;
-    transform: scale(1);
-    transition: opacity 300ms, transform 300ms;
-}
-
     </style>
-</head>
-<body>
-    <div id="termsModal" class="hidden fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4 modal-enter">
-        <div class="bg-slate-800 border border-violet-700/50 rounded-2xl shadow-2xl shadow-violet-500/10 p-6 sm:p-8 max-w-2xl w-full max-h-[90vh] overflow-y-auto modal-content-enter">
-            <div class="flex justify-between items-center mb-6">
-                <h2 class="text-3xl font-bold text-slate-100">Terms & Disclaimer</h2>
-                <button id="closeTermsModal" class="text-slate-400 hover:text-white transition-colors">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
-                    </svg>
-                </button>
-            </div>
-            <div class="space-y-6 text-slate-300 text-left text-sm">
-                <div>
-                    <h3 class="text-xl font-semibold text-violet-400 mb-2">Disclaimer</h3>
-                    <p>Navacite tools are provided “as is” and are not intended to diagnose, prevent, or cure any speech-language disorder. They are designed as supplemental engagement supports to be used by qualified professionals. Navacite makes no warranties, expressed or implied, and hereby disclaims and negates all other warranties, including without limitation, implied warranties of merchantability, fitness for a particular purpose, and non-infringement of intellectual property or other rights. Navacite does not warrant or make any representations concerning the accuracy, likely results, or reliability of the materials on this site or on any sites linked to it.</p>
-                </div>
-                <div>
-                    <h3 class="text-xl font-semibold text-violet-400 mb-2">Professional Responsibility</h3>
-                    <p>The responsibility for all clinical decisions, interpretations, and applications of Navacite tools rests solely with the licensed professional using them. Navacite assumes no liability for misuse, misapplication, or outcomes resulting from the use of these materials.</p>
-                </div>
-                <div>
-                    <h3 class="text-xl font-semibold text-violet-400 mb-2">Revisions and Errata</h3>
-                    <p>The materials appearing on Navacite’s web site may include technical, typographical, or content errors. Navacite does not warrant that any of the materials are accurate, complete, or current. Navacite may make changes to the materials contained on its site at any time without notice, but makes no commitment to update them.</p>
-                </div>
-                <div>
-                    <h3 class="text-xl font-semibold text-violet-400 mb-2">Terms of Use Modifications</h3>
-                    <p>Navacite may revise these terms of use at any time without notice. By using this site you agree to be bound by the then-current version of these Terms & Disclaimer provisions.</p>
-                </div>
-                <div>
-                    <h3 class="text-xl font-semibold text-violet-400 mb-2">Conflict of Interest Disclaimer</h3>
-                    <p>Navacite is an independent project created in a personal capacity by its author. It is not a product of, nor is it affiliated with, endorsed by, or representative of any school district, university, or employer. All intellectual property, design, and code on this site were developed as an independent effort, outside the scope of employment. Use of Navacite does not imply involvement, approval, or responsibility by any employer, past or present.</p>
-                </div>
-                <div>
-                    <h3 class="text-xl font-semibold text-violet-400 mb-2">Limitation of Liability</h3>
-                    <p>In no event shall Navacite or its creator be liable for any damages (including, without limitation, damages for loss of data, income, or clinical outcomes) arising out of the use or inability to use the materials on this site, even if Navacite has been notified of the possibility of such damages.</p>
-                </div>
-                <div>
-                    <h3 class="text-xl font-semibold text-violet-400 mb-2">Governing Law</h3>
-                    <p>Any claim relating to Navacite’s web site shall be governed by the laws of the State of Nebraska (USA), without regard to its conflict of law provisions.</p>
-                </div>
-            </div>
-        </div>
-    </div>
-<body class="bg-[#0c0a18] min-h-screen font-sans text-slate-300 flex flex-col items-center p-4 sm:p-6 lg:p-8 overflow-x-hidden">
+{% endblock %}
 
+{% block content %}
     <!-- Header Section -->
     <header class="w-full max-w-5xl mx-auto my-8">
         <div class="text-center pt-8">
@@ -138,10 +72,9 @@
             <!-- Tool buttons will be injected here by JavaScript -->
         </div>
     </main>
+{% endblock %}
 
-    <!-- Footer Section -->
- 
-
+{% block scripts %}
     <script>
         document.addEventListener('DOMContentLoaded', () => {
             
@@ -235,52 +168,4 @@
             resetButton.addEventListener('click', resetAllFilters);
         });
     </script>
-<script>
-document.addEventListener('DOMContentLoaded', () => {
-    // --- Terms & Disclaimer Modal Logic ---
-    const termsModal = document.getElementById('termsModal');
-    const openTermsLink = document.getElementById('openTermsModal');
-    const closeTermsButton = document.getElementById('closeTermsModal');
-
-    function showTermsModal(event) {
-        event.preventDefault(); 
-        termsModal.classList.remove('hidden');
-        setTimeout(() => {
-            termsModal.classList.add('modal-enter-active');
-            termsModal.querySelector('.modal-content-enter').classList.add('modal-content-enter-active');
-        }, 10);
-    }
-
-    function hideTermsModal() {
-        termsModal.classList.add('hidden');
-        termsModal.classList.remove('modal-enter-active');
-        termsModal.querySelector('.modal-content-enter').classList.remove('modal-content-enter-active');
-    }
-
-    if (openTermsLink) {
-        openTermsLink.addEventListener('click', showTermsModal);
-    }
-    if (closeTermsButton) {
-        closeTermsButton.addEventListener('click', hideTermsModal);
-    }
-    if (termsModal) {
-        termsModal.addEventListener('click', (event) => {
-            if (event.target === termsModal) {
-                hideTermsModal();
-            }
-        });
-    }
-    // --- You can add other page-specific JavaScript inside this listener ---
-});
-</script>
-<footer class="w-full max-w-3xl mx-auto mt-24 text-center text-sm text-slate-500 p-6 border-t border-slate-800/50">
-    <p class="font-bold text-violet-400">
-        &copy; 2025 Navacite | All Rights Reserved
-    </p>
-    <p class="mt-4 text-xs text-slate-500">
-        Navacite tools are provided ‘as is’ and are not intended to diagnose. Use requires professional judgment. <br><br>
-        <a href="#" id="openTermsModal" class="underline hover:text-violet-400 transition-colors">Terms & Disclaimer</a>
-    </p>
-</footer>
-</body>
-</html>
+{% endblock %}
