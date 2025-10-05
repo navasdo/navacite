@@ -357,7 +357,7 @@ def phoneme_page(phoneme_slug):
 @app.route('/language-tools')
 @token_required
 def language_tools():
-    return render_terender_template('language-tools/index.html')
+    return render_template('language-tools/index.html')
 
 # --- Dynamic Route for Individual Language Pages ---
 @app.route('/language-tools/<languageTools_slug>')
