@@ -53,7 +53,11 @@ class User(db.Model):
     hobbies = db.Column(db.JSON)
     specializations = db.Column(db.JSON)
     display_preference = db.Column(db.String(20), default='username')
-    notifications_received = db.relationship('Notification', foreign_keys='Notification.recipient_id', backref='recipient', lazy='dynamic')
+    
+    # UPDATED: Explicitly defined relationships to resolve ambiguity
+    notifications_received = db.relationship('Notification', foreign_keys='Notification.recipient_id', back_populates='recipient', lazy='dynamic')
+    notifications_sent = db.relationship('Notification', foreign_keys='Notification.sender_id', back_populates='sender', lazy='dynamic')
+
 
 class Notification(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -62,7 +66,10 @@ class Notification(db.Model):
     type = db.Column(db.String(50), nullable=False)
     is_read = db.Column(db.Boolean, default=False, nullable=False)
     timestamp = db.Column(db.DateTime, default=datetime.utcnow)
-    sender = db.relationship('User', foreign_keys=[sender_id])
+    
+    # UPDATED: Explicitly defined relationships to resolve ambiguity
+    sender = db.relationship('User', foreign_keys=[sender_id], back_populates='notifications_sent')
+    recipient = db.relationship('User', foreign_keys=[recipient_id], back_populates='notifications_received')
 
 # --- Custom CLI Command to Initialize DB ---
 @app.cli.command("init-db")
@@ -385,5 +392,3 @@ def page_not_found(e):
 # --- This block should be the VERY LAST thing in your file ---
 if __name__ == '__main__':
     app.run(debug=True)
-
-
