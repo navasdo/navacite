@@ -1,12 +1,9 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <link rel="icon" type="image/x-icon" href="https://raw.githubusercontent.com/navasdo/navacite/main/templates/static/ico/navacite.ico">
-    <a href="/articulation-tools" class="absolute top-4 right-4 z-20 p-1 rounded-full bg-gray-700/50 hover:bg-gray-600/50 transition" title="Back to Articulation Library"><img src="https://raw.githubusercontent.com/navasdo/oliver/main/navacite/gems/Navacite-Main.png" alt="Back to Library" class="w-10 h-10 rounded-full"/></a>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Navacite Articulation: /p/</title>
-    <script src="https://cdn.tailwindcss.com"></script>
+{% extends "base.html" %}
+
+{% block title %}Navacite Articulation: /p/{% endblock %}
+
+{% block head %}
+    {{ super() }}
     <style>
         html { scroll-behavior: smooth; }
         .filter-label { transition: all 0.2s ease-in-out; cursor: pointer; }
@@ -31,10 +28,6 @@
             background-color: rgba(12, 10, 24, 0.9);
             backdrop-filter: blur(8px);
         }
-        /* MODIFIED: Removed aspect-ratio from here */
-        .flashcard {
-            /* No styles needed here anymore */
-        }
         .nav-arrow {
             transition: transform 0.2s ease, color 0.2s ease;
         }
@@ -58,7 +51,6 @@
             padding: 1rem 5rem; /* Padding to keep text from hitting nav arrows */
         }
         .flashcard.text-only-mode #flashcard-text {
-            /* font-size is now set dynamically by JS */
             line-height: 1.1;
             text-align: center;
             padding-left: 1rem;
@@ -77,9 +69,9 @@
             right: 1rem;
         }
     </style>
-</head>
-<body class="bg-[#0c0a18] min-h-screen font-sans text-slate-300 flex flex-col items-center p-4 sm:p-6 lg:p-8 overflow-x-hidden">
+{% endblock %}
 
+{% block content %}
     <header class="w-full max-w-5xl mx-auto my-8">
         <div class="text-center pt-8">
             <img
@@ -142,12 +134,9 @@
             </div>
         </div>
     </div>
+{% endblock %}
 
-
-    <footer class="w-full max-w-3xl mx-auto mt-24 mb-8 text-center text-sm text-slate-500 p-6 border-t border-slate-800/50">
-        <p class="font-bold text-violet-400">&copy; 2025 Navacite | All Rights Reserved</p>
-    </footer>
-
+{% block scripts %}
     <script>
     document.addEventListener('DOMContentLoaded', () => {
         const baseImagePath = 'https://raw.githubusercontent.com/navasdo/navacite/main/templates/articulation-tools/images/flashcards/';
@@ -399,7 +388,7 @@
                 modal.classList.remove('hidden');
             }
         });
-
+        
         closeModalBtn.addEventListener('click', () => {
             modal.classList.add('hidden');
         });
@@ -426,8 +415,5 @@
         });
     });
     </script>
-</body>
-</html>
-
-
+{% endblock %}
 
