@@ -31,6 +31,7 @@ bcrypt = Bcrypt(app)
 
 # --- Database Models ---
 class User(db.Model):
+    __tablename__ = 'user'  # EXPLICITLY DEFINE the table name as lowercase 'user'
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(80), unique=True, nullable=False)
     password = db.Column(db.String(120), nullable=False)
@@ -384,4 +385,5 @@ def page_not_found(e):
 # --- This block should be the VERY LAST thing in your file ---
 if __name__ == '__main__':
     app.run(debug=True)
+
 
