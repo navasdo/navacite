@@ -6,75 +6,218 @@
     <title>Navacite</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="preconnect" href="https://fonts.gstatic" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
         body { font-family: 'Inter', sans-serif; }
-        /* Hide scrollbar for notification dropdown */
-        #notifications-panel::-webkit-scrollbar { display: none; }
-        #notifications-panel { -ms-overflow-style: none; scrollbar-width: none; }
+        #notifications-panel::-webkit-scrollbar,
+        #modal-content::-webkit-scrollbar { display: none; }
+        #notifications-panel,
+        #modal-content { -ms-overflow-style: none; scrollbar-width: none; }
     </style>
 </head>
-<body class="h-full">
+<body class="h-full flex flex-col">
     <nav class="bg-slate-800/50 backdrop-blur-lg border-b border-violet-900/80 sticky top-0 z-50">
         <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
             <div class="flex h-16 items-center justify-between">
                 <div class="flex items-center">
                     <div class="flex-shrink-0">
-                        <a href="{{ url_for('library_page') }}" class="text-2xl font-bold text-white tracking-tight">Navacite</a>
+                        <a href="{{ url_for('library_page') if current_user else url_for('landing_page') }}" class="text-2xl font-bold text-white tracking-tight">Navacite</a>
                     </div>
                 </div>
                 <div class="flex items-center space-x-4">
-                    <a href="{{ url_for('library_page') }}" class="text-slate-300 hover:text-violet-400 px-3 py-2 rounded-md text-sm font-medium transition-colors">Library</a>
                     {% if current_user %}
-                    <a href="{{ url_for('profile_page', username=current_user.username) }}" class="text-slate-300 hover:text-violet-400 px-3 py-2 rounded-md text-sm font-medium transition-colors">Profile</a>
-                    
-                    <!-- UPDATED: Notifications Icon with Dropdown -->
-                    <div class="relative">
-                        <button id="notifications-btn" class="relative text-slate-300 hover:text-violet-400 p-2 rounded-full focus:outline-none">
-                            <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6 6 0 10-12 0v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
-                            </svg>
-                            {% if notification_count > 0 %}
-                            <span id="notifications-bubble" class="absolute top-0 right-0 block h-4 w-4 transform -translate-y-1/2 translate-x-1/2">
-                                <span class="absolute inline-flex h-full w-full rounded-full bg-red-500 opacity-75 animate-ping"></span>
-                                <span class="relative inline-flex rounded-full h-4 w-4 bg-red-600 items-center justify-center text-xs font-bold text-white">{{ notification_count }}</span>
-                            </span>
-                            {% endif %}
-                        </button>
-                        <!-- Notifications Panel -->
-                        <div id="notifications-panel" class="hidden absolute right-0 mt-2 w-80 max-h-96 overflow-y-auto bg-slate-800 border border-violet-700 rounded-lg shadow-xl">
-                            <div class="p-3 border-b border-violet-700/50">
-                                <h3 class="text-lg font-semibold text-white">Notifications</h3>
-                            </div>
-                            <div id="notifications-list">
-                                <!-- Notifications will be injected here by JavaScript -->
-                                <p class="text-slate-400 text-center p-4">Loading...</p>
+                        <a href="{{ url_for('library_page') }}" class="text-slate-300 hover:text-violet-400 px-3 py-2 rounded-md text-sm font-medium transition-colors">Library</a>
+                        <a href="{{ url_for('profile_page', username=current_user.username) }}" class="text-slate-300 hover:text-violet-400 px-3 py-2 rounded-md text-sm font-medium transition-colors">Profile</a>
+                        
+                        <div class="relative">
+                            <button id="notifications-btn" class="relative text-slate-300 hover:text-violet-400 p-2 rounded-full focus:outline-none">
+                                <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6 6 0 10-12 0v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+                                </svg>
+                                {% if notification_count > 0 %}
+                                <span id="notifications-bubble" class="absolute top-0 right-0 block h-4 w-4 transform -translate-y-1/2 translate-x-1/2">
+                                    <span class="absolute inline-flex h-full w-full rounded-full bg-red-500 opacity-75 animate-ping"></span>
+                                    <span class="relative inline-flex rounded-full h-4 w-4 bg-red-600 items-center justify-center text-xs font-bold text-white">{{ notification_count }}</span>
+                                </span>
+                                {% endif %}
+                            </button>
+                            <div id="notifications-panel" class="hidden absolute right-0 mt-2 w-80 max-h-96 overflow-y-auto bg-slate-800 border border-violet-700 rounded-lg shadow-xl">
+                                <div class="p-3 border-b border-violet-700/50">
+                                    <h3 class="text-lg font-semibold text-white">Notifications</h3>
+                                </div>
+                                <div id="notifications-list">
+                                    <p class="text-slate-400 text-center p-4">Loading...</p>
+                                </div>
                             </div>
                         </div>
-                    </div>
-
-                    <a href="{{ url_for('logout') }}" class="text-slate-300 hover:text-violet-400 px-3 py-2 rounded-md text-sm font-medium transition-colors">Logout</a>
+                        <a href="{{ url_for('logout') }}" class="text-slate-300 hover:text-violet-400 px-3 py-2 rounded-md text-sm font-medium transition-colors">Logout</a>
+                    {% else %}
+                        <a href="{{ url_for('login_page') }}" class="text-slate-300 hover:text-violet-400 px-3 py-2 rounded-md text-sm font-medium transition-colors">Login</a>
+                        <a href="{{ url_for('register_page') }}" class="bg-violet-600 hover:bg-violet-700 text-white font-bold py-2 px-4 rounded-lg text-sm transition-colors">Register</a>
                     {% endif %}
                 </div>
             </div>
         </div>
     </nav>
 
-    <main>
+    <main class="flex-grow">
         {% block content %}{% endblock %}
     </main>
 
     <footer class="bg-slate-900/60 text-center py-4 mt-12 border-t border-violet-900/80">
+        <div class="mb-2">
+             <a href="#" id="terms-link" class="text-xs text-violet-400 hover:text-violet-300 px-2">Terms & Disclaimer</a>
+             <span class="text-slate-600">|</span>
+             <a href="#" id="privacy-link" class="text-xs text-violet-400 hover:text-violet-300 px-2">Privacy Policy</a>
+        </div>
         <p class="text-xs text-slate-500">&copy; 2025 Navacite | All Rights Reserved</p>
         <p class="text-xs text-slate-600 mt-1">Navacite tools are provided 'as is' and are not intended to diagnose. Use requires professional judgment.</p>
     </footer>
+
+    <!-- MODAL CONTAINER -->
+    <div id="privacy-modal" class="hidden fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4">
+        <div class="bg-slate-800 border border-violet-700 rounded-lg shadow-xl w-full max-w-3xl flex flex-col max-h-[90vh]">
+            <div class="flex justify-between items-center p-4 border-b border-violet-700/50 sticky top-0 bg-slate-800">
+                <h2 class="text-xl font-bold text-violet-400">Privacy Policy</h2>
+                <button id="close-modal-btn" class="text-2xl text-slate-400 hover:text-white">&times;</button>
+            </div>
+            <div id="modal-content" class="p-6 overflow-y-auto text-slate-300 space-y-4 text-sm">
+                <p class="text-xs text-slate-500">Last updated: October 04, 2025</p>
+                <p>This Privacy Notice for Navacite ("we," "us," or "our"), describes how and why we might access, collect, store, use, and/or share ("process") your personal information when you use our services ("Services"), including when you visit our website or engage with us in other related ways, including any sales, marketing, or events.</p>
+                <p><strong>Questions or concerns?</strong> Reading this Privacy Notice will help you understand your privacy rights and choices. If you do not agree with our policies and practices, please do not use our Services. If you still have any questions or concerns, please contact us at <a href="mailto:PLACEHOLDER@navacite.com" class="text-violet-400 hover:underline">PLACEHOLDER@navacite.com</a>.</p>
+                
+                <h3 class="text-xl font-semibold text-slate-100 pt-4">SUMMARY OF KEY POINTS</h3>
+                <p class="italic text-slate-400">This summary provides key points from our Privacy Notice. For more details, please review the full notice below.</p>
+                <ul class="list-disc list-inside space-y-2 pl-2">
+                    <li><strong>What personal information do we process?</strong> When you visit, use, or navigate our Services, we may process personal information depending on how you interact with us.</li>
+                    <li><strong>Do we process any sensitive personal information?</strong> We do not process sensitive personal information.</li>
+                    <li><strong>How do we process your information?</strong> We process your information to provide, improve, and administer our Services, communicate with you, for security and fraud prevention, and to comply with law.</li>
+                    <li><strong>In what situations do we share personal information?</strong> We may share information in specific situations, such as business transfers or when you post public content.</li>
+                    <li><strong>How do we keep your information safe?</strong> We have organizational and technical processes in place to protect your personal information. However, no electronic transmission can be guaranteed to be 100% secure.</li>
+                </ul>
+            
+                <h3 class="text-xl font-semibold text-slate-100 pt-4">1. WHAT INFORMATION DO WE COLLECT?</h3>
+                <p>We collect personal information that you voluntarily provide to us when you register on the Services, express an interest in obtaining information about us or our products and Services, when you participate in activities on the Services, or otherwise when you contact us. The personal information we collect may include: names, email addresses, usernames, passwords, and IP addresses. All personal information that you provide must be true, complete, and accurate.</p>
+                <h4 class="text-lg font-semibold text-slate-200 mt-2">Google API</h4>
+                <p>Our use of information received from Google APIs will adhere to the <a href="https://developers.google.com/terms/api-services-user-data-policy" class="text-violet-400 hover:underline" target="_blank" rel="noopener noreferrer">Google API Services User Data Policy</a>, including the Limited Use requirements.</p>
+
+                <h3 class="text-xl font-semibold text-slate-100 pt-4">2. HOW DO WE PROCESS YOUR INFORMATION?</h3>
+                <p>We process your information to provide, improve, and administer our Services, communicate with you, for security and fraud prevention, and to comply with law. We process your information for a variety of reasons, including to facilitate account creation, deliver services, respond to inquiries, send administrative information, enable user-to-user communications, request feedback, and protect our Services.</p>
+
+                <h3 class="text-xl font-semibold text-slate-100 pt-4">3. WHAT LEGAL BASES DO WE RELY ON TO PROCESS YOUR PERSONAL INFORMATION?</h3>
+                <p>We only process your personal information when we believe it is necessary and we have a valid legal reason to do so under applicable law, like with your consent, to comply with laws, to provide you with services, to fulfill our contractual obligations, to protect your rights, or to fulfill our legitimate business interests.</p>
+
+                <h3 class="text-xl font-semibold text-slate-100 pt-4">4. WHEN AND WITH WHOM DO WE SHARE YOUR PERSONAL INFORMATION?</h3>
+                <p>We may share information in specific situations, including: Business Transfers (in connection with any merger or sale of company assets) and with Other Users (when you share personal information in public areas of the Services).</p>
+
+                <h3 class="text-xl font-semibold text-slate-100 pt-4">5. DO WE OFFER ARTIFICIAL INTELLIGENCE-BASED PRODUCTS?</h3>
+                <p>Yes. We offer products powered by AI through third-party service providers like Google Cloud AI. Your input, output, and personal information will be shared with and processed by these providers to enable your use of our AI Products. You must not use the AI Products in any way that violates the terms of any AI Service Provider.</p>
+
+                <h3 class="text-xl font-semibold text-slate-100 pt-4">6. HOW LONG DO WE KEEP YOUR INFORMATION?</h3>
+                <p>We keep your information for as long as necessary to fulfill the purposes outlined in this Privacy Notice unless otherwise required by law. Generally, this means for as long as you have an account with us. When we have no ongoing legitimate business need to process your information, we will delete or anonymize it.</p>
+
+                <h3 class="text-xl font-semibold text-slate-100 pt-4">7. HOW DO WE KEEP YOUR INFORMATION SAFE?</h3>
+                <p>We have implemented appropriate technical and organizational security measures designed to protect the security of any personal information we process. However, no electronic transmission over the Internet or information storage technology can be guaranteed to be 100% secure. Transmission of personal information to and from our Services is at your own risk.</p>
+
+                <h3 class="text-xl font-semibold text-slate-100 pt-4">8. DO WE COLLECT INFORMATION FROM MINORS?</h3>
+                <p>We do not knowingly collect data from or market to children under 18 years of age. By using the Services, you represent that you are at least 18. If we learn that personal information from users less than 18 has been collected, we will deactivate the account and take reasonable measures to delete such data.</p>
+
+                <h3 class="text-xl font-semibold text-slate-100 pt-4">9. WHAT ARE YOUR PRIVACY RIGHTS?</h3>
+                <p>Depending on your location, you have rights that allow you greater access to and control over your personal information. You may review, change, or terminate your account at any time. If you are in regions like the EEA, UK, Switzerland, or Canada, these rights may include the right to request access, rectification, erasure, and data portability.</p>
+
+                <h3 class="text-xl font-semibold text-slate-100 pt-4">10. CONTROLS FOR DO-NOT-TRACK FEATURES</h3>
+                <p>Most web browsers include a Do-Not-Track ("DNT") feature. At this stage, no uniform technology standard for recognizing and implementing DNT signals has been finalized. As such, we do not currently respond to DNT browser signals.</p>
+
+                <h3 class="text-xl font-semibold text-slate-100 pt-4">11. DO UNITED STATES RESIDENTS HAVE SPECIFIC PRIVACY RIGHTS?</h3>
+                <p>If you are a resident of certain US states (e.g., Nebraska), you may have the right to request access to and receive details about the personal information we maintain about you, correct inaccuracies, get a copy of, or delete your personal information. We have collected the following categories of personal information in the past twelve (12) months:</p>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse mt-2 text-sm">
+                        <thead class="bg-slate-700 text-slate-200">
+                            <tr>
+                                <th class="border border-slate-600 p-2">Category</th>
+                                <th class="border border-slate-600 p-2">Examples</th>
+                                <th class="border border-slate-600 p-2 text-center">Collected</th>
+                            </tr>
+                        </thead>
+                        <tbody class="text-slate-400">
+                            <tr>
+                                <td class="border border-slate-600 p-2">A. Identifiers</td>
+                                <td class="border border-slate-600 p-2">Contact details, real name, alias, IP address, email address, account name</td>
+                                <td class="border border-slate-600 p-2 text-center text-green-400 font-bold">YES</td>
+                            </tr>
+                            <tr>
+                                <td class="border border-slate-600 p-2">F. Geolocation data</td>
+                                <td class="border border-slate-600 p-2">Device location</td>
+                                <td class="border border-slate-600 p-2 text-center text-green-400 font-bold">YES</td>
+                            </tr>
+                            <tr>
+                                <td class="border border-slate-600 p-2">H. Professional or employment-related information</td>
+                                <td class="border border-slate-600 p-2">Job title, work history, and professional qualifications</td>
+                                <td class="border border-slate-600 p-2 text-center text-green-400 font-bold">YES</td>
+                            </tr>
+                            <tr>
+                                <td class="border border-slate-600 p-2 italic" colspan="2">Other categories such as Protected classification, Commercial information, Biometric information, Internet activity, etc.</td>
+                                <td class="border border-slate-600 p-2 text-center text-red-400 font-bold">NO</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <p class="mt-2">We have not disclosed, sold, or shared any personal information to third parties for a business or commercial purpose in the preceding twelve (12) months and will not do so in the future.</p>
+                
+                <h3 class="text-xl font-semibold text-slate-100 pt-4">12. DO WE MAKE UPDATES TO THIS NOTICE?</h3>
+                <p>Yes, we will update this notice as necessary to stay compliant with relevant laws. The updated version will be indicated by the "Last updated" date at the top.</p>
+
+                <h3 class="text-xl font-semibold text-slate-100 pt-4">13. HOW CAN YOU CONTACT US ABOUT THIS NOTICE?</h3>
+                <p>If you have questions or comments, you may email us at <a href="mailto:PLACEHOLDER@navacite.com" class="text-violet-400 hover:underline">PLACEHOLDER@navacite.com</a>.</p>
+
+                <h3 class="text-xl font-semibold text-slate-100 pt-4">14. HOW CAN YOU REVIEW, UPDATE, OR DELETE THE DATA WE COLLECT FROM YOU?</h3>
+                <p>Based on the applicable laws of your country or state, you may have the right to request access to, correct, or delete your personal information. To do so, please visit your <a href="http://www.navacite.com/profile" class="text-violet-400 hover:underline" target="_blank" rel="noopener noreferrer">profile page</a> or contact us.</p>
+            </div>
+        </div>
+    </div>
     
+    <script>
+        // --- Modal Logic ---
+        document.addEventListener('DOMContentLoaded', function() {
+            const privacyModal = document.getElementById('privacy-modal');
+            const privacyLink = document.getElementById('privacy-link');
+            const closeModalBtn = document.getElementById('close-modal-btn');
+            // const termsLink = document.getElementById('terms-link'); // For future use
+
+            const openModal = () => privacyModal.classList.remove('hidden');
+            const closeModal = () => privacyModal.classList.add('hidden');
+
+            if (privacyLink) {
+                privacyLink.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    openModal();
+                });
+            }
+            if (closeModalBtn) {
+                closeModalBtn.addEventListener('click', closeModal);
+            }
+            privacyModal.addEventListener('click', (e) => {
+                if (e.target === privacyModal) {
+                    closeModal();
+                }
+            });
+            document.addEventListener('keydown', (e) => {
+                if (e.key === "Escape" && !privacyModal.classList.contains('hidden')) {
+                    closeModal();
+                }
+            });
+        });
+    </script>
+
     {% if current_user %}
     <script>
+        // --- Notification Logic ---
         document.addEventListener('DOMContentLoaded', function() {
             const notificationsBtn = document.getElementById('notifications-btn');
             const notificationsPanel = document.getElementById('notifications-panel');
+            if (!notificationsBtn || !notificationsPanel) return;
+
             const notificationsList = document.getElementById('notifications-list');
             const notificationsBubble = document.getElementById('notifications-bubble');
             let isPanelOpen = false;
@@ -96,32 +239,21 @@
                     const response = await fetch('/api/notifications');
                     if (!response.ok) throw new Error('Failed to fetch notifications');
                     const notifications = await response.json();
-
-                    notificationsList.innerHTML = ''; // Clear current list
-
+                    notificationsList.innerHTML = '';
                     if (notifications.length === 0) {
                         notificationsList.innerHTML = '<p class="text-slate-400 text-center p-4">No new notifications.</p>';
                         return;
                     }
-
                     notifications.forEach(n => {
                         const notificationEl = document.createElement('div');
                         notificationEl.className = `p-3 flex items-start gap-3 border-b border-violet-900/50 ${n.is_read ? '' : 'bg-violet-900/20'}`;
-                        
-                        let message = '';
-                        if (n.type === 'collaboration_request') {
-                            message = `<span class="font-bold text-slate-100">${n.sender_username}</span> wants to collaborate.`;
-                        } else {
-                            message = 'You have a new notification.';
-                        }
-
+                        let message = n.type === 'collaboration_request' ? `<span class="font-bold text-slate-100">${n.sender_username}</span> wants to collaborate.` : 'You have a new notification.';
                         notificationEl.innerHTML = `
                             <img src="${n.sender_photo}" alt="${n.sender_username}" class="w-10 h-10 rounded-full object-cover">
                             <div class="flex-1">
                                 <p class="text-slate-300 text-sm">${message}</p>
                                 <div class="text-xs text-slate-500 mt-1">${new Date(n.timestamp).toLocaleString()}</div>
-                            </div>
-                        `;
+                            </div>`;
                         notificationsList.appendChild(notificationEl);
                     });
                 } catch (error) {
@@ -133,7 +265,6 @@
             async function markNotificationsAsRead() {
                  try {
                     await fetch('/api/notifications/mark-read', { method: 'POST' });
-                    // Hide the bubble visually after it's been seen
                     if (notificationsBubble) {
                        notificationsBubble.style.display = 'none';
                     }
@@ -142,7 +273,6 @@
                 }
             }
             
-            // Close the panel if clicking outside of it
             document.addEventListener('click', function(event) {
                 if (!notificationsBtn.contains(event.target) && !notificationsPanel.contains(event.target)) {
                     isPanelOpen = false;
