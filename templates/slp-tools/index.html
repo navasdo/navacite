@@ -1,13 +1,9 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <link rel="icon" type="image/x-icon" href="https://raw.githubusercontent.com/navasdo/navacite/refs/heads/main/templates/static/ico/navacite.ico">
-    <a href="/library" class="absolute top-4 right-4 z-10 p-1 rounded-full bg-gray-700/50 hover:bg-gray-600/50 transition" title="Back to Homepage"><img src="https://raw.githubusercontent.com/navasdo/navacite/refs/heads/main/templates/static/navacite-images/Navacite-Main.png" alt="Navacite Homepage" class="w-10 h-10 rounded-full"/></a>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Navacite Library: SLP Tools</title>
-    <!-- Direct link to Tailwind CSS CDN -->
-    <script src="https://cdn.tailwindcss.com"></script>
+{% extends "base.html" %}
+
+{% block title %}Navacite Library: SLP Tools{% endblock %}
+
+{% block head %}
+    {{ super() }}
     <style>
         /* Smooth scrolling behavior */
         html {
@@ -33,9 +29,9 @@
             display: none;
         }
     </style>
-</head>
-<body class="bg-[#0c0a18] min-h-screen font-sans text-slate-300 flex flex-col items-center p-4 sm:p-6 lg:p-8 overflow-x-hidden">
+{% endblock %}
 
+{% block content %}
     <!-- Header Section -->
     <header class="w-full max-w-5xl mx-auto my-8">
         <div class="text-center pt-8">
@@ -75,14 +71,9 @@
             <!-- Tool buttons will be injected here by JavaScript -->
         </div>
     </main>
+{% endblock %}
 
-    <!-- Footer Section -->
-    <footer class="w-full max-w-3xl mx-auto mt-24 mb-8 text-center text-sm text-slate-500 p-6 border-t border-slate-800/50">
-        <p class="font-bold text-violet-400">
-            &copy; 2025 Navacite | All Rights Reserved
-        </p>
-    </footer>
-
+{% block scripts %}
     <script>
         document.addEventListener('DOMContentLoaded', () => {
             
@@ -174,4 +165,4 @@
             resetButton.addEventListener('click', resetAllFilters);
         });
     </script>
-</body>
+{% endblock %}
