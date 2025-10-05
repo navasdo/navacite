@@ -166,22 +166,16 @@
                     const placeValue = selectedPlace.value;
                     const mannerValue = selectedManner.value;
 
-                    const sortedButtons = [...phonemeButtons].sort((a, b) => {
-                        const aIsMatch = a.dataset.place.includes(placeValue) && a.dataset.manner === mannerValue;
-                        const bIsMatch = b.dataset.place.includes(placeValue) && b.dataset.manner === mannerValue;
-                        
-                        if (aIsMatch && !bIsMatch) return -1;
-                        if (!aIsMatch && bIsMatch) return 1;
-                        return 0; // maintain original relative order
+                    phonemeButtons.forEach(button => {
+                        const isMatch = button.dataset.place.includes(placeValue) && button.dataset.manner === mannerValue;
+                        button.style.display = isMatch ? 'flex' : 'none';
                     });
-                    
-                    phonemeGrid.innerHTML = '';
-                    sortedButtons.forEach(button => phonemeGrid.appendChild(button));
 
                 } else {
-                     // If not fully selected, restore original order
-                    phonemeGrid.innerHTML = '';
-                    phonemeButtons.forEach(button => phonemeGrid.appendChild(button));
+                     // If not both filters are selected, show all buttons
+                    phonemeButtons.forEach(button => {
+                        button.style.display = 'flex';
+                    });
                 }
             };
             
