@@ -3,6 +3,7 @@
 {% block title %}Navacite Library{% endblock %}
 
 {% block head %}
+    {{ super() }} <!-- This was the missing piece! It includes the parent's head content. -->
     <style>
         /* Simple transition for the update list reveal */
         .fade-in {
