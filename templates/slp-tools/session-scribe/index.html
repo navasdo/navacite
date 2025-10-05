@@ -1,12 +1,9 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <link rel="icon" type="image/x-icon" href="https://raw.githubusercontent.com/navasdo/navacite/refs/heads/main/templates/static/ico/navacite.ico">
-    <a href="/slp-tools" class="absolute top-4 right-4 z-10 p-1 rounded-full bg-gray-700/50 hover:bg-gray-600/50 transition" title="Back to Homepage"><img src="https://raw.githubusercontent.com/navasdo/navacite/refs/heads/main/templates/static/navacite-images/Navacite-Main.png" alt="Navacite Homepage" class="w-10 h-10 rounded-full"/></a>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Session Scribe</title>
-    <script src="https://cdn.tailwindcss.com"></script>
+{% extends "base.html" %}
+
+{% block title %}Session Scribe{% endblock %}
+
+{% block head %}
+    {{ super() }}
     <style>
         /* Custom styles for the magical loading indicator */
         @keyframes pulse {
@@ -51,13 +48,15 @@
             border: 2px solid #1e293b;
         }
     </style>
-</head>
-<body class="bg-[#0c0a18] text-slate-300 font-sans">
+{% endblock %}
 
+{% block content %}
     <div id="app-root" class="min-h-screen flex flex-col">
         <!-- The entire application will be rendered here by JavaScript -->
     </div>
+{% endblock %}
 
+{% block scripts %}
     <script>
         // --- Shorthand Glossary ---
         const shorthandGlossary = {
@@ -354,6 +353,7 @@
                         ${screenHTML}
                     </main>
                 </div>
+                <!-- This footer is specific to the app and won't be inherited from base.html -->
                 <footer class="w-full text-center text-sm text-slate-400 p-6">
                     <p class="font-bold">
                         &copy; ${new Date().getFullYear()} Navacite | All Rights Reserved
@@ -418,5 +418,4 @@
         document.addEventListener('DOMContentLoaded', render);
 
     </script>
-</body>
-</html>
+{% endblock %}
