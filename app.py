@@ -24,6 +24,9 @@ app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL', 'sqlite:/
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['GEMINI_API_KEY_COGNITION'] = os.environ.get('GEMINI_API_KEY_COGNITION')
 app.config['GEMINI_API_KEY_SLP'] = os.environ.get('GEMINI_API_KEY_SLP')
+# NEW: Add API Key for Literacy Launchpad
+app.config['LITERACY_LAUNCHPAD_API_KEY'] = os.environ.get('LITERACY-LAUNCHPAD')
+
 
 # --- Database and Encryption Setup ---
 db = SQLAlchemy(app)
@@ -31,18 +34,13 @@ bcrypt = Bcrypt(app)
 
 # --- Database Models ---
 class User(db.Model):
-    __tablename__ = 'user'  # EXPLICITLY DEFINE the table name as lowercase 'user'
+    __tablename__ = 'user'
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(80), unique=True, nullable=False)
     password = db.Column(db.String(120), nullable=False)
-    
-    # NEW FIELDS FOR REGISTRATION
     first_name = db.Column(db.String(100))
     last_name = db.Column(db.String(100))
-    # UPDATED: Made email required for all new accounts
     email = db.Column(db.String(120), unique=True, nullable=False)
-    
-    # Existing fields
     display_name = db.Column(db.String(100)) 
     real_name = db.Column(db.String(100))
     location = db.Column(db.String(100))
@@ -54,7 +52,6 @@ class User(db.Model):
     specializations = db.Column(db.JSON)
     display_preference = db.Column(db.String(20), default='username')
     
-    # UPDATED: Using primaryjoin for unambiguous relationships
     notifications_received = db.relationship(
         'Notification',
         primaryjoin="User.id == Notification.recipient_id",
@@ -68,7 +65,6 @@ class User(db.Model):
         lazy='dynamic'
     )
 
-
 class Notification(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     recipient_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
@@ -77,7 +73,6 @@ class Notification(db.Model):
     is_read = db.Column(db.Boolean, default=False, nullable=False)
     timestamp = db.Column(db.DateTime, default=datetime.utcnow)
     
-    # UPDATED: Using primaryjoin for unambiguous relationships
     sender = db.relationship(
         'User',
         primaryjoin="Notification.sender_id == User.id",
@@ -88,6 +83,13 @@ class Notification(db.Model):
         primaryjoin="Notification.recipient_id == User.id",
         back_populates='notifications_received'
     )
+
+# NEW: Database model for the Literacy Launchpad Leaderboard
+class Leaderboard(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    pseudonym = db.Column(db.String(100), nullable=False)
+    score = db.Column(db.Integer, nullable=False)
+    timestamp = db.Column(db.DateTime, default=datetime.utcnow)
 
 # --- Custom CLI Command to Initialize DB ---
 @app.cli.command("init-db")
@@ -369,6 +371,73 @@ def handle_generate_note():
     except requests.exceptions.RequestException as e:
         app.logger.error(f"API call failed: {e}")
         return jsonify({"error": "Failed to communicate with AI service"}), 500
+
+# --- NEW LITERACY LAUNCHPAD API ROUTES ---
+@app.route('/api/literacy-launchpad/leaderboard', methods=['GET'])
+@token_required
+def get_leaderboard():
+    entries = Leaderboard.query.order_by(desc(Leaderboard.score)).limit(10).all()
+    return jsonify([{'pseudonym': e.pseudonym, 'score': e.score} for e in entries])
+
+@app.route('/api/literacy-launchpad/leaderboard', methods=['POST'])
+@token_required
+def add_to_leaderboard():
+    data = request.get_json()
+    pseudonym = data.get('pseudonym')
+    score = data.get('score')
+    password = data.get('password')
+
+    if not all([pseudonym, score, password]):
+        return jsonify({"error": "Missing data"}), 400
+
+    # Authenticate the clinician
+    if not g.user or not bcrypt.check_password_hash(g.user.password, password):
+        return jsonify({"error": "Invalid credentials"}), 401
+
+    # Add the new entry
+    new_entry = Leaderboard(pseudonym=pseudonym, score=score)
+    db.session.add(new_entry)
+    
+    # Keep only the top 10 scores
+    entry_count = Leaderboard.query.count()
+    if entry_count > 10:
+        lowest_entry = Leaderboard.query.order_by(Leaderboard.score.asc()).first()
+        db.session.delete(lowest_entry)
+        
+    db.session.commit()
+    return jsonify({"message": "Leaderboard updated successfully"}), 201
+    
+@app.route('/api/literacy-launchpad/scaffold', methods=['POST'])
+@token_required
+def get_scaffold():
+    data = request.get_json()
+    passage = data.get('passage')
+    incorrect_word = data.get('incorrect_word')
+    
+    api_key = app.config.get('LITERACY_LAUNCHPAD_API_KEY')
+    if not api_key:
+        return jsonify({"error": "API key not configured for Literacy Launchpad"}), 500
+
+    url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key={api_key}"
+    
+    prompt = f"""
+    A student was reading the following passage and made an error.
+    Passage: "{passage}"
+    The student incorrectly chose the word "{incorrect_word}".
+    Provide a brief, student-friendly explanation of why that word does not fit grammatically or semantically.
+    Also, identify the contextual clue in the passage that points to the correct answer.
+    Respond ONLY with a JSON object with two keys: "explanation" and "clue".
+    Example: {{"explanation": "The word 'running' is an action, but the sentence needs a describing word for the apple.", "clue": "The apple was..."}}
+    """
+    
+    try:
+        response = requests.post(url, json={"contents": [{"parts": [{"text": prompt}]}]})
+        response.raise_for_status()
+        # The AI response will be a stringified JSON, so we return it directly
+        return jsonify(response.json())
+    except requests.exceptions.RequestException as e:
+        app.logger.error(f"Literacy Launchpad API call failed: {e}")
+        return jsonify({"error": "Failed to get help from the AI service"}), 500
 
 # --- Page Routes ---
 @app.route('/')
