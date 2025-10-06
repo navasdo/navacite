@@ -1,12 +1,9 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <link rel="icon" type="image/x-icon" href="https://raw.githubusercontent.com/navasdo/navacite/templates/static/ico/navacite.ico">
-     <a href="https://navacite.com" class="absolute top-4 right-4 z-10 p-1 rounded-full bg-gray-700/50 hover:bg-gray-600/50 transition" title="Back to Homepage"><img src="https://raw.githubusercontent.com/navasdo/oliver/main/navacite/gems/Navacite-Main.png" alt="Navacite Homepage" class="w-10 h-10 rounded-full"/></a>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Grammar Grid</title>
-    <script src="https://cdn.tailwindcss.com"></script>
+{% extends "base.html" %}
+
+{% block title %}Grammar Grid{% endblock %}
+
+{% block head %}
+    {{ super() }}
     <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
@@ -90,9 +87,13 @@
             animation: fade-in-up 0.3s ease-out forwards;
         }
     </style>
-</head>
-<body class="bg-[#0c0a18] text-slate-300 font-sans">
-    <div id="root"></div>
+{% endblock %}
+
+{% block content %}
+    <div id="root" class="bg-[#0c0a18] text-slate-300 font-sans"></div>
+{% endblock %}
+
+{% block scripts %}
 
     <!-- Question Data Block -->
     <script id="question-data" type="application/json">
@@ -4274,10 +4275,7 @@
                 {error && <div className="border border-red-500 bg-red-900/40 text-red-400 p-3 rounded-lg text-center my-4 max-w-5xl mx-auto">{error}</div>}
                 <main className="bg-slate-900/40 p-6 sm:p-8 rounded-2xl shadow-lg border border-violet-900/80"> {renderScreen()} </main>
               </div>
-              <footer className="w-full text-center text-sm text-slate-400 p-6">
-                <p className="font-bold">&copy; {new Date().getFullYear()} Navacite | All Rights Reserved</p>
-                <p className="mt-4 text-xs text-slate-500">Navacite tools are provided ‘as is’ and are not intended to diagnose. Use requires professional judgment. <br /> <a href="#" onClick={(e) => { e.preventDefault(); setShowTermsModal(true); }} className="underline hover:text-violet-400 transition-colors">Terms & Disclaimer</a></p>
-              </footer>
+              {/* Footer is now in base.html */}
               <TermsModal show={showTermsModal} onClose={() => setShowTermsModal(false)} />
             </div>
           );
@@ -4756,6 +4754,4 @@
         root.render(<App />);
     </script>
 {% endraw %}
-</body>
-</html>
-
+{% endblock %}
