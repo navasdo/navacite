@@ -28,6 +28,12 @@
         .notification-item {
             animation: fade-in-up 0.5s ease-out forwards, fade-out-up 0.5s ease-in forwards 2s;
         }
+        .map-container {
+            aspect-ratio: 9 / 16;
+            overflow-y: scroll;
+            scroll-behavior: smooth;
+        }
+        .map-container::-webkit-scrollbar { display: none; }
     </style>
 {% endblock %}
 
@@ -39,13 +45,14 @@
 {% raw %}
     <script type="text/babel">
         const { useState, useEffect, useCallback, useMemo, useRef } = React;
-        const { createPortal } = ReactDOM;
-        const { createRoot } = ReactDOM;
+        const { createPortal, createRoot } = ReactDOM;
 
-        // --- Placeholder Data & Assets ---
+        // --- Game Data & Assets ---
         const correctSound = new Audio("https://raw.githubusercontent.com/navasdo/navacite/main/templates/static/audio/literacy-launchpad/correct.wav");
         const incorrectSound = new Audio("https://raw.githubusercontent.com/navasdo/navacite/main/templates/static/audio/literacy-launchpad/incorrect.wav");
         const streakSound = new Audio("https://raw.githubusercontent.com/navasdo/navacite/main/templates/static/audio/literacy-launchpad/streak.wav");
+        const multiplierSound = new Audio("https://raw.githubusercontent.com/navasdo/navacite/main/templates/static/audio/literacy-launchpad/multiplier.mp3");
+        const heartSound = new Audio("https://raw.githubusercontent.com/navasdo/navacite/main/templates/static/audio/literacy-launchpad/heart.mp3");
 
         const passages = {
             '2-3': {
@@ -59,9 +66,24 @@
             }
         };
 
+        const characterClasses = {
+            adventurer: { name: 'Adventurer', bonus: '+1 starting heart', penalty: 'Slightly lower score multiplier', heartMod: 1, streakMod: 0, scoreMod: 0.9, variants: [{gender: 'female', id: 'female_presenting'}, {gender: 'male', id: 'male_presenting'}] },
+            alchemist: { name: 'Alchemist', bonus: 'Heart rewards restore +2', penalty: 'Score rewards are smaller', heartMod: 0, streakMod: 0, scoreMod: 0.8, variants: [{gender: 'neutral', id: ''}] },
+            archer: { name: 'Archer', bonus: 'Higher streak bonus', penalty: 'Streaks require +1 correct answer', heartMod: 0, streakMod: 1, scoreMod: 1.2, variants: [{gender: 'female', id: '-female_presenting'}, {gender: 'male', id: '-male_presenting'}] },
+            assassin: { name: 'Assassin', bonus: 'Massive score multiplier', penalty: 'Start with -3 hearts', heartMod: -3, streakMod: 0, scoreMod: 1.5, variants: [{gender: 'female', id: '-female_presenting'}, {gender: 'male', id: '-male_presenting'}] },
+            bandit: { name: 'Bandit', bonus: 'More points from choices', penalty: 'No streak rewards', heartMod: 0, streakMod: 99, scoreMod: 1.3, variants: [{gender: 'neutral', id: ''}] },
+            barbarian: { name: 'Barbarian', bonus: 'Start with +3 hearts', penalty: 'Lower overall score', heartMod: 3, streakMod: 0, scoreMod: 0.7, variants: [{gender: 'neutral', id: ''}] },
+            'beast-master': { name: 'Beast Master', bonus: 'First incorrect answer is free', penalty: 'Reduced streak bonus', heartMod: 0, streakMod: 0, scoreMod: 0.9, freebie: true, variants: [{gender: 'neutral', id: ''}] },
+            'dragon-knight': { name: 'Dragon Knight', bonus: 'Immune to first 2 mistakes', penalty: 'No score multiplier reward', heartMod: 0, streakMod: 0, scoreMod: 1, immune: 2, variants: [{gender: 'neutral', id: ''}] },
+            knight: { name: 'Knight', bonus: 'Balanced stats', penalty: 'None', heartMod: 0, streakMod: 0, scoreMod: 1, variants: [{gender: 'male', id: '-male_presenting'}] },
+            'martial-artist': { name: 'Martial Artist', bonus: 'Streaks activate faster', penalty: 'No heart reward option', heartMod: 0, streakMod: -1, scoreMod: 1.1, variants: [{gender: 'female', id: '-female_presenting'}, {gender: 'male', id: '-male_presenting'}] },
+            samurai: { name: 'Samurai', bonus: 'Perfect answers grant huge bonus', penalty: 'Any mistake resets streak', heartMod: 0, streakMod: 0, scoreMod: 1.2, perfect: true, variants: [{gender: 'neutral', id: ''}] },
+            wizard: { name: 'Wizard', bonus: 'Streak score rewards are massively increased', penalty: 'Fewer starting hearts', heartMod: -2, streakMod: 0, scoreMod: 1, streakBonusMultiplier: 2.5, variants: [{gender: 'female', id: '-female_presenting'}, {gender: 'male', id: '-male_presenting'}] },        };
+        const classImageBaseUrl = "https://raw.githubusercontent.com/navasdo/navacite/refs/heads/main/templates/language-tools/literacy-launchpad/static/images/character-avatars/";
+        
         // --- Main App Component ---
         function App() {
-            const [screen, setScreen] = useState('setup'); // setup, game, results
+             const [screen, setScreen] = useState('setup'); // setup, game, results
             const [gameSettings, setGameSettings] = useState(null);
             const [gameResults, setGameResults] = useState(null);
             const [leaderboardData, setLeaderboardData] = useState([]);
@@ -106,14 +128,16 @@
             };
 
             return (
-                <div className="w-full max-w-5xl mx-auto py-8">
+                <div className="w-full max-w-7xl mx-auto py-8">
                      <header className="text-center mb-12">
                         <img src="https://raw.githubusercontent.com/navasdo/navacite/main/templates/static/navacite-images/literacy-launchpad.png" alt="Literacy Launchpad Logo" className="w-48 mx-auto mb-4" style={{filter: 'drop-shadow(0 0 15px rgba(167, 139, 250, 0.4))'}} />
                         <h1 className="text-5xl md:text-6xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-violet-400 to-fuchsia-500">
                             Literacy Launchpad
                         </h1>
                         <p className="text-md md:text-lg text-slate-400 italic max-w-4xl mx-auto mt-2">
-                            Transforming reading assessment into a dynamic, engaging, and insight-driven adventure to improve K-12 reading comprehension.
+                            An engaging reading adventure that analyzes sentence-level comprehension to generate data-driven instructional hypotheses and connect you with evidence-based interventions. <br> Choose your hero, embark on an adventure, and conquer reading challenges in a gamified quest for comprehension.
+
+
                         </p>
                     </header>
                     <main className="bg-slate-900/40 p-6 sm:p-8 rounded-2xl shadow-lg border border-violet-900/80">
@@ -130,65 +154,99 @@
             const [map, setMap] = useState('Jungle of Syntax');
             const [isPractice, setIsPractice] = useState(false);
             const [showPrivacyModal, setShowPrivacyModal] = useState(false);
+            const [selectedClass, setSelectedClass] = useState('knight');
+            const [selectedVariant, setSelectedVariant] = useState(0);
             
             const handleStart = () => {
-                onStartGame({ studentName, level, map, isPractice });
+                const charClass = characterClasses[selectedClass];
+                const variant = charClass.variants[selectedVariant];
+                const characterImage = `${classImageBaseUrl}${selectedClass}${variant.id.replace(/_/g, '-')}_50.png`;
+                onStartGame({ studentName, level, map, isPractice, characterClass: charClass, characterImage });
             };
+            
+            const currentClass = characterClasses[selectedClass];
+            const currentVariant = currentClass.variants[selectedVariant];
+            const largeImageUrl = `${classImageBaseUrl}${selectedClass}${currentVariant.id.replace(/_/g, '-')}_100.png`;
+
 
             return (
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                    <div className="lg:col-span-2 space-y-8">
-                        <h3 className="text-xl font-bold text-violet-400 text-center">Prepare for Launch</h3>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            {/* Student Name Input */}
+                <div>
+                     <h3 className="text-2xl font-bold text-violet-400 text-center mb-8">Prepare for Launch</h3>
+                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                        <div className="lg:col-span-2 space-y-8">
+                            {/* Top part: Student, Level, Map */}
+                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div>
+                                    <label htmlFor="student" className="text-slate-400 flex items-center gap-2">Student Name <button onClick={() => setShowPrivacyModal(true)} title="Privacy Information" className="text-slate-500 hover:text-violet-400 transition-colors"><IconInfo /></button></label>
+                                    <input id="student" type="text" value={studentName} onChange={(e) => setStudentName(e.target.value)} className="w-full mt-2 p-3 rounded-md bg-slate-800/60 text-slate-300 border border-slate-700 focus:outline-none focus:ring-2 focus:ring-violet-500" placeholder="For printable report only" />
+                                </div>
+                                <div>
+                                    <label htmlFor="level-select" className="text-slate-400">Passage Level</label>
+                                    <select id="level-select" value={level} onChange={e => setLevel(e.target.value)} className="w-full mt-2 p-3 rounded-md bg-slate-800/60 text-slate-300 border border-slate-700">
+                                        <option value="2-3">Grades 2-3</option>
+                                        <option value="4-5">Grades 4-5</option>
+                                        <option value="6-8">Grades 6-8</option>
+                                    </select>
+                                </div>
+                                <div className="md:col-span-2">
+                                    <label htmlFor="map-select" className="text-slate-400">Select a Map</label>
+                                    <select id="map-select" value={map} onChange={e => setMap(e.target.value)} className="w-full mt-2 p-3 rounded-md bg-slate-800/60 text-slate-300 border border-slate-700">
+                                        <option>Jungle of Syntax</option>
+                                        <option>Vocabulary Volcano</option>
+                                        <option>Caverns of Cohesion</option>
+                                    </select>
+                                </div>
+                                <div className="flex items-center justify-center md:col-span-2">
+                                    <label className="flex items-center gap-3 cursor-pointer text-slate-400">
+                                        <input type="checkbox" checked={isPractice} onChange={e => setIsPractice(e.target.checked)} className="w-5 h-5 rounded text-violet-600 bg-slate-700 border-slate-600 focus:ring-violet-500"/>
+                                        <span>Enable Practice Mode (Provides hints)</span>
+                                    </label>
+                                </div>
+                             </div>
+                             {/* Character Selection */}
                             <div>
-                                <label htmlFor="student" className="text-slate-400 flex items-center gap-2">Student Name <button onClick={() => setShowPrivacyModal(true)} title="Privacy Information" className="text-slate-500 hover:text-violet-400 transition-colors"><IconInfo /></button></label>
-                                <input id="student" type="text" value={studentName} onChange={(e) => setStudentName(e.target.value)} className="w-full mt-2 p-3 rounded-md bg-slate-800/60 text-slate-300 border border-slate-700 focus:outline-none focus:ring-2 focus:ring-violet-500" placeholder="For printable report only" />
+                                <h4 className="text-xl font-bold text-violet-400 text-center mb-4">Choose Your Class</h4>
+                                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+                                    {Object.keys(characterClasses).map(key => (
+                                        <button key={key} onClick={() => {setSelectedClass(key); setSelectedVariant(0);}} className={`p-2 rounded-lg border-2 transition ${selectedClass === key ? 'border-violet-400 scale-105 bg-violet-900/50' : 'border-slate-700 bg-slate-800/50 hover:bg-slate-700/50'}`}>
+                                            <img src={`${classImageBaseUrl}${key}${characterClasses[key].variants[0].id.replace(/_/g, '-')}_100.png`} alt={characterClasses[key].name} className="w-full h-auto rounded-md" />
+                                            <p className="text-sm font-bold mt-2">{characterClasses[key].name}</p>
+                                        </button>
+                                    ))}
+                                </div>
                             </div>
-                            {/* Passage Level */}
-                            <div>
-                                <label htmlFor="level-select" className="text-slate-400">Passage Level</label>
-                                <select id="level-select" value={level} onChange={e => setLevel(e.target.value)} className="w-full mt-2 p-3 rounded-md bg-slate-800/60 text-slate-300 border border-slate-700">
-                                    <option value="2-3">Grades 2-3</option>
-                                    <option value="4-5">Grades 4-5</option>
-                                    <option value="6-8">Grades 6-8</option>
-                                </select>
-                            </div>
-                            {/* Map Selection */}
-                            <div className="md:col-span-2">
-                                <label htmlFor="map-select" className="text-slate-400">Select a Map</label>
-                                <select id="map-select" value={map} onChange={e => setMap(e.target.value)} className="w-full mt-2 p-3 rounded-md bg-slate-800/60 text-slate-300 border border-slate-700">
-                                    <option>Jungle of Syntax</option>
-                                    <option>Vocabulary Volcano</option>
-                                    <option>Caverns of Cohesion</option>
-                                </select>
-                            </div>
-                            {/* Practice Mode Toggle */}
-                            <div className="flex items-center justify-center md:col-span-2">
-                                <label className="flex items-center gap-3 cursor-pointer text-slate-400">
-                                    <input type="checkbox" checked={isPractice} onChange={e => setIsPractice(e.target.checked)} className="w-5 h-5 rounded text-violet-600 bg-slate-700 border-slate-600 focus:ring-violet-500"/>
-                                    <span>Enable Practice Mode (Provides hints)</span>
-                                </label>
+                            {/* Class Details & Start Button */}
+                            <div className="flex flex-col md:flex-row items-center gap-6 p-4 bg-slate-800/50 rounded-lg">
+                               <img src={largeImageUrl} alt={currentClass.name} className="w-24 h-24 rounded-full border-2 border-violet-500"/>
+                               <div className="flex-1 text-center md:text-left">
+                                   {currentClass.variants.length > 1 && (
+                                       <div className="flex gap-2 justify-center md:justify-start mb-2">
+                                           {currentClass.variants.map((variant, index) => (
+                                                <button key={variant.id} onClick={() => setSelectedVariant(index)} className={`px-3 py-1 text-xs rounded-full ${selectedVariant === index ? 'bg-violet-600 text-white' : 'bg-slate-700 text-slate-300'}`}>{variant.gender}</button>
+                                           ))}
+                                       </div>
+                                   )}
+                                   <p><strong className="text-green-400">Bonus:</strong> {currentClass.bonus}</p>
+                                   <p><strong className="text-red-400">Penalty:</strong> {currentClass.penalty}</p>
+                               </div>
+                               <button onClick={handleStart} className="bg-violet-600 hover:bg-violet-700 text-white font-bold py-3 px-8 rounded-lg transition whitespace-nowrap">Begin Literacy Launch</button>
                             </div>
                         </div>
-                        <div className="text-center pt-4">
-                            <button onClick={handleStart} className="bg-violet-600 hover:bg-violet-700 text-white font-bold py-3 px-8 rounded-lg transition">Begin Literacy Launch</button>
+                        {/* Leaderboard */}
+                        <div className="p-4 bg-slate-800/50 rounded-lg">
+                            <h3 className="text-xl font-bold text-yellow-400 text-center mb-4">Top Scores</h3>
+                            <ol className="list-decimal list-inside space-y-2">
+                                {leaderboard.map((entry, index) => (
+                                    <li key={index} className="flex justify-between">
+                                        <span>{entry.pseudonym}</span>
+                                        <span className="font-bold">{entry.score}</span>
+                                    </li>
+                                ))}
+                                {leaderboard.length === 0 && <p className="text-slate-400 text-center">No scores yet!</p>}
+                            </ol>
                         </div>
                     </div>
-                    {/* Leaderboard */}
-                    <div className="p-4 bg-slate-800/50 rounded-lg">
-                        <h3 className="text-xl font-bold text-yellow-400 text-center mb-4">Top Scores</h3>
-                        <ol className="list-decimal list-inside space-y-2">
-                            {leaderboard.map((entry, index) => (
-                                <li key={index} className="flex justify-between">
-                                    <span>{entry.pseudonym}</span>
-                                    <span className="font-bold">{entry.score}</span>
-                                </li>
-                            ))}
-                            {leaderboard.length === 0 && <p className="text-slate-400 text-center">No scores yet!</p>}
-                        </ol>
-                    </div>
-                    <PrivacyModal show={showPrivacyModal} onClose={() => setShowPrivacyModal(false)} />
+                     <PrivacyModal show={showPrivacyModal} onClose={() => setShowPrivacyModal(false)} />
                 </div>
             );
         }
@@ -197,19 +255,22 @@
         function GameScreen({ settings, onEndGame }) {
             const [passage, setPassage] = useState([]);
             const [currentItemIndex, setCurrentItemIndex] = useState(-1);
-            const [hearts, setHearts] = useState(10);
+            const [hearts, setHearts] = useState(10 + (settings.characterClass.heartMod || 0));
             const [score, setScore] = useState(0);
             const [streak, setStreak] = useState(0);
             const [notifications, setNotifications] = useState([]);
             const [errorLog, setErrorLog] = useState({ semantic: 0, syntactic: 0 });
             const [showStreakChoice, setShowStreakChoice] = useState(false);
             const [scaffoldHint, setScaffoldHint] = useState(null);
-
-            const passageTextRef = useRef(""); // To hold the raw text for the API
+            const [mapPosition, setMapPosition] = useState(0);
+            const [immuneCharges, setImmuneCharges] = useState(settings.characterClass.immune || 0);
+            const [hasUsedFreebie, setHasUsedFreebie] = useState(false);
+            const mapRef = useRef(null);
+            const passageTextRef = useRef(""); 
 
             useEffect(() => {
                 const rawText = passages[settings.level][settings.map];
-                passageTextRef.current = rawText.replace(/\[[^\]]+\]/g, '...'); // Store clean text for API
+                passageTextRef.current = rawText.replace(/\[[^\]]+\]/g, '...');
                 const parsedPassage = rawText.split(/(\[[^\]]+\])/).map((part, index) => {
                     if (part.startsWith('[')) {
                         const options = part.slice(1, -1).split('|');
@@ -232,6 +293,10 @@
             }, []);
 
             const getScaffoldHint = async (incorrectWord) => {
+                if(settings.characterClass.freeHints){
+                    setScaffoldHint("The Wizard's knowledge protects you from losing hearts on this question!");
+                    return;
+                }
                 try {
                     const response = await fetch('/api/literacy-launchpad/scaffold', {
                         method: 'POST',
@@ -254,19 +319,20 @@
             const handleChoice = (selectedOption, choiceId) => {
                 if (showStreakChoice || passage.find(p => p.id === choiceId)?.answered) return;
                 
-                setScaffoldHint(null); // Clear previous hint
-
-                // Mark as answered
-                setPassage(p => p.map(part => part.id === choiceId ? {...part, answered: true, selection: selectedOption.word} : part));
+                setScaffoldHint(null);
 
                 if (selectedOption.type === 'correct') {
                     correctSound.play();
-                    setScore(s => s + 10);
+                    let points = 10;
+                    if (settings.characterClass.perfect && streak > 0) points *= settings.characterClass.scoreMod;
+                    setScore(s => s + Math.round(points * settings.characterClass.scoreMod));
+                    addNotification(`+${Math.round(points * settings.characterClass.scoreMod)}`, 'score');
+                    
                     const newStreak = streak + 1;
                     setStreak(newStreak);
-                    addNotification('+10', 'score');
-
-                    if (newStreak >= 3 && newStreak % 3 === 0) {
+                    
+                    const streakThreshold = 3 + (settings.characterClass.streakMod || 0);
+                    if (newStreak >= streakThreshold && newStreak % streakThreshold === 0) {
                         streakSound.play();
                         setShowStreakChoice(true);
                     } else {
@@ -274,40 +340,67 @@
                     }
                 } else { // Incorrect
                     incorrectSound.play();
-                    setHearts(h => h - 1);
-                    setStreak(0);
+                     if (settings.characterClass.perfect) setStreak(0);
+
+                    let heartsToLose = 1;
+                    if (settings.characterClass.freebie && !hasUsedFreebie) {
+                        heartsToLose = 0;
+                        setHasUsedFreebie(true);
+                        addNotification("Beast Master's Bond Protected You!", 'info');
+                    } else if (immuneCharges > 0) {
+                        heartsToLose = 0;
+                        setImmuneCharges(c => c - 1);
+                        addNotification("Dragon Knight's Armor Protected You!", 'info');
+                    }
+                    
+                    if(heartsToLose > 0) {
+                        setHearts(h => h - 1);
+                        setStreak(0);
+                        addNotification('-1 ♥', 'heart');
+                    }
+
                     setErrorLog(log => ({ ...log, [selectedOption.type]: log[selectedOption.type] + 1 }));
-                    addNotification('-1 ♥', 'heart');
                     
                     if (settings.isPractice) {
                         getScaffoldHint(selectedOption.word);
                     }
-                    if (hearts - 1 <= 0) {
-                        setTimeout(endGame, 1000); // give time for heart animation
+                    
+                    // The incorrect choice still progresses the game
+                    advanceToNext();
+                    
+                    if (hearts - heartsToLose <= 0) {
+                        setTimeout(endGame, 500);
                     }
                 }
+                 setPassage(p => p.map(part => part.id === choiceId ? {...part, answered: true, selection: selectedOption.word} : part));
             };
             
             const handleStreakReward = (reward) => {
                 if (reward === 'multiplier') {
-                    const bonus = streak * 5;
+                    multiplierSound.play();
+                    const bonus = Math.round(streak * 5 * settings.characterClass.scoreMod);
                     setScore(s => s + bonus);
                     addNotification(`+${bonus} Streak Bonus!`, 'score');
                 } else if (reward === 'heart') {
-                    setHearts(h => Math.min(10, h + 1));
-                    addNotification('+1 ♥ Restored!', 'heart');
+                    heartSound.play();
+                    const heartsRestored = settings.characterClass.name === 'Alchemist' ? 2 : 1;
+                    setHearts(h => Math.min(10, h + heartsRestored));
+                    addNotification(`+${heartsRestored} ♥ Restored!`, 'heart');
                 }
                 setShowStreakChoice(false);
                 advanceToNext();
             };
 
             const advanceToNext = () => {
-                const nextChoiceIndex = passage.findIndex((p, index) => index > currentItemIndex && p.type === 'choice');
-                if (nextChoiceIndex !== -1) {
-                    setCurrentItemIndex(nextChoiceIndex);
-                } else {
-                    endGame();
-                }
+                setTimeout(() => {
+                    const nextChoiceIndex = passage.findIndex((p, index) => !p.answered && p.type === 'choice');
+                    if (nextChoiceIndex !== -1) {
+                         setMapPosition(p => p + 1);
+                        setCurrentItemIndex(nextChoiceIndex);
+                    } else {
+                        endGame();
+                    }
+                }, 500); // A small delay to let animations play
             };
 
             const endGame = useCallback(() => {
@@ -318,75 +411,115 @@
                 });
             }, [score, errorLog, settings, onEndGame]);
 
+            useEffect(() => {
+                if (mapRef.current) {
+                    const nodeHeight = 80; // h-16 (4rem) + my-2 (0.5rem * 2) = 5rem = 80px
+                    const targetScroll = mapPosition * nodeHeight;
+                    mapRef.current.scrollTop = targetScroll - (mapRef.current.clientHeight / 2) + (nodeHeight/2);
+                }
+            }, [mapPosition]);
+            
             return (
-                <div className="relative">
-                    {/* Notifications */}
-                    <div className="absolute top-0 left-1/2 -translate-x-1/2 w-64 h-24 pointer-events-none z-50">
-                        {notifications.map(n => <Notification key={n.id} {...n} />)}
-                    </div>
-
-                    <div className="flex justify-between items-center mb-4">
-                        <h3 className="text-xl font-bold text-violet-400">{settings.map}</h3>
-                        <div className="flex items-center gap-2">
-                           <span className="font-bold text-lg text-white">Score: {score}</span>
-                           <div className="flex items-center gap-1">
-                                {[...Array(hearts)].map((_, i) => <span key={i} className="text-red-500 text-2xl animate-pulse-heart">♥</span>)}
-                                {[...Array(10-hearts)].map((_, i) => <span key={i} className="text-slate-700 text-2xl">♥</span>)}
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                    <div className="lg:col-span-2 relative">
+                        {/* Gameplay UI */}
+                        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-64 h-24 pointer-events-none z-50">
+                            {notifications.map(n => <Notification key={n.id} {...n} />)}
+                        </div>
+                        <div className="flex justify-between items-center mb-4">
+                            <h3 className="text-xl font-bold text-violet-400">{settings.map}</h3>
+                            <div className="flex items-center gap-2">
+                               <span className="font-bold text-lg text-white">Score: {score}</span>
+                               <div className="flex items-center gap-1">
+                                    {[...Array(hearts)].map((_, i) => <span key={i} className="text-red-500 text-2xl animate-pulse-heart">♥</span>)}
+                                    {[...Array(10-hearts > 0 ? 10-hearts : 0)].map((_, i) => <span key={i} className="text-slate-700 text-2xl">♥</span>)}
+                                </div>
                             </div>
                         </div>
-                    </div>
-                    <div className="p-6 bg-slate-800/50 rounded-lg text-lg leading-loose">
-                        {passage.map((part, index) => {
-                            if (part.type === 'text') {
-                                return <span key={part.id}>{part.content}</span>;
-                            }
-                            if (part.answered) {
-                                const isCorrect = part.options.find(o => o.word === part.selection)?.type === 'correct';
-                                return <strong key={part.id} className={`mx-1 ${isCorrect ? 'text-green-400' : 'text-red-400'}`}>{part.selection}</strong>;
-                            }
-                            if (index === currentItemIndex) {
-                                return (
-                                    <span key={part.id} className="inline-flex flex-wrap gap-2 mx-1 p-2 bg-slate-900/50 rounded-md">
-                                        {part.options.map(option => (
-                                            <button key={option.word} onClick={() => handleChoice(option, part.id)} className="px-3 py-1 bg-violet-600 text-white rounded-md hover:bg-violet-700 transition">
-                                                {option.word}
-                                            </button>
-                                        ))}
-                                    </span>
-                                );
-                            }
-                            return <span key={part.id} className="font-bold text-slate-500 mx-1">[ • • • ]</span>;
-                        })}
-                    </div>
-                    
-                     {scaffoldHint && (
-                        <div className="mt-4 p-3 bg-yellow-900/30 border border-yellow-600 rounded-lg text-yellow-300 animate-fade-in-up">
-                           <strong className="font-bold">Hint:</strong> {scaffoldHint}
+                        <div className="p-6 bg-slate-800/50 rounded-lg text-lg leading-loose">
+                            {passage.map((part, index) => {
+                                if (part.type === 'text') {
+                                    return <span key={part.id}>{part.content}</span>;
+                                }
+                                if (part.answered) {
+                                    const isCorrect = part.options.find(o => o.word === part.selection)?.type === 'correct';
+                                    return <strong key={part.id} className={`mx-1 ${isCorrect ? 'text-green-400' : 'text-red-400'}`}>{part.selection}</strong>;
+                                }
+                                if (passage.findIndex(p=> p.type === 'choice' && !p.answered) === index) {
+                                    return (
+                                        <span key={part.id} className="inline-flex flex-wrap gap-2 mx-1 p-2 bg-slate-900/50 rounded-md">
+                                            {part.options.map(option => (
+                                                <button key={option.word} onClick={() => handleChoice(option, part.id)} className="px-3 py-1 bg-violet-600 text-white rounded-md hover:bg-violet-700 transition">
+                                                    {option.word}
+                                                </button>
+                                            ))}
+                                        </span>
+                                    );
+                                }
+                                return <span key={part.id} className="font-bold text-slate-500 mx-1">[ • • • ]</span>;
+                            })}
                         </div>
-                    )}
-
-
-                    {showStreakChoice && (
-                        <StreakChoiceModal onSelect={handleStreakReward} streak={streak} />
-                    )}
+                         {scaffoldHint && (
+                            <div className="mt-4 p-3 bg-yellow-900/30 border border-yellow-600 rounded-lg text-yellow-300 animate-fade-in-up">
+                               <strong className="font-bold">Hint:</strong> {scaffoldHint}
+                            </div>
+                        )}
+                        {showStreakChoice && (
+                            <StreakChoiceModal onSelect={handleStreakReward} streak={streak} characterClass={settings.characterClass} />
+                        )}
+                    </div>
+                    {/* Adventure Map */}
+                    <div className="relative h-full">
+                        <h3 className="text-xl font-bold text-yellow-400 text-center mb-4">Adventure Map</h3>
+                        <div ref={mapRef} className="map-container bg-slate-900/50 border border-slate-700 rounded-lg p-4 relative">
+                            <div className="relative w-full flex flex-col-reverse items-center">
+                                {[...Array(100)].map((_, i) => (
+                                    <MapNode 
+                                        key={i} 
+                                        number={i + 1}
+                                        isCurrent={mapPosition === i}
+                                        isCompleted={mapPosition > i}
+                                    />
+                                ))}
+                            </div>
+                        </div>
+                        <div className="absolute inset-0 flex items-center justify-center pointer-events-none" style={{top: '4rem', bottom: '0'}}>
+                            <img src={settings.characterImage} className="w-12 h-12 transition-transform duration-500" style={{transform: `translateY(${(mapPosition - 4) * -80}px)`}}/>
+                        </div>
+                    </div>
                 </div>
             );
         }
-
-        // --- Results Screen Component ---
-        function ResultsScreen({ results, onRestart, leaderboard, onUpdateLeaderboard }) {
+        
+        // --- Map Node Component ---
+        const MapNode = ({ number, isCurrent, isCompleted }) => {
+            let content;
+            if (isCurrent) {
+                content = <img src="https://raw.githubusercontent.com/navasdo/navacite/refs/heads/main/templates/language-tools/literacy-launchpad/static/images/battle.png" className="w-10 h-10" />;
+            } else {
+                content = <span className="font-bold text-lg">{number}</span>;
+            }
+            return (
+                <div className={`w-16 h-16 flex items-center justify-center rounded-full border-2 my-2 ${isCompleted ? 'bg-slate-700 border-slate-600 text-slate-500' : isCurrent ? 'bg-red-900/50 border-red-500' : 'bg-slate-800 border-slate-600'}`}>
+                    {content}
+                </div>
+            );
+        };
+        
+        // --- ResultsScreen, Notification, and other Modals ---
+        const ResultsScreen = ({ results, onRestart, leaderboard, onUpdateLeaderboard }) => {
             const [showResourceHub, setShowResourceHub] = useState(false);
             const [isEligible, setIsEligible] = useState(false);
             const [pseudonym, setPseudonym] = useState('');
             const [password, setPassword] = useState('');
-            const [submitStatus, setSubmitStatus] = useState('idle'); // idle, submitting, success, error
+            const [submitStatus, setSubmitStatus] = useState('idle');
 
             useEffect(() => {
-                if (leaderboard.length < 10 || results.score > leaderboard[leaderboard.length - 1]?.score) {
+                if (leaderboard.length < 10 || results.score > (leaderboard[leaderboard.length - 1]?.score || 0)) {
                     setIsEligible(true);
                 }
             }, [results.score, leaderboard]);
-            
+
             const handleLeaderboardSubmit = async (e) => {
                 e.preventDefault();
                 setSubmitStatus('submitting');
@@ -398,7 +531,7 @@
                     });
                     if (!response.ok) throw new Error('Submission failed');
                     setSubmitStatus('success');
-                    onUpdateLeaderboard(); // Refresh leaderboard data
+                    onUpdateLeaderboard();
                 } catch (error) {
                     setSubmitStatus('error');
                 }
@@ -432,9 +565,8 @@
                     <ResourceHubModal show={showResourceHub} onClose={() => setShowResourceHub(false)} errors={results.errors} />
                 </div>
             );
-        }
-
-        // --- All other components (Notification, StreakChoiceModal, modals, etc.) ---
+        };
+        
         const Notification = ({ text, type }) => {
             const colorClass = type === 'score' ? 'text-green-400' : type === 'heart' ? 'text-red-400' : 'text-yellow-400';
             return (
@@ -444,14 +576,14 @@
             );
         };
         
-        const StreakChoiceModal = ({ onSelect, streak }) => (
+        const StreakChoiceModal = ({ onSelect, streak, characterClass }) => (
             <div className="absolute inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center rounded-2xl z-40">
                 <div className="text-center p-8 bg-slate-900 border-2 border-violet-500 rounded-xl shadow-lg animate-fade-in-up">
                     <h3 className="text-3xl font-bold text-yellow-400">{streak} in a row!</h3>
                     <p className="text-slate-300 my-4">Choose your reward!</p>
                     <div className="flex gap-4">
-                        <button onClick={() => onSelect('multiplier')} className="flex-1 bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-6 rounded-lg transition">Score Multiplier!</button>
-                        <button onClick={() => onSelect('heart')} className="flex-1 bg-red-600 hover:bg-red-700 text-white font-bold py-3 px-6 rounded-lg transition">+1 Heart!</button>
+                        {characterClass.name !== 'Dragon Knight' && <button onClick={() => onSelect('multiplier')} className="flex-1 bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-6 rounded-lg transition">Score Multiplier!</button>}
+                        {characterClass.name !== 'Martial Artist' && <button onClick={() => onSelect('heart')} className="flex-1 bg-red-600 hover:bg-red-700 text-white font-bold py-3 px-6 rounded-lg transition">+1 Heart!</button>}
                     </div>
                 </div>
             </div>
@@ -463,7 +595,7 @@
                      <div className="p-6">
                         <h2 className="text-3xl font-bold text-slate-100 mb-4">Evidence-Based Resource Hub</h2>
                          <div className="space-y-6 text-slate-300 text-left text-sm">
-                            {(errors.semantic > 0 || errors.syntactic === 0) && ( // Show if semantic errors exist, or if no errors exist
+                            {(errors.semantic > 0 || errors.syntactic === 0) && (
                                 <div>
                                     <h3 className="text-xl font-semibold text-violet-400 mb-2">Instructional Hypothesis (Semantic)</h3>
                                     <p>The student may have difficulty using context clues to differentiate between words with similar meanings. They may benefit from explicit instruction in vocabulary and morphemic analysis.</p>
@@ -475,7 +607,7 @@
                                     </ul>
                                 </div>
                             )}
-                             {(errors.syntactic > 0 || errors.semantic === 0) && ( // Show if syntactic errors exist, or if no errors exist
+                             {(errors.syntactic > 0 || errors.semantic === 0) && (
                                 <div>
                                     <h3 className="text-xl font-semibold text-violet-400 mb-2">Instructional Hypothesis (Syntactic)</h3>
                                     <p>The student may not be fully attending to sentence structure and could benefit from instruction on how sentences are built. They may benefit from sentence combining and expansion exercises.</p>
@@ -492,17 +624,6 @@
             );
         };
         
-        // Helper function to shuffle array
-        const shuffleArray = (array) => {
-            let currentIndex = array.length,  randomIndex;
-            while (currentIndex != 0) {
-                randomIndex = Math.floor(Math.random() * currentIndex);
-                currentIndex--;
-                [array[currentIndex], array[randomIndex]] = [array[randomIndex], array[currentIndex]];
-            }
-            return array;
-        };
-
         const IconInfo = () => (<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>);
 
         const BaseModal = ({ show, onClose, children, maxWidth = 'max-w-2xl' }) => {
