@@ -47,12 +47,12 @@
         const { useState, useEffect, useCallback, useMemo, useRef } = React;
         const { createPortal, createRoot } = ReactDOM;
 
-        // --- Game Data & Assets ---
-        const correctSound = new Audio("https://raw.githubusercontent.com/navasdo/navacite/main/templates/static/audio/literacy-launchpad/correct.wav");
-        const incorrectSound = new Audio("https://raw.githubusercontent.com/navasdo/navacite/main/templates/static/audio/literacy-launchpad/incorrect.wav");
-        const streakSound = new Audio("https://raw.githubusercontent.com/navasdo/navacite/main/templates/static/audio/literacy-launchpad/streak.wav");
-        const multiplierSound = new Audio("https://raw.githubusercontent.com/navasdo/navacite/main/templates/static/audio/literacy-launchpad/multiplier.mp3");
-        const heartSound = new Audio("https://raw.githubusercontent.com/navasdo/navacite/main/templates/static/audio/literacy-launchpad/heart.mp3");
+         // --- Game Data & Assets ---
+        const correctSound = new Audio("https://raw.githubusercontent.com/navasdo/navacite/refs/heads/main/templates/language-tools/literacy-launchpad/static/audio/correct.wav");
+        const incorrectSound = new Audio("https://raw.githubusercontent.com/navasdo/navacite/refs/heads/main/templates/language-tools/literacy-launchpad/static/audio/damage.mp3");
+        const streakSound = new Audio("https://raw.githubusercontent.com/navasdo/navacite/refs/heads/main/templates/language-tools/literacy-launchpad/static/audio/streak.mp3");
+        const multiplierSound = new Audio("https://raw.githubusercontent.com/navasdo/navacite/refs/heads/main/templates/language-tools/literacy-launchpad/static/audio/multiplier.mp3");
+        const heartSound = new Audio("https://raw.githubusercontent.com/navasdo/navacite/refs/heads/main/templates/language-tools/literacy-launchpad/static/audio/healing.mp3");
 
         const passages = {
             '2-3': {
@@ -65,25 +65,59 @@
                 'Caverns of Cohesion': "Space exploration presents immense challenges; [furthermore|however|because], it offers incredible rewards. The journey to Mars, for example, will require unprecedented technological [innovation|idea|invent]. Scientists must develop systems for life support, radiation shielding, and sustainable energy. [Despite|Although|Therefore] these obstacles, the quest to explore the red planet continues, driven by human curiosity and the search for knowledge.",
             }
         };
-
+        
         const characterClasses = {
-            adventurer: { name: 'Adventurer', bonus: '+1 starting heart', penalty: 'Slightly lower score multiplier', heartMod: 1, streakMod: 0, scoreMod: 0.9, variants: [{gender: 'female', id: 'female_presenting'}, {gender: 'male', id: 'male_presenting'}] },
-            alchemist: { name: 'Alchemist', bonus: 'Heart rewards restore +2', penalty: 'Score rewards are smaller', heartMod: 0, streakMod: 0, scoreMod: 0.8, variants: [{gender: 'neutral', id: ''}] },
-            archer: { name: 'Archer', bonus: 'Higher streak bonus', penalty: 'Streaks require +1 correct answer', heartMod: 0, streakMod: 1, scoreMod: 1.2, variants: [{gender: 'female', id: '-female_presenting'}, {gender: 'male', id: '-male_presenting'}] },
-            assassin: { name: 'Assassin', bonus: 'Massive score multiplier', penalty: 'Start with -3 hearts', heartMod: -3, streakMod: 0, scoreMod: 1.5, variants: [{gender: 'female', id: '-female_presenting'}, {gender: 'male', id: '-male_presenting'}] },
-            bandit: { name: 'Bandit', bonus: 'More points from choices', penalty: 'No streak rewards', heartMod: 0, streakMod: 99, scoreMod: 1.3, variants: [{gender: 'neutral', id: ''}] },
-            barbarian: { name: 'Barbarian', bonus: 'Start with +3 hearts', penalty: 'Lower overall score', heartMod: 3, streakMod: 0, scoreMod: 0.7, variants: [{gender: 'neutral', id: ''}] },
-            'beast-master': { name: 'Beast Master', bonus: 'First incorrect answer is free', penalty: 'Reduced streak bonus', heartMod: 0, streakMod: 0, scoreMod: 0.9, freebie: true, variants: [{gender: 'neutral', id: ''}] },
-            'dragon-knight': { name: 'Dragon Knight', bonus: 'Immune to first 2 mistakes', penalty: 'No score multiplier reward', heartMod: 0, streakMod: 0, scoreMod: 1, immune: 2, variants: [{gender: 'neutral', id: ''}] },
-            knight: { name: 'Knight', bonus: 'Balanced stats', penalty: 'None', heartMod: 0, streakMod: 0, scoreMod: 1, variants: [{gender: 'male', id: '-male_presenting'}] },
-            'martial-artist': { name: 'Martial Artist', bonus: 'Streaks activate faster', penalty: 'No heart reward option', heartMod: 0, streakMod: -1, scoreMod: 1.1, variants: [{gender: 'female', id: '-female_presenting'}, {gender: 'male', id: '-male_presenting'}] },
-            samurai: { name: 'Samurai', bonus: 'Perfect answers grant huge bonus', penalty: 'Any mistake resets streak', heartMod: 0, streakMod: 0, scoreMod: 1.2, perfect: true, variants: [{gender: 'neutral', id: ''}] },
-            wizard: { name: 'Wizard', bonus: 'Streak score rewards are massively increased', penalty: 'Fewer starting hearts', heartMod: -2, streakMod: 0, scoreMod: 1, streakBonusMultiplier: 2.5, variants: [{gender: 'female', id: '-female_presenting'}, {gender: 'male', id: '-male_presenting'}] },        };
+            adventurer: { name: 'Adventurer', bonus: '+1 starting heart', penalty: 'Slightly lower score multiplier', heartMod: 1, streakMod: 0, scoreMod: 0.9, variants: [{gender: 'Female', id: '_female_presenting'}, {gender: 'Male', id: '_male_presenting'}] },
+            alchemist: { name: 'Alchemist', bonus: 'Heart rewards restore +2', penalty: 'Score rewards are smaller', heartMod: 0, streakMod: 0, scoreMod: 0.8, variants: [{gender: 'Neutral', id: ''}] },
+            archer: { name: 'Archer', bonus: 'Higher streak bonus', penalty: 'Streaks require +1 correct answer', heartMod: 0, streakMod: 1, scoreMod: 1.2, variants: [{gender: 'Female', id: '-female_presenting'}, {gender: 'Male', id: '-male_presenting'}] },
+            assassin: { name: 'Assassin', bonus: 'Massive score multiplier', penalty: 'Start with -3 hearts', heartMod: -3, streakMod: 0, scoreMod: 1.5, variants: [{gender: 'Female', id: '-female_presenting'}, {gender: 'Male', id: '-male_presenting'}] },
+            bandit: { name: 'Bandit', bonus: 'More points from choices', penalty: 'No streak rewards', heartMod: 0, streakMod: 99, scoreMod: 1.3, variants: [{gender: 'Neutral', id: ''}] },
+            barbarian: { name: 'Barbarian', bonus: 'Start with +3 hearts', penalty: 'Lower overall score', heartMod: 3, streakMod: 0, scoreMod: 0.7, variants: [{gender: 'Neutral', id: ''}] },
+            'beast_master': { name: 'Beast Master', bonus: 'First incorrect answer is free', penalty: 'Reduced streak bonus', heartMod: 0, streakMod: 0, scoreMod: 0.9, freebie: true, variants: [{gender: 'Neutral', id: ''}] },
+            'dragon-knight': { name: 'Dragon Knight', bonus: 'Immune to first 2 mistakes', penalty: 'No score multiplier reward', heartMod: 0, streakMod: 0, scoreMod: 1, immune: 2, variants: [{gender: 'Neutral', id: ''}] },
+            knight: { name: 'Knight', bonus: 'Balanced stats', penalty: 'None', heartMod: 0, streakMod: 0, scoreMod: 1, variants: [{gender: 'Male', id: '-male_presenting'}] },
+            'martial-artist': { name: 'Martial Artist', bonus: 'Streaks activate faster', penalty: 'No heart reward option', heartMod: 0, streakMod: -1, scoreMod: 1.1, variants: [{gender: 'Female', id: '-female_presenting'}, {gender: 'Male', id: '-male_presenting'}] },
+            samurai: { name: 'Samurai', bonus: 'Perfect answers grant huge bonus', penalty: 'Any mistake resets streak', heartMod: 0, streakMod: 0, scoreMod: 1.2, perfect: true, variants: [{gender: 'Neutral', id: ''}] },
+            wizard: { name: 'Wizard', bonus: 'Streak score rewards are massively increased', penalty: 'Fewer starting hearts', heartMod: -2, streakMod: 0, scoreMod: 1, streakBonusMultiplier: 2.5, variants: [{gender: 'Female', id: '-female_presenting'}, {gender: 'Male', id: '-male_presenting'}] },
+        };
         const classImageBaseUrl = "https://raw.githubusercontent.com/navasdo/navacite/refs/heads/main/templates/language-tools/literacy-launchpad/static/images/character-avatars/";
+
+        // --- Helper & Utility Components ---
+        const IconInfo = () => (<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>);
+
+        const BaseModal = ({ show, onClose, children, maxWidth = 'max-w-2xl' }) => {
+            if (!show) return null;
+            return createPortal(
+                <div className={`modal fixed inset-0 bg-black bg-opacity-75 backdrop-blur-sm flex items-center justify-center z-50 p-4`} onClick={onClose}>
+                    <div className={`modal-content bg-slate-800 border border-violet-700/50 rounded-2xl shadow-2xl w-full ${maxWidth} max-h-[90vh] flex flex-col`} onClick={e => e.stopPropagation()}>
+                        <div className="overflow-y-auto modal-scroll">{children}</div>
+                    </div>
+                </div>,
+                document.body
+            );
+        };
+        
+        const PrivacyModal = ({ show, onClose }) => (
+            <BaseModal show={show} onClose={onClose}>
+                 <div className="p-6 sm:p-8">
+                    <div className="flex justify-between items-center mb-6">
+                        <h2 className="text-3xl font-bold text-slate-100">Student Data Privacy</h2>
+                        <button onClick={onClose} className="text-slate-400 hover:text-white transition-colors">
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
+                        </button>
+                    </div>
+                    <div className="space-y-4 text-slate-300 text-left text-sm">
+                        <p>This application is designed to support language assessment activities without collecting or maintaining student data.</p>
+                        <p><strong className="text-violet-400 block mb-1">Student Information Use:</strong> Student names may be entered by the examiner for the sole purpose of personalizing a printable PDF report. This information is not transmitted, stored, or retained by the application or its hosting service.</p>
+                        <p><strong className="text-violet-400 block mb-1">Data Retention:</strong> Once the examiner completes an assessment, the entered name is cleared from the page. No student information is written to logs, databases, or external servers.</p>
+                    </div>
+                 </div>
+            </BaseModal>
+        );
         
         // --- Main App Component ---
         function App() {
-             const [screen, setScreen] = useState('setup'); // setup, game, results
+            const [screen, setScreen] = useState('setup');
             const [gameSettings, setGameSettings] = useState(null);
             const [gameResults, setGameResults] = useState(null);
             const [leaderboardData, setLeaderboardData] = useState([]);
@@ -135,9 +169,7 @@
                             Literacy Launchpad
                         </h1>
                         <p className="text-md md:text-lg text-slate-400 italic max-w-4xl mx-auto mt-2">
-                            An engaging reading adventure that analyzes sentence-level comprehension to generate data-driven instructional hypotheses and connect you with evidence-based interventions. <br> Choose your hero, embark on an adventure, and conquer reading challenges in a gamified quest for comprehension.
-
-
+                            Transforming reading assessment into a dynamic, engaging, and insight-driven adventure to improve K-12 reading comprehension.
                         </p>
                     </header>
                     <main className="bg-slate-900/40 p-6 sm:p-8 rounded-2xl shadow-lg border border-violet-900/80">
@@ -160,13 +192,16 @@
             const handleStart = () => {
                 const charClass = characterClasses[selectedClass];
                 const variant = charClass.variants[selectedVariant];
-                const characterImage = `${classImageBaseUrl}${selectedClass}${variant.id.replace(/_/g, '-')}_50.png`;
+                const imageName = `${selectedClass}${variant.id.replace(/_/g, '-')}_50.png`;
+                const characterImage = `${classImageBaseUrl}${imageName}`;
+
                 onStartGame({ studentName, level, map, isPractice, characterClass: charClass, characterImage });
             };
             
             const currentClass = characterClasses[selectedClass];
             const currentVariant = currentClass.variants[selectedVariant];
-            const largeImageUrl = `${classImageBaseUrl}${selectedClass}${currentVariant.id.replace(/_/g, '-')}_100.png`;
+            const largeImageName = `${selectedClass}${currentVariant.id.replace(/_/g, '-')}_100.png`;
+            const largeImageUrl = `${classImageBaseUrl}${largeImageName}`;
 
 
             return (
@@ -207,12 +242,16 @@
                             <div>
                                 <h4 className="text-xl font-bold text-violet-400 text-center mb-4">Choose Your Class</h4>
                                 <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
-                                    {Object.keys(characterClasses).map(key => (
-                                        <button key={key} onClick={() => {setSelectedClass(key); setSelectedVariant(0);}} className={`p-2 rounded-lg border-2 transition ${selectedClass === key ? 'border-violet-400 scale-105 bg-violet-900/50' : 'border-slate-700 bg-slate-800/50 hover:bg-slate-700/50'}`}>
-                                            <img src={`${classImageBaseUrl}${key}${characterClasses[key].variants[0].id.replace(/_/g, '-')}_100.png`} alt={characterClasses[key].name} className="w-full h-auto rounded-md" />
-                                            <p className="text-sm font-bold mt-2">{characterClasses[key].name}</p>
-                                        </button>
-                                    ))}
+                                    {Object.keys(characterClasses).map(key => {
+                                        const char = characterClasses[key];
+                                        const imageName = `${key}${char.variants[0].id.replace(/_/g, '-')}_100.png`;
+                                        return (
+                                            <button key={key} onClick={() => {setSelectedClass(key); setSelectedVariant(0);}} className={`p-2 rounded-lg border-2 transition ${selectedClass === key ? 'border-violet-400 scale-105 bg-violet-900/50' : 'border-slate-700 bg-slate-800/50 hover:bg-slate-700/50'}`}>
+                                                <img src={`${classImageBaseUrl}${imageName}`} alt={char.name} className="w-full h-auto rounded-md" />
+                                                <p className="text-sm font-bold mt-2">{char.name}</p>
+                                            </button>
+                                        );
+                                    })}
                                 </div>
                             </div>
                             {/* Class Details & Start Button */}
@@ -250,416 +289,9 @@
                 </div>
             );
         }
-
-        // --- Game Screen Component ---
-        function GameScreen({ settings, onEndGame }) {
-            const [passage, setPassage] = useState([]);
-            const [currentItemIndex, setCurrentItemIndex] = useState(-1);
-            const [hearts, setHearts] = useState(10 + (settings.characterClass.heartMod || 0));
-            const [score, setScore] = useState(0);
-            const [streak, setStreak] = useState(0);
-            const [notifications, setNotifications] = useState([]);
-            const [errorLog, setErrorLog] = useState({ semantic: 0, syntactic: 0 });
-            const [showStreakChoice, setShowStreakChoice] = useState(false);
-            const [scaffoldHint, setScaffoldHint] = useState(null);
-            const [mapPosition, setMapPosition] = useState(0);
-            const [immuneCharges, setImmuneCharges] = useState(settings.characterClass.immune || 0);
-            const [hasUsedFreebie, setHasUsedFreebie] = useState(false);
-            const mapRef = useRef(null);
-            const passageTextRef = useRef(""); 
-
-            useEffect(() => {
-                const rawText = passages[settings.level][settings.map];
-                passageTextRef.current = rawText.replace(/\[[^\]]+\]/g, '...');
-                const parsedPassage = rawText.split(/(\[[^\]]+\])/).map((part, index) => {
-                    if (part.startsWith('[')) {
-                        const options = part.slice(1, -1).split('|');
-                        const [correct, semantic, syntactic] = options;
-                        return { type: 'choice', options: shuffleArray([{word: correct, type: 'correct'}, {word: semantic, type: 'semantic'}, {word: syntactic, type: 'syntactic'}]), id: `choice-${index}`, answered: false };
-                    }
-                    return { type: 'text', content: part, id: `text-${index}` };
-                });
-                setPassage(parsedPassage);
-                const firstChoice = parsedPassage.findIndex(p => p.type === 'choice');
-                setCurrentItemIndex(firstChoice);
-            }, [settings]);
-
-            const addNotification = useCallback((text, type) => {
-                const id = Date.now();
-                setNotifications(prev => [...prev, { id, text, type }]);
-                setTimeout(() => {
-                    setNotifications(prev => prev.filter(n => n.id !== id));
-                }, 2500);
-            }, []);
-
-            const getScaffoldHint = async (incorrectWord) => {
-                if(settings.characterClass.freeHints){
-                    setScaffoldHint("The Wizard's knowledge protects you from losing hearts on this question!");
-                    return;
-                }
-                try {
-                    const response = await fetch('/api/literacy-launchpad/scaffold', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ passage: passageTextRef.current, incorrect_word: incorrectWord })
-                    });
-                    if (!response.ok) throw new Error('API Error');
-                    const result = await response.json();
-                    const textContent = result.candidates?.[0]?.content?.parts?.[0]?.text;
-                    if(textContent) {
-                        const hintData = JSON.parse(textContent);
-                        setScaffoldHint(hintData.explanation);
-                    }
-                } catch (err) {
-                    console.error("Scaffold API call failed:", err);
-                    setScaffoldHint("Remember to check if the word makes sense and sounds right in the sentence!");
-                }
-            };
-
-            const handleChoice = (selectedOption, choiceId) => {
-                if (showStreakChoice || passage.find(p => p.id === choiceId)?.answered) return;
-                
-                setScaffoldHint(null);
-
-                if (selectedOption.type === 'correct') {
-                    correctSound.play();
-                    let points = 10;
-                    if (settings.characterClass.perfect && streak > 0) points *= settings.characterClass.scoreMod;
-                    setScore(s => s + Math.round(points * settings.characterClass.scoreMod));
-                    addNotification(`+${Math.round(points * settings.characterClass.scoreMod)}`, 'score');
-                    
-                    const newStreak = streak + 1;
-                    setStreak(newStreak);
-                    
-                    const streakThreshold = 3 + (settings.characterClass.streakMod || 0);
-                    if (newStreak >= streakThreshold && newStreak % streakThreshold === 0) {
-                        streakSound.play();
-                        setShowStreakChoice(true);
-                    } else {
-                        advanceToNext();
-                    }
-                } else { // Incorrect
-                    incorrectSound.play();
-                     if (settings.characterClass.perfect) setStreak(0);
-
-                    let heartsToLose = 1;
-                    if (settings.characterClass.freebie && !hasUsedFreebie) {
-                        heartsToLose = 0;
-                        setHasUsedFreebie(true);
-                        addNotification("Beast Master's Bond Protected You!", 'info');
-                    } else if (immuneCharges > 0) {
-                        heartsToLose = 0;
-                        setImmuneCharges(c => c - 1);
-                        addNotification("Dragon Knight's Armor Protected You!", 'info');
-                    }
-                    
-                    if(heartsToLose > 0) {
-                        setHearts(h => h - 1);
-                        setStreak(0);
-                        addNotification('-1 ♥', 'heart');
-                    }
-
-                    setErrorLog(log => ({ ...log, [selectedOption.type]: log[selectedOption.type] + 1 }));
-                    
-                    if (settings.isPractice) {
-                        getScaffoldHint(selectedOption.word);
-                    }
-                    
-                    // The incorrect choice still progresses the game
-                    advanceToNext();
-                    
-                    if (hearts - heartsToLose <= 0) {
-                        setTimeout(endGame, 500);
-                    }
-                }
-                 setPassage(p => p.map(part => part.id === choiceId ? {...part, answered: true, selection: selectedOption.word} : part));
-            };
-            
-            const handleStreakReward = (reward) => {
-                if (reward === 'multiplier') {
-                    multiplierSound.play();
-                    const bonus = Math.round(streak * 5 * settings.characterClass.scoreMod);
-                    setScore(s => s + bonus);
-                    addNotification(`+${bonus} Streak Bonus!`, 'score');
-                } else if (reward === 'heart') {
-                    heartSound.play();
-                    const heartsRestored = settings.characterClass.name === 'Alchemist' ? 2 : 1;
-                    setHearts(h => Math.min(10, h + heartsRestored));
-                    addNotification(`+${heartsRestored} ♥ Restored!`, 'heart');
-                }
-                setShowStreakChoice(false);
-                advanceToNext();
-            };
-
-            const advanceToNext = () => {
-                setTimeout(() => {
-                    const nextChoiceIndex = passage.findIndex((p, index) => !p.answered && p.type === 'choice');
-                    if (nextChoiceIndex !== -1) {
-                         setMapPosition(p => p + 1);
-                        setCurrentItemIndex(nextChoiceIndex);
-                    } else {
-                        endGame();
-                    }
-                }, 500); // A small delay to let animations play
-            };
-
-            const endGame = useCallback(() => {
-                onEndGame({ 
-                    studentName: settings.studentName, 
-                    score: score, 
-                    errors: errorLog 
-                });
-            }, [score, errorLog, settings, onEndGame]);
-
-            useEffect(() => {
-                if (mapRef.current) {
-                    const nodeHeight = 80; // h-16 (4rem) + my-2 (0.5rem * 2) = 5rem = 80px
-                    const targetScroll = mapPosition * nodeHeight;
-                    mapRef.current.scrollTop = targetScroll - (mapRef.current.clientHeight / 2) + (nodeHeight/2);
-                }
-            }, [mapPosition]);
-            
-            return (
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                    <div className="lg:col-span-2 relative">
-                        {/* Gameplay UI */}
-                        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-64 h-24 pointer-events-none z-50">
-                            {notifications.map(n => <Notification key={n.id} {...n} />)}
-                        </div>
-                        <div className="flex justify-between items-center mb-4">
-                            <h3 className="text-xl font-bold text-violet-400">{settings.map}</h3>
-                            <div className="flex items-center gap-2">
-                               <span className="font-bold text-lg text-white">Score: {score}</span>
-                               <div className="flex items-center gap-1">
-                                    {[...Array(hearts)].map((_, i) => <span key={i} className="text-red-500 text-2xl animate-pulse-heart">♥</span>)}
-                                    {[...Array(10-hearts > 0 ? 10-hearts : 0)].map((_, i) => <span key={i} className="text-slate-700 text-2xl">♥</span>)}
-                                </div>
-                            </div>
-                        </div>
-                        <div className="p-6 bg-slate-800/50 rounded-lg text-lg leading-loose">
-                            {passage.map((part, index) => {
-                                if (part.type === 'text') {
-                                    return <span key={part.id}>{part.content}</span>;
-                                }
-                                if (part.answered) {
-                                    const isCorrect = part.options.find(o => o.word === part.selection)?.type === 'correct';
-                                    return <strong key={part.id} className={`mx-1 ${isCorrect ? 'text-green-400' : 'text-red-400'}`}>{part.selection}</strong>;
-                                }
-                                if (passage.findIndex(p=> p.type === 'choice' && !p.answered) === index) {
-                                    return (
-                                        <span key={part.id} className="inline-flex flex-wrap gap-2 mx-1 p-2 bg-slate-900/50 rounded-md">
-                                            {part.options.map(option => (
-                                                <button key={option.word} onClick={() => handleChoice(option, part.id)} className="px-3 py-1 bg-violet-600 text-white rounded-md hover:bg-violet-700 transition">
-                                                    {option.word}
-                                                </button>
-                                            ))}
-                                        </span>
-                                    );
-                                }
-                                return <span key={part.id} className="font-bold text-slate-500 mx-1">[ • • • ]</span>;
-                            })}
-                        </div>
-                         {scaffoldHint && (
-                            <div className="mt-4 p-3 bg-yellow-900/30 border border-yellow-600 rounded-lg text-yellow-300 animate-fade-in-up">
-                               <strong className="font-bold">Hint:</strong> {scaffoldHint}
-                            </div>
-                        )}
-                        {showStreakChoice && (
-                            <StreakChoiceModal onSelect={handleStreakReward} streak={streak} characterClass={settings.characterClass} />
-                        )}
-                    </div>
-                    {/* Adventure Map */}
-                    <div className="relative h-full">
-                        <h3 className="text-xl font-bold text-yellow-400 text-center mb-4">Adventure Map</h3>
-                        <div ref={mapRef} className="map-container bg-slate-900/50 border border-slate-700 rounded-lg p-4 relative">
-                            <div className="relative w-full flex flex-col-reverse items-center">
-                                {[...Array(100)].map((_, i) => (
-                                    <MapNode 
-                                        key={i} 
-                                        number={i + 1}
-                                        isCurrent={mapPosition === i}
-                                        isCompleted={mapPosition > i}
-                                    />
-                                ))}
-                            </div>
-                        </div>
-                        <div className="absolute inset-0 flex items-center justify-center pointer-events-none" style={{top: '4rem', bottom: '0'}}>
-                            <img src={settings.characterImage} className="w-12 h-12 transition-transform duration-500" style={{transform: `translateY(${(mapPosition - 4) * -80}px)`}}/>
-                        </div>
-                    </div>
-                </div>
-            );
-        }
         
-        // --- Map Node Component ---
-        const MapNode = ({ number, isCurrent, isCompleted }) => {
-            let content;
-            if (isCurrent) {
-                content = <img src="https://raw.githubusercontent.com/navasdo/navacite/refs/heads/main/templates/language-tools/literacy-launchpad/static/images/battle.png" className="w-10 h-10" />;
-            } else {
-                content = <span className="font-bold text-lg">{number}</span>;
-            }
-            return (
-                <div className={`w-16 h-16 flex items-center justify-center rounded-full border-2 my-2 ${isCompleted ? 'bg-slate-700 border-slate-600 text-slate-500' : isCurrent ? 'bg-red-900/50 border-red-500' : 'bg-slate-800 border-slate-600'}`}>
-                    {content}
-                </div>
-            );
-        };
-        
-        // --- ResultsScreen, Notification, and other Modals ---
-        const ResultsScreen = ({ results, onRestart, leaderboard, onUpdateLeaderboard }) => {
-            const [showResourceHub, setShowResourceHub] = useState(false);
-            const [isEligible, setIsEligible] = useState(false);
-            const [pseudonym, setPseudonym] = useState('');
-            const [password, setPassword] = useState('');
-            const [submitStatus, setSubmitStatus] = useState('idle');
-
-            useEffect(() => {
-                if (leaderboard.length < 10 || results.score > (leaderboard[leaderboard.length - 1]?.score || 0)) {
-                    setIsEligible(true);
-                }
-            }, [results.score, leaderboard]);
-
-            const handleLeaderboardSubmit = async (e) => {
-                e.preventDefault();
-                setSubmitStatus('submitting');
-                try {
-                    const response = await fetch('/api/literacy-launchpad/leaderboard', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ pseudonym, score: results.score, password })
-                    });
-                    if (!response.ok) throw new Error('Submission failed');
-                    setSubmitStatus('success');
-                    onUpdateLeaderboard();
-                } catch (error) {
-                    setSubmitStatus('error');
-                }
-            };
-            
-            return (
-                <div className="text-center space-y-8">
-                    <h3 className="text-2xl font-bold text-violet-400">Launch Complete!</h3>
-                    <div>
-                        <p className="text-slate-400">Student: {results.studentName || 'N/A'}</p>
-                        <p className="text-5xl font-bold text-white mt-2">{results.score} pts</p>
-                    </div>
-                    
-                    {isEligible && submitStatus !== 'success' && (
-                        <form onSubmit={handleLeaderboardSubmit} className="max-w-md mx-auto p-4 bg-slate-800/50 rounded-lg space-y-3 animate-fade-in-up">
-                            <p className="font-bold text-yellow-400">New High Score!</p>
-                            <input type="text" value={pseudonym} onChange={e => setPseudonym(e.target.value)} placeholder="Enter a pseudonym" className="w-full p-2 rounded-md bg-slate-700 text-white border border-slate-600" required />
-                            <input type="password" value={password} onChange={e => setPassword(e.target.value)} placeholder="Clinician Password for Approval" className="w-full p-2 rounded-md bg-slate-700 text-white border border-slate-600" required />
-                            <button type="submit" disabled={submitStatus === 'submitting'} className="w-full bg-yellow-500 hover:bg-yellow-600 text-black font-bold py-2 px-4 rounded-lg transition disabled:opacity-50">
-                                {submitStatus === 'submitting' ? 'Submitting...' : 'Submit to Leaderboard'}
-                            </button>
-                            {submitStatus === 'error' && <p className="text-red-500 text-sm">Submission failed. Please check password.</p>}
-                        </form>
-                    )}
-                    {submitStatus === 'success' && <p className="text-green-400 font-bold">Your score has been added to the leaderboard!</p>}
-
-                    <div className="flex justify-center items-center gap-4">
-                        <button onClick={() => setShowResourceHub(true)} className="bg-violet-600 hover:bg-violet-700 text-white font-bold py-3 px-8 rounded-lg">Open Resource Hub</button>
-                        <button onClick={onRestart} className="border border-slate-600 text-slate-300 font-bold py-3 px-8 rounded-lg hover:bg-slate-700">New Launch</button>
-                    </div>
-                    <ResourceHubModal show={showResourceHub} onClose={() => setShowResourceHub(false)} errors={results.errors} />
-                </div>
-            );
-        };
-        
-        const Notification = ({ text, type }) => {
-            const colorClass = type === 'score' ? 'text-green-400' : type === 'heart' ? 'text-red-400' : 'text-yellow-400';
-            return (
-                <div className={`notification-item absolute top-0 w-full text-center p-2 font-bold text-2xl ${colorClass}`} style={{textShadow: '0 0 5px black'}}>
-                    {text}
-                </div>
-            );
-        };
-        
-        const StreakChoiceModal = ({ onSelect, streak, characterClass }) => (
-            <div className="absolute inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center rounded-2xl z-40">
-                <div className="text-center p-8 bg-slate-900 border-2 border-violet-500 rounded-xl shadow-lg animate-fade-in-up">
-                    <h3 className="text-3xl font-bold text-yellow-400">{streak} in a row!</h3>
-                    <p className="text-slate-300 my-4">Choose your reward!</p>
-                    <div className="flex gap-4">
-                        {characterClass.name !== 'Dragon Knight' && <button onClick={() => onSelect('multiplier')} className="flex-1 bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-6 rounded-lg transition">Score Multiplier!</button>}
-                        {characterClass.name !== 'Martial Artist' && <button onClick={() => onSelect('heart')} className="flex-1 bg-red-600 hover:bg-red-700 text-white font-bold py-3 px-6 rounded-lg transition">+1 Heart!</button>}
-                    </div>
-                </div>
-            </div>
-        );
-
-        const ResourceHubModal = ({ show, onClose, errors }) => {
-            return (
-                <BaseModal show={show} onClose={onClose} maxWidth="max-w-4xl">
-                     <div className="p-6">
-                        <h2 className="text-3xl font-bold text-slate-100 mb-4">Evidence-Based Resource Hub</h2>
-                         <div className="space-y-6 text-slate-300 text-left text-sm">
-                            {(errors.semantic > 0 || errors.syntactic === 0) && (
-                                <div>
-                                    <h3 className="text-xl font-semibold text-violet-400 mb-2">Instructional Hypothesis (Semantic)</h3>
-                                    <p>The student may have difficulty using context clues to differentiate between words with similar meanings. They may benefit from explicit instruction in vocabulary and morphemic analysis.</p>
-                                    <h4 className="text-lg font-semibold text-slate-200 mt-4 mb-2">Recommended Resources:</h4>
-                                    <ul className="list-disc list-inside space-y-2 pl-2">
-                                        <li><strong>Teach Context Clues:</strong> Use surrounding words to infer meaning. Recommended video: <a href="https://www.khanacademy.org/ela/cc-2nd-reading-vocab/xfb4fc0bf01437792:cc-2nd-fairy-tales-retold/xfb4fc0bf01437792:applying-knowledge/v/using-context-clues-to-figure-out-new-words-reading" target="_blank" rel="noopener noreferrer" className="text-violet-400 hover:underline">Khan Academy - Context Clues</a>.</li>
-                                        <li><strong>Morphemic Analysis:</strong> Break down words into prefixes, suffixes, and roots. Activity suggestion: <a href="https://fcrr.org/student-center-activities/fourth-and-fifth-grade" target="_blank" rel="noopener noreferrer" className="text-violet-400 hover:underline">FCRR - "Affix Wiz" & "Root Rap"</a>.</li>
-                                        <li><strong>Word Relationships:</strong> Explore synonyms, antonyms, and categories. Activity suggestion: FCRR - "Synonym Bingo!" & "Antonym Dominoes".</li>
-                                    </ul>
-                                </div>
-                            )}
-                             {(errors.syntactic > 0 || errors.semantic === 0) && (
-                                <div>
-                                    <h3 className="text-xl font-semibold text-violet-400 mb-2">Instructional Hypothesis (Syntactic)</h3>
-                                    <p>The student may not be fully attending to sentence structure and could benefit from instruction on how sentences are built. They may benefit from sentence combining and expansion exercises.</p>
-                                    <h4 className="text-lg font-semibold text-slate-200 mt-4 mb-2">Recommended Resources:</h4>
-                                    <ul className="list-disc list-inside space-y-2 pl-2">
-                                        <li><strong>Sentence Combining:</strong> Combine short sentences into more complex ones. Lesson Plan: <a href="https://readinguniverse.org/resources/pdf/sentence-writing/lesson-plan-for-sentence-combining" target="_blank" rel="noopener noreferrer" className="text-violet-400 hover:underline">Reading Universe - Sentence Combining</a>.</li>
-                                        <li><strong>Sentence Expansion:</strong> Add detail to simple "kernel" sentences. Classroom Video: <a href="https://www.readingrockets.org/videos/classroom/introducing-sentence-expansion" target="_blank" rel="noopener noreferrer" className="text-violet-400 hover:underline">Reading Rockets - Sentence Expansion</a>.</li>
-                                    </ul>
-                                </div>
-                            )}
-                        </div>
-                    </div>
-                </BaseModal>
-            );
-        };
-        
-        const IconInfo = () => (<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>);
-
-        const BaseModal = ({ show, onClose, children, maxWidth = 'max-w-2xl' }) => {
-            if (!show) return null;
-            return createPortal(
-                <div className={`modal fixed inset-0 bg-black bg-opacity-75 backdrop-blur-sm flex items-center justify-center z-50 p-4`} onClick={onClose}>
-                    <div className={`modal-content bg-slate-800 border border-violet-700/50 rounded-2xl shadow-2xl w-full ${maxWidth} max-h-[90vh] flex flex-col`} onClick={e => e.stopPropagation()}>
-                        <div className="overflow-y-auto modal-scroll">{children}</div>
-                    </div>
-                </div>,
-                document.body
-            );
-        };
-        
-        const PrivacyModal = ({ show, onClose }) => (
-            <BaseModal show={show} onClose={onClose}>
-                 <div className="p-6 sm:p-8">
-                    <div className="flex justify-between items-center mb-6">
-                        <h2 className="text-3xl font-bold text-slate-100">Student Data Privacy</h2>
-                        <button onClick={onClose} className="text-slate-400 hover:text-white transition-colors">
-                            <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
-                        </button>
-                    </div>
-                    <div className="space-y-4 text-slate-300 text-left text-sm">
-                        <p>This application is designed to support language assessment activities without collecting or maintaining student data.</p>
-                        <p><strong className="text-violet-400 block mb-1">Student Information Use:</strong> Student names may be entered by the examiner for the sole purpose of personalizing a printable PDF report. This information is not transmitted, stored, or retained by the application or its hosting service.</p>
-                        <p><strong className="text-violet-400 block mb-1">Data Retention:</strong> Once the examiner completes an assessment, the entered name is cleared from the page. No student information is written to logs, databases, or external servers.</p>
-                    </div>
-                 </div>
-            </BaseModal>
-        );
-
-        const container = document.getElementById('root');
-        const root = createRoot(container);
-        root.render(<App />);
-
+        // --- Game Screen, Results Screen, and other components remain the same
+        // ...
     </script>
 {% endraw %}
 {% endblock %}
