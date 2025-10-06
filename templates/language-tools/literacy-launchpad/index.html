@@ -1,0 +1,545 @@
+{% extends "base.html" %}
+
+{% block title %}Literacy Launchpad{% endblock %}
+
+{% block head %}
+    {{ super() }}
+    <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <style>
+        .modal { transition: opacity 300ms ease-in-out; }
+        .modal-content { transition: opacity 300ms ease-in-out, transform 300ms ease-in-out; }
+        .modal.hidden { opacity: 0; pointer-events: none; }
+        .modal:not(.hidden) { opacity: 1; }
+        .modal.hidden .modal-content { opacity: 0; transform: scale(0.95); }
+        .modal:not(.hidden) .modal-content { opacity: 1; transform: scale(1); }
+        .modal-scroll::-webkit-scrollbar { width: 8px; }
+        .modal-scroll::-webkit-scrollbar-track { background: #1e293b; }
+        .modal-scroll::-webkit-scrollbar-thumb { background-color: #4c1d95; border-radius: 10px; border: 2px solid #1e293b; }
+        
+        @keyframes fade-in-up { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        .animate-fade-in-up { animation: fade-in-up 0.5s ease-out forwards; }
+
+        @keyframes pulse-heart { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.2); } }
+        .animate-pulse-heart { animation: pulse-heart 0.5s ease-in-out; }
+
+        @keyframes fade-out-up { from { opacity: 1; transform: translateY(0); } to { opacity: 0; transform: translateY(-20px); } }
+        .notification-item {
+            animation: fade-in-up 0.5s ease-out forwards, fade-out-up 0.5s ease-in forwards 2s;
+        }
+    </style>
+{% endblock %}
+
+{% block content %}
+    <div id="root"></div>
+{% endblock %}
+
+{% block scripts %}
+{% raw %}
+    <script type="text/babel">
+        const { useState, useEffect, useCallback, useMemo, useRef } = React;
+        const { createPortal } = ReactDOM;
+        const { createRoot } = ReactDOM;
+
+        // --- Placeholder Data & Assets ---
+        const correctSound = new Audio("https://raw.githubusercontent.com/navasdo/navacite/main/templates/static/audio/literacy-launchpad/correct.wav");
+        const incorrectSound = new Audio("https://raw.githubusercontent.com/navasdo/navacite/main/templates/static/audio/literacy-launchpad/incorrect.wav");
+        const streakSound = new Audio("https://raw.githubusercontent.com/navasdo/navacite/main/templates/static/audio/literacy-launchpad/streak.wav");
+
+        const passages = {
+            '2-3': {
+                'Jungle of Syntax': "A little monkey likes to [play|plays|playing]. He swings from a [branch|leaf|root] all day long. His mom tells him to be [careful|carefully|caring] so he does not fall down. The monkey sees a bright yellow [banana|rock|flower] hanging from a vine. He gets very [excited|exciting|excite] and chatters happily.",
+            },
+            '4-5': {
+                'Vocabulary Volcano': "The ancient volcano was [dormant|sleeping|sleep], meaning it had not erupted for a long time. The villagers felt safe living nearby. They cultivated the [fertile|good|fast] soil on its slopes, growing delicious fruits and vegetables. One day, a scientist came to [inspect|look|looking] the volcano. She said there was no immediate [danger|bad|dangerous], but it was wise to be prepared.",
+            },
+            '6-8': {
+                'Caverns of Cohesion': "Space exploration presents immense challenges; [furthermore|however|because], it offers incredible rewards. The journey to Mars, for example, will require unprecedented technological [innovation|idea|invent]. Scientists must develop systems for life support, radiation shielding, and sustainable energy. [Despite|Although|Therefore] these obstacles, the quest to explore the red planet continues, driven by human curiosity and the search for knowledge.",
+            }
+        };
+
+        // --- Main App Component ---
+        function App() {
+            const [screen, setScreen] = useState('setup'); // setup, game, results
+            const [gameSettings, setGameSettings] = useState(null);
+            const [gameResults, setGameResults] = useState(null);
+            const [leaderboardData, setLeaderboardData] = useState([]);
+
+            const fetchLeaderboard = useCallback(() => {
+                fetch('/api/literacy-launchpad/leaderboard')
+                    .then(res => res.json())
+                    .then(data => setLeaderboardData(data))
+                    .catch(err => console.error("Failed to fetch leaderboard:", err));
+            }, []);
+
+            useEffect(() => {
+                fetchLeaderboard();
+            }, [fetchLeaderboard]);
+
+            const handleStartGame = (settings) => {
+                setGameSettings(settings);
+                setScreen('game');
+            };
+            
+            const handleEndGame = (results) => {
+                setGameResults(results);
+                setScreen('results');
+            };
+
+            const handleRestart = () => {
+                setGameSettings(null);
+                setGameResults(null);
+                setScreen('setup');
+            };
+            
+            const renderScreen = () => {
+                switch(screen) {
+                    case 'game':
+                        return <GameScreen settings={gameSettings} onEndGame={handleEndGame} />;
+                    case 'results':
+                        return <ResultsScreen results={gameResults} onRestart={handleRestart} leaderboard={leaderboardData} onUpdateLeaderboard={fetchLeaderboard} />;
+                    case 'setup':
+                    default:
+                        return <SetupScreen onStartGame={handleStartGame} leaderboard={leaderboardData} />;
+                }
+            };
+
+            return (
+                <div className="w-full max-w-5xl mx-auto py-8">
+                     <header className="text-center mb-12">
+                        <img src="https://raw.githubusercontent.com/navasdo/navacite/main/templates/static/navacite-images/literacy-launchpad.png" alt="Literacy Launchpad Logo" className="w-48 mx-auto mb-4" style={{filter: 'drop-shadow(0 0 15px rgba(167, 139, 250, 0.4))'}} />
+                        <h1 className="text-5xl md:text-6xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-violet-400 to-fuchsia-500">
+                            Literacy Launchpad
+                        </h1>
+                        <p className="text-md md:text-lg text-slate-400 italic max-w-4xl mx-auto mt-2">
+                            Transforming reading assessment into a dynamic, engaging, and insight-driven adventure to improve K-12 reading comprehension.
+                        </p>
+                    </header>
+                    <main className="bg-slate-900/40 p-6 sm:p-8 rounded-2xl shadow-lg border border-violet-900/80">
+                        {renderScreen()}
+                    </main>
+                </div>
+            );
+        }
+        
+        // --- Setup Screen Component ---
+        function SetupScreen({ onStartGame, leaderboard }) {
+            const [studentName, setStudentName] = useState('');
+            const [level, setLevel] = useState('2-3');
+            const [map, setMap] = useState('Jungle of Syntax');
+            const [isPractice, setIsPractice] = useState(false);
+            const [showPrivacyModal, setShowPrivacyModal] = useState(false);
+            
+            const handleStart = () => {
+                onStartGame({ studentName, level, map, isPractice });
+            };
+
+            return (
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                    <div className="lg:col-span-2 space-y-8">
+                        <h3 className="text-xl font-bold text-violet-400 text-center">Prepare for Launch</h3>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            {/* Student Name Input */}
+                            <div>
+                                <label htmlFor="student" className="text-slate-400 flex items-center gap-2">Student Name <button onClick={() => setShowPrivacyModal(true)} title="Privacy Information" className="text-slate-500 hover:text-violet-400 transition-colors"><IconInfo /></button></label>
+                                <input id="student" type="text" value={studentName} onChange={(e) => setStudentName(e.target.value)} className="w-full mt-2 p-3 rounded-md bg-slate-800/60 text-slate-300 border border-slate-700 focus:outline-none focus:ring-2 focus:ring-violet-500" placeholder="For printable report only" />
+                            </div>
+                            {/* Passage Level */}
+                            <div>
+                                <label htmlFor="level-select" className="text-slate-400">Passage Level</label>
+                                <select id="level-select" value={level} onChange={e => setLevel(e.target.value)} className="w-full mt-2 p-3 rounded-md bg-slate-800/60 text-slate-300 border border-slate-700">
+                                    <option value="2-3">Grades 2-3</option>
+                                    <option value="4-5">Grades 4-5</option>
+                                    <option value="6-8">Grades 6-8</option>
+                                </select>
+                            </div>
+                            {/* Map Selection */}
+                            <div className="md:col-span-2">
+                                <label htmlFor="map-select" className="text-slate-400">Select a Map</label>
+                                <select id="map-select" value={map} onChange={e => setMap(e.target.value)} className="w-full mt-2 p-3 rounded-md bg-slate-800/60 text-slate-300 border border-slate-700">
+                                    <option>Jungle of Syntax</option>
+                                    <option>Vocabulary Volcano</option>
+                                    <option>Caverns of Cohesion</option>
+                                </select>
+                            </div>
+                            {/* Practice Mode Toggle */}
+                            <div className="flex items-center justify-center md:col-span-2">
+                                <label className="flex items-center gap-3 cursor-pointer text-slate-400">
+                                    <input type="checkbox" checked={isPractice} onChange={e => setIsPractice(e.target.checked)} className="w-5 h-5 rounded text-violet-600 bg-slate-700 border-slate-600 focus:ring-violet-500"/>
+                                    <span>Enable Practice Mode (Provides hints)</span>
+                                </label>
+                            </div>
+                        </div>
+                        <div className="text-center pt-4">
+                            <button onClick={handleStart} className="bg-violet-600 hover:bg-violet-700 text-white font-bold py-3 px-8 rounded-lg transition">Begin Literacy Launch</button>
+                        </div>
+                    </div>
+                    {/* Leaderboard */}
+                    <div className="p-4 bg-slate-800/50 rounded-lg">
+                        <h3 className="text-xl font-bold text-yellow-400 text-center mb-4">Top Scores</h3>
+                        <ol className="list-decimal list-inside space-y-2">
+                            {leaderboard.map((entry, index) => (
+                                <li key={index} className="flex justify-between">
+                                    <span>{entry.pseudonym}</span>
+                                    <span className="font-bold">{entry.score}</span>
+                                </li>
+                            ))}
+                            {leaderboard.length === 0 && <p className="text-slate-400 text-center">No scores yet!</p>}
+                        </ol>
+                    </div>
+                    <PrivacyModal show={showPrivacyModal} onClose={() => setShowPrivacyModal(false)} />
+                </div>
+            );
+        }
+
+        // --- Game Screen Component ---
+        function GameScreen({ settings, onEndGame }) {
+            const [passage, setPassage] = useState([]);
+            const [currentItemIndex, setCurrentItemIndex] = useState(-1);
+            const [hearts, setHearts] = useState(10);
+            const [score, setScore] = useState(0);
+            const [streak, setStreak] = useState(0);
+            const [notifications, setNotifications] = useState([]);
+            const [errorLog, setErrorLog] = useState({ semantic: 0, syntactic: 0 });
+            const [showStreakChoice, setShowStreakChoice] = useState(false);
+            const [scaffoldHint, setScaffoldHint] = useState(null);
+
+            const passageTextRef = useRef(""); // To hold the raw text for the API
+
+            useEffect(() => {
+                const rawText = passages[settings.level][settings.map];
+                passageTextRef.current = rawText.replace(/\[[^\]]+\]/g, '...'); // Store clean text for API
+                const parsedPassage = rawText.split(/(\[[^\]]+\])/).map((part, index) => {
+                    if (part.startsWith('[')) {
+                        const options = part.slice(1, -1).split('|');
+                        const [correct, semantic, syntactic] = options;
+                        return { type: 'choice', options: shuffleArray([{word: correct, type: 'correct'}, {word: semantic, type: 'semantic'}, {word: syntactic, type: 'syntactic'}]), id: `choice-${index}`, answered: false };
+                    }
+                    return { type: 'text', content: part, id: `text-${index}` };
+                });
+                setPassage(parsedPassage);
+                const firstChoice = parsedPassage.findIndex(p => p.type === 'choice');
+                setCurrentItemIndex(firstChoice);
+            }, [settings]);
+
+            const addNotification = useCallback((text, type) => {
+                const id = Date.now();
+                setNotifications(prev => [...prev, { id, text, type }]);
+                setTimeout(() => {
+                    setNotifications(prev => prev.filter(n => n.id !== id));
+                }, 2500);
+            }, []);
+
+            const getScaffoldHint = async (incorrectWord) => {
+                try {
+                    const response = await fetch('/api/literacy-launchpad/scaffold', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ passage: passageTextRef.current, incorrect_word: incorrectWord })
+                    });
+                    if (!response.ok) throw new Error('API Error');
+                    const result = await response.json();
+                    const textContent = result.candidates?.[0]?.content?.parts?.[0]?.text;
+                    if(textContent) {
+                        const hintData = JSON.parse(textContent);
+                        setScaffoldHint(hintData.explanation);
+                    }
+                } catch (err) {
+                    console.error("Scaffold API call failed:", err);
+                    setScaffoldHint("Remember to check if the word makes sense and sounds right in the sentence!");
+                }
+            };
+
+            const handleChoice = (selectedOption, choiceId) => {
+                if (showStreakChoice || passage.find(p => p.id === choiceId)?.answered) return;
+                
+                setScaffoldHint(null); // Clear previous hint
+
+                // Mark as answered
+                setPassage(p => p.map(part => part.id === choiceId ? {...part, answered: true, selection: selectedOption.word} : part));
+
+                if (selectedOption.type === 'correct') {
+                    correctSound.play();
+                    setScore(s => s + 10);
+                    const newStreak = streak + 1;
+                    setStreak(newStreak);
+                    addNotification('+10', 'score');
+
+                    if (newStreak >= 3 && newStreak % 3 === 0) {
+                        streakSound.play();
+                        setShowStreakChoice(true);
+                    } else {
+                        advanceToNext();
+                    }
+                } else { // Incorrect
+                    incorrectSound.play();
+                    setHearts(h => h - 1);
+                    setStreak(0);
+                    setErrorLog(log => ({ ...log, [selectedOption.type]: log[selectedOption.type] + 1 }));
+                    addNotification('-1 ♥', 'heart');
+                    
+                    if (settings.isPractice) {
+                        getScaffoldHint(selectedOption.word);
+                    }
+                    if (hearts - 1 <= 0) {
+                        setTimeout(endGame, 1000); // give time for heart animation
+                    }
+                }
+            };
+            
+            const handleStreakReward = (reward) => {
+                if (reward === 'multiplier') {
+                    const bonus = streak * 5;
+                    setScore(s => s + bonus);
+                    addNotification(`+${bonus} Streak Bonus!`, 'score');
+                } else if (reward === 'heart') {
+                    setHearts(h => Math.min(10, h + 1));
+                    addNotification('+1 ♥ Restored!', 'heart');
+                }
+                setShowStreakChoice(false);
+                advanceToNext();
+            };
+
+            const advanceToNext = () => {
+                const nextChoiceIndex = passage.findIndex((p, index) => index > currentItemIndex && p.type === 'choice');
+                if (nextChoiceIndex !== -1) {
+                    setCurrentItemIndex(nextChoiceIndex);
+                } else {
+                    endGame();
+                }
+            };
+
+            const endGame = useCallback(() => {
+                onEndGame({ 
+                    studentName: settings.studentName, 
+                    score: score, 
+                    errors: errorLog 
+                });
+            }, [score, errorLog, settings, onEndGame]);
+
+            return (
+                <div className="relative">
+                    {/* Notifications */}
+                    <div className="absolute top-0 left-1/2 -translate-x-1/2 w-64 h-24 pointer-events-none z-50">
+                        {notifications.map(n => <Notification key={n.id} {...n} />)}
+                    </div>
+
+                    <div className="flex justify-between items-center mb-4">
+                        <h3 className="text-xl font-bold text-violet-400">{settings.map}</h3>
+                        <div className="flex items-center gap-2">
+                           <span className="font-bold text-lg text-white">Score: {score}</span>
+                           <div className="flex items-center gap-1">
+                                {[...Array(hearts)].map((_, i) => <span key={i} className="text-red-500 text-2xl animate-pulse-heart">♥</span>)}
+                                {[...Array(10-hearts)].map((_, i) => <span key={i} className="text-slate-700 text-2xl">♥</span>)}
+                            </div>
+                        </div>
+                    </div>
+                    <div className="p-6 bg-slate-800/50 rounded-lg text-lg leading-loose">
+                        {passage.map((part, index) => {
+                            if (part.type === 'text') {
+                                return <span key={part.id}>{part.content}</span>;
+                            }
+                            if (part.answered) {
+                                const isCorrect = part.options.find(o => o.word === part.selection)?.type === 'correct';
+                                return <strong key={part.id} className={`mx-1 ${isCorrect ? 'text-green-400' : 'text-red-400'}`}>{part.selection}</strong>;
+                            }
+                            if (index === currentItemIndex) {
+                                return (
+                                    <span key={part.id} className="inline-flex flex-wrap gap-2 mx-1 p-2 bg-slate-900/50 rounded-md">
+                                        {part.options.map(option => (
+                                            <button key={option.word} onClick={() => handleChoice(option, part.id)} className="px-3 py-1 bg-violet-600 text-white rounded-md hover:bg-violet-700 transition">
+                                                {option.word}
+                                            </button>
+                                        ))}
+                                    </span>
+                                );
+                            }
+                            return <span key={part.id} className="font-bold text-slate-500 mx-1">[ • • • ]</span>;
+                        })}
+                    </div>
+                    
+                     {scaffoldHint && (
+                        <div className="mt-4 p-3 bg-yellow-900/30 border border-yellow-600 rounded-lg text-yellow-300 animate-fade-in-up">
+                           <strong className="font-bold">Hint:</strong> {scaffoldHint}
+                        </div>
+                    )}
+
+
+                    {showStreakChoice && (
+                        <StreakChoiceModal onSelect={handleStreakReward} streak={streak} />
+                    )}
+                </div>
+            );
+        }
+
+        // --- Results Screen Component ---
+        function ResultsScreen({ results, onRestart, leaderboard, onUpdateLeaderboard }) {
+            const [showResourceHub, setShowResourceHub] = useState(false);
+            const [isEligible, setIsEligible] = useState(false);
+            const [pseudonym, setPseudonym] = useState('');
+            const [password, setPassword] = useState('');
+            const [submitStatus, setSubmitStatus] = useState('idle'); // idle, submitting, success, error
+
+            useEffect(() => {
+                if (leaderboard.length < 10 || results.score > leaderboard[leaderboard.length - 1]?.score) {
+                    setIsEligible(true);
+                }
+            }, [results.score, leaderboard]);
+            
+            const handleLeaderboardSubmit = async (e) => {
+                e.preventDefault();
+                setSubmitStatus('submitting');
+                try {
+                    const response = await fetch('/api/literacy-launchpad/leaderboard', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ pseudonym, score: results.score, password })
+                    });
+                    if (!response.ok) throw new Error('Submission failed');
+                    setSubmitStatus('success');
+                    onUpdateLeaderboard(); // Refresh leaderboard data
+                } catch (error) {
+                    setSubmitStatus('error');
+                }
+            };
+            
+            return (
+                <div className="text-center space-y-8">
+                    <h3 className="text-2xl font-bold text-violet-400">Launch Complete!</h3>
+                    <div>
+                        <p className="text-slate-400">Student: {results.studentName || 'N/A'}</p>
+                        <p className="text-5xl font-bold text-white mt-2">{results.score} pts</p>
+                    </div>
+                    
+                    {isEligible && submitStatus !== 'success' && (
+                        <form onSubmit={handleLeaderboardSubmit} className="max-w-md mx-auto p-4 bg-slate-800/50 rounded-lg space-y-3 animate-fade-in-up">
+                            <p className="font-bold text-yellow-400">New High Score!</p>
+                            <input type="text" value={pseudonym} onChange={e => setPseudonym(e.target.value)} placeholder="Enter a pseudonym" className="w-full p-2 rounded-md bg-slate-700 text-white border border-slate-600" required />
+                            <input type="password" value={password} onChange={e => setPassword(e.target.value)} placeholder="Clinician Password for Approval" className="w-full p-2 rounded-md bg-slate-700 text-white border border-slate-600" required />
+                            <button type="submit" disabled={submitStatus === 'submitting'} className="w-full bg-yellow-500 hover:bg-yellow-600 text-black font-bold py-2 px-4 rounded-lg transition disabled:opacity-50">
+                                {submitStatus === 'submitting' ? 'Submitting...' : 'Submit to Leaderboard'}
+                            </button>
+                            {submitStatus === 'error' && <p className="text-red-500 text-sm">Submission failed. Please check password.</p>}
+                        </form>
+                    )}
+                    {submitStatus === 'success' && <p className="text-green-400 font-bold">Your score has been added to the leaderboard!</p>}
+
+                    <div className="flex justify-center items-center gap-4">
+                        <button onClick={() => setShowResourceHub(true)} className="bg-violet-600 hover:bg-violet-700 text-white font-bold py-3 px-8 rounded-lg">Open Resource Hub</button>
+                        <button onClick={onRestart} className="border border-slate-600 text-slate-300 font-bold py-3 px-8 rounded-lg hover:bg-slate-700">New Launch</button>
+                    </div>
+                    <ResourceHubModal show={showResourceHub} onClose={() => setShowResourceHub(false)} errors={results.errors} />
+                </div>
+            );
+        }
+
+        // --- All other components (Notification, StreakChoiceModal, modals, etc.) ---
+        const Notification = ({ text, type }) => {
+            const colorClass = type === 'score' ? 'text-green-400' : type === 'heart' ? 'text-red-400' : 'text-yellow-400';
+            return (
+                <div className={`notification-item absolute top-0 w-full text-center p-2 font-bold text-2xl ${colorClass}`} style={{textShadow: '0 0 5px black'}}>
+                    {text}
+                </div>
+            );
+        };
+        
+        const StreakChoiceModal = ({ onSelect, streak }) => (
+            <div className="absolute inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center rounded-2xl z-40">
+                <div className="text-center p-8 bg-slate-900 border-2 border-violet-500 rounded-xl shadow-lg animate-fade-in-up">
+                    <h3 className="text-3xl font-bold text-yellow-400">{streak} in a row!</h3>
+                    <p className="text-slate-300 my-4">Choose your reward!</p>
+                    <div className="flex gap-4">
+                        <button onClick={() => onSelect('multiplier')} className="flex-1 bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-6 rounded-lg transition">Score Multiplier!</button>
+                        <button onClick={() => onSelect('heart')} className="flex-1 bg-red-600 hover:bg-red-700 text-white font-bold py-3 px-6 rounded-lg transition">+1 Heart!</button>
+                    </div>
+                </div>
+            </div>
+        );
+
+        const ResourceHubModal = ({ show, onClose, errors }) => {
+            return (
+                <BaseModal show={show} onClose={onClose} maxWidth="max-w-4xl">
+                     <div className="p-6">
+                        <h2 className="text-3xl font-bold text-slate-100 mb-4">Evidence-Based Resource Hub</h2>
+                         <div className="space-y-6 text-slate-300 text-left text-sm">
+                            {(errors.semantic > 0 || errors.syntactic === 0) && ( // Show if semantic errors exist, or if no errors exist
+                                <div>
+                                    <h3 className="text-xl font-semibold text-violet-400 mb-2">Instructional Hypothesis (Semantic)</h3>
+                                    <p>The student may have difficulty using context clues to differentiate between words with similar meanings. They may benefit from explicit instruction in vocabulary and morphemic analysis.</p>
+                                    <h4 className="text-lg font-semibold text-slate-200 mt-4 mb-2">Recommended Resources:</h4>
+                                    <ul className="list-disc list-inside space-y-2 pl-2">
+                                        <li><strong>Teach Context Clues:</strong> Use surrounding words to infer meaning. Recommended video: <a href="https://www.khanacademy.org/ela/cc-2nd-reading-vocab/xfb4fc0bf01437792:cc-2nd-fairy-tales-retold/xfb4fc0bf01437792:applying-knowledge/v/using-context-clues-to-figure-out-new-words-reading" target="_blank" rel="noopener noreferrer" className="text-violet-400 hover:underline">Khan Academy - Context Clues</a>.</li>
+                                        <li><strong>Morphemic Analysis:</strong> Break down words into prefixes, suffixes, and roots. Activity suggestion: <a href="https://fcrr.org/student-center-activities/fourth-and-fifth-grade" target="_blank" rel="noopener noreferrer" className="text-violet-400 hover:underline">FCRR - "Affix Wiz" & "Root Rap"</a>.</li>
+                                        <li><strong>Word Relationships:</strong> Explore synonyms, antonyms, and categories. Activity suggestion: FCRR - "Synonym Bingo!" & "Antonym Dominoes".</li>
+                                    </ul>
+                                </div>
+                            )}
+                             {(errors.syntactic > 0 || errors.semantic === 0) && ( // Show if syntactic errors exist, or if no errors exist
+                                <div>
+                                    <h3 className="text-xl font-semibold text-violet-400 mb-2">Instructional Hypothesis (Syntactic)</h3>
+                                    <p>The student may not be fully attending to sentence structure and could benefit from instruction on how sentences are built. They may benefit from sentence combining and expansion exercises.</p>
+                                    <h4 className="text-lg font-semibold text-slate-200 mt-4 mb-2">Recommended Resources:</h4>
+                                    <ul className="list-disc list-inside space-y-2 pl-2">
+                                        <li><strong>Sentence Combining:</strong> Combine short sentences into more complex ones. Lesson Plan: <a href="https://readinguniverse.org/resources/pdf/sentence-writing/lesson-plan-for-sentence-combining" target="_blank" rel="noopener noreferrer" className="text-violet-400 hover:underline">Reading Universe - Sentence Combining</a>.</li>
+                                        <li><strong>Sentence Expansion:</strong> Add detail to simple "kernel" sentences. Classroom Video: <a href="https://www.readingrockets.org/videos/classroom/introducing-sentence-expansion" target="_blank" rel="noopener noreferrer" className="text-violet-400 hover:underline">Reading Rockets - Sentence Expansion</a>.</li>
+                                    </ul>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                </BaseModal>
+            );
+        };
+        
+        // Helper function to shuffle array
+        const shuffleArray = (array) => {
+            let currentIndex = array.length,  randomIndex;
+            while (currentIndex != 0) {
+                randomIndex = Math.floor(Math.random() * currentIndex);
+                currentIndex--;
+                [array[currentIndex], array[randomIndex]] = [array[randomIndex], array[currentIndex]];
+            }
+            return array;
+        };
+
+        const IconInfo = () => (<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>);
+
+        const BaseModal = ({ show, onClose, children, maxWidth = 'max-w-2xl' }) => {
+            if (!show) return null;
+            return createPortal(
+                <div className={`modal fixed inset-0 bg-black bg-opacity-75 backdrop-blur-sm flex items-center justify-center z-50 p-4`} onClick={onClose}>
+                    <div className={`modal-content bg-slate-800 border border-violet-700/50 rounded-2xl shadow-2xl w-full ${maxWidth} max-h-[90vh] flex flex-col`} onClick={e => e.stopPropagation()}>
+                        <div className="overflow-y-auto modal-scroll">{children}</div>
+                    </div>
+                </div>,
+                document.body
+            );
+        };
+        
+        const PrivacyModal = ({ show, onClose }) => (
+            <BaseModal show={show} onClose={onClose}>
+                 <div className="p-6 sm:p-8">
+                    <div className="flex justify-between items-center mb-6">
+                        <h2 className="text-3xl font-bold text-slate-100">Student Data Privacy</h2>
+                        <button onClick={onClose} className="text-slate-400 hover:text-white transition-colors">
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
+                        </button>
+                    </div>
+                    <div className="space-y-4 text-slate-300 text-left text-sm">
+                        <p>This application is designed to support language assessment activities without collecting or maintaining student data.</p>
+                        <p><strong className="text-violet-400 block mb-1">Student Information Use:</strong> Student names may be entered by the examiner for the sole purpose of personalizing a printable PDF report. This information is not transmitted, stored, or retained by the application or its hosting service.</p>
+                        <p><strong className="text-violet-400 block mb-1">Data Retention:</strong> Once the examiner completes an assessment, the entered name is cleared from the page. No student information is written to logs, databases, or external servers.</p>
+                    </div>
+                 </div>
+            </BaseModal>
+        );
+
+        const container = document.getElementById('root');
+        const root = createRoot(container);
+        root.render(<App />);
+
+    </script>
+{% endraw %}
+{% endblock %}
+
