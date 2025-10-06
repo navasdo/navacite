@@ -284,7 +284,91 @@ def mark_notifications_as_read():
         app.logger.error(f"Error marking notifications as read: {e}")
         return jsonify({"error": "An internal error occurred."}), 500
 
-# --- (The rest of your page routes and other API endpoints remain the same) ---
+# --- NEW SESSION SCRIBE API ROUTES ---
+@app.route('/api/compliance-check', methods=['POST'])
+@token_required
+def handle_compliance_check():
+    data = request.get_json()
+    user_input = data.get('userInput')
+    if not user_input:
+        return jsonify({"error": "No input provided"}), 400
+
+    api_key = app.config.get('GEMINI_API_KEY_SLP')
+    if not api_key:
+        return jsonify({"error": "API key not configured"}), 500
+    
+    url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key={api_key}"
+    
+    system_prompt = "You are a compliance officer reviewing therapy notes for FERPA and HIPAA. Identify any potential personally identifiable information (PII) like names, specific locations, or other identifying details. Do NOT flag common acronyms used in the field. Respond ONLY with a JSON object. The JSON object should have a single key, 'violations', which is an array of strings. Each string should be a word or phrase you identified as a potential violation. If there are no violations, return an empty array: {\"violations\": []}."
+    
+    schema = {
+        "type": "OBJECT",
+        "properties": {
+            "violations": {
+                "type": "ARRAY",
+                "items": { "type": "STRING" }
+            }
+        }
+    }
+
+    payload = {
+        "contents": [{"parts": [{"text": user_input}]}],
+        "systemInstruction": {"parts": [{"text": system_prompt}]},
+        "generationConfig": {
+            "responseMimeType": "application/json",
+            "responseSchema": schema
+        }
+    }
+
+    try:
+        response = requests.post(url, json=payload)
+        response.raise_for_status()
+        return jsonify(response.json())
+    except requests.exceptions.RequestException as e:
+        app.logger.error(f"API call failed: {e}")
+        return jsonify({"error": "Failed to communicate with AI service"}), 500
+
+@app.route('/api/generate-note', methods=['POST'])
+@token_required
+def handle_generate_note():
+    data = request.get_json()
+    user_input = data.get('userInput')
+    glossary = data.get('glossary', {})
+    if not user_input:
+        return jsonify({"error": "No input provided"}), 400
+
+    api_key = app.config.get('GEMINI_API_KEY_SLP')
+    if not api_key:
+        return jsonify({"error": "API key not configured"}), 500
+
+    url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key={api_key}"
+    
+    glossary_text = "\n".join([f"- {key}: {value}" for key, value in glossary.items()])
+    
+    prompt = f"""
+    Based on the following shorthand notes and glossary, please generate a professional therapy note.
+
+    Shorthand Notes:
+    "{user_input}"
+
+    Glossary of Terms:
+    {glossary_text}
+    """
+    
+    system_prompt = "You are an expert Speech-Language Pathologist. Your task is to expand shorthand clinical notes into a complete, professional, and compliant therapy note. Write the note in the third-person, past tense. Ensure the output is a single, concise paragraph. Do not add a date."
+
+    payload = {
+        "contents": [{"parts": [{"text": prompt}]}],
+        "systemInstruction": {"parts": [{"text": system_prompt}]},
+    }
+
+    try:
+        response = requests.post(url, json=payload)
+        response.raise_for_status()
+        return jsonify(response.json())
+    except requests.exceptions.RequestException as e:
+        app.logger.error(f"API call failed: {e}")
+        return jsonify({"error": "Failed to communicate with AI service"}), 500
 
 # --- Page Routes ---
 @app.route('/')
@@ -335,12 +419,6 @@ def profile_page(username):
         
     return render_template('profile.html', user=profile_user, is_own_profile=is_own_profile)
 
-
-@app.route('/session-scribe')
-@token_required
-def session_scribe():
-    return render_template('session-scribe/index.html')
-
 # --- Articulation Tools ---
 @app.route('/articulation-tools')
 @token_required
@@ -351,6 +429,9 @@ def articulation_tools():
 @app.route('/articulation-tools/<phoneme_slug>')
 @token_required
 def phoneme_page(phoneme_slug):
+    # Sanitize slug to prevent directory traversal
+    if '..' in phoneme_slug or '/' in phoneme_slug:
+        abort(404)
     return render_template(f'articulation-tools/{phoneme_slug}/index.html')
 
 # --- Language Tools ---
@@ -363,6 +444,8 @@ def language_tools():
 @app.route('/language-tools/<languageTools_slug>')
 @token_required
 def language_page(languageTools_slug):
+    if '..' in languageTools_slug or '/' in languageTools_slug:
+        abort(404)
     return render_template(f'language-tools/{languageTools_slug}/index.html')
 
 # --- Fluency Tools ---
@@ -375,6 +458,8 @@ def fluency_tools():
 @app.route('/fluency-tools/<fluencyTools_slug>')
 @token_required
 def fluency_page(fluencyTools_slug):
+    if '..' in fluencyTools_slug or '/' in fluencyTools_slug:
+        abort(404)
     return render_template(f'fluency-tools/{fluencyTools_slug}/index.html')
 
 # --- SLP Tools ---
@@ -387,6 +472,8 @@ def slp_tools():
 @app.route('/slp-tools/<slpTools_slug>')
 @token_required
 def slp_page(slpTools_slug):
+    if '..' in slpTools_slug or '/' in slpTools_slug:
+        abort(404)
     return render_template(f'slp-tools/{slpTools_slug}/index.html')
 
 # --- Cognition Tools ---
@@ -399,6 +486,8 @@ def cognition_tools():
 @app.route('/cognition-tools/<cognitionTools_slug>')
 @token_required
 def cognition_page(cognitionTools_slug):
+    if '..' in cognitionTools_slug or '/' in cognitionTools_slug:
+        abort(404)
     return render_template(f'cognition-tools/{cognitionTools_slug}/index.html')
 
 
@@ -410,4 +499,3 @@ def page_not_found(e):
 # --- This block should be the VERY LAST thing in your file ---
 if __name__ == '__main__':
     app.run(debug=True)
-
