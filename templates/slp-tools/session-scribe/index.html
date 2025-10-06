@@ -314,21 +314,34 @@
                     copyButton.addEventListener('click', () => {
                         const tempTextArea = document.createElement('textarea');
                         tempTextArea.value = state.generatedNote;
+                        // Make it non-editable and position off-screen
+                        tempTextArea.setAttribute('readonly', '');
+                        tempTextArea.style.position = 'absolute';
+                        tempTextArea.style.left = '-9999px';
+
                         document.body.appendChild(tempTextArea);
                         tempTextArea.select();
-                        document.execCommand('copy');
+                        
+                        try {
+                            document.execCommand('copy');
+                            
+                            // Visual feedback for success
+                            const originalContent = copyButton.innerHTML;
+                            copyButton.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-green-400"><path d="M20 6 9 17l-5-5"/></svg>`;
+                            copyButton.title = "Copied!";
+                            copyButton.disabled = true;
+
+                            setTimeout(() => {
+                                copyButton.innerHTML = originalContent;
+                                copyButton.title = "Copy to Clipboard";
+                                copyButton.disabled = false;
+                            }, 2000);
+
+                        } catch (err) {
+                            console.error('Oops, unable to copy to clipboard', err);
+                        }
+
                         document.body.removeChild(tempTextArea);
-
-                        const originalContent = copyButton.innerHTML;
-                        copyButton.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-green-400"><path d="M20 6 9 17l-5-5"/></svg>`;
-                        copyButton.title = "Copied!";
-                        copyButton.disabled = true;
-
-                        setTimeout(() => {
-                            copyButton.innerHTML = originalContent;
-                            copyButton.title = "Copy to Clipboard";
-                            copyButton.disabled = false;
-                        }, 2000);
                     });
                 }
             }
@@ -344,3 +357,4 @@
 
     </script>
 {% endblock %}
+
