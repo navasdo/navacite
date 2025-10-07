@@ -45,7 +45,7 @@
 {% raw %}
     <script type="text/babel">
         const { useState, useEffect, useCallback, useMemo, useRef } = React;
-        const { createPortal, createRoot } = ReactDOM;
+        const { createPortal } = ReactDOM;
 
         // --- Game Data & Assets ---
         const correctSound = new Audio("https://raw.githubusercontent.com/navasdo/navacite/refs/heads/main/templates/language-tools/literacy-launchpad/static/audio/correct.wav");
@@ -84,7 +84,11 @@
 
         // --- Helper & Utility Components ---
         const IconInfo = () => (<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>);
-
+        const IconHeart = ({ className }) => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round" className={`text-red-500 ${className}`}><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>;
+        const IconTrophy = () => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/></svg>;
+        const IconClock = () => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>;
+        const IconCheckCircle = () => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>;
+        
         const BaseModal = ({ show, onClose, children, maxWidth = 'max-w-2xl' }) => {
             if (!show) return null;
             return createPortal(
@@ -171,7 +175,7 @@
                             Literacy Launchpad
                         </h1>
                         <p className="text-md md:text-lg text-slate-400 italic max-w-4xl mx-auto mt-2">
-                            Transforming reading assessment into a dynamic, engaging, and insight-driven adventure to improve K-12 reading comprehension.
+                            An engaging reading adventure that analyzes sentence-level comprehension to generate data-driven instructional hypotheses and connect you with evidence-based interventions. Choose your hero, embark on an adventure, and conquer reading challenges in a gamified quest for comprehension.
                         </p>
                     </header>
                     <main className="bg-slate-900/40 p-6 sm:p-8 rounded-2xl shadow-lg border border-violet-900/80">
@@ -289,11 +293,287 @@
             );
         }
         
-        // --- Game Screen, Results Screen, and other components remain the same ---
-        // ... (The rest of the components are unchanged)
-        const GameScreen = () => <div>Game Screen Placeholder</div>;
-        const ResultsScreen = () => <div>Results Screen Placeholder</div>;
+        // --- Game Screen Component ---
+        function GameScreen({ settings, onEndGame }) {
+            const { studentName, level, map, isPractice, characterClass, characterImage } = settings;
+
+            const passageData = useMemo(() => {
+                const text = passages[level][map];
+                const parts = text.split(/(\[.*?\])/g).map((part, index) => {
+                    if (part.startsWith('[') && part.endsWith(']')) {
+                        const options = part.slice(1, -1).split('|');
+                        return { type: 'question', options: options, correct: options[0], id: index };
+                    }
+                    return { type: 'text', content: part, id: index };
+                });
+                return parts.filter(p => p.type === 'text' ? p.content.length > 0 : true);
+            }, [level, map]);
+
+            const questions = useMemo(() => passageData.filter(p => p.type === 'question'), [passageData]);
+
+            const [startTime] = useState(Date.now());
+            const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
+            const [answers, setAnswers] = useState(Array(questions.length).fill(null));
+            const [hearts, setHearts] = useState(5 + (characterClass.heartMod || 0));
+            const [score, setScore] = useState(0);
+            const [streak, setStreak] = useState(0);
+            const [lastAnswerCorrect, setLastAnswerCorrect] = useState(null);
+            const [selectedOption, setSelectedOption] = useState(null);
+            const [isImmune, setIsImmune] = useState(characterClass.immune > 0);
+            const [immunityCharges, setImmunityCharges] = useState(characterClass.immune || 0);
+
+            const handleAnswer = (option, questionId) => {
+                if (selectedOption) return;
+
+                const question = questions.find(q => q.id === questionId);
+                const isCorrect = option === question.correct;
+                setSelectedOption({ option, isCorrect });
+
+                setTimeout(() => {
+                    if (isCorrect) {
+                        correctSound.play();
+                        const points = 100 * (characterClass.scoreMod || 1);
+                        setScore(prev => prev + points);
+                        setStreak(prev => prev + 1);
+                        setLastAnswerCorrect(true);
+                    } else {
+                        incorrectSound.play();
+                        if (immunityCharges > 0) {
+                            setImmunityCharges(prev => prev - 1);
+                        } else {
+                            setHearts(prev => Math.max(0, prev - 1));
+                        }
+                        setStreak(0);
+                        setLastAnswerCorrect(false);
+                    }
+
+                    const newAnswers = [...answers];
+                    const questionIndexInAll = questions.findIndex(q => q.id === questionId);
+                    newAnswers[questionIndexInAll] = option;
+                    setAnswers(newAnswers);
+
+                    if (currentQuestionIndex < questions.length - 1) {
+                         setCurrentQuestionIndex(prev => prev + 1);
+                         setSelectedOption(null);
+                    } else {
+                        // Game over
+                        const endTime = Date.now();
+                        onEndGame({
+                            score,
+                            hearts,
+                            time: (endTime - startTime) / 1000,
+                            correctAnswers: newAnswers.filter((ans, i) => ans === questions[i].correct).length,
+                            totalQuestions: questions.length,
+                            studentName,
+                            level,
+                            map,
+                            characterClass,
+                            characterImage
+                        });
+                    }
+                }, 1000);
+            };
+            
+            if (hearts <= 0) {
+                const endTime = Date.now();
+                onEndGame({
+                    score, hearts, time: (endTime - startTime) / 1000,
+                    correctAnswers: answers.filter((ans, i) => ans && ans === questions[i].correct).length,
+                    totalQuestions: questions.length,
+                    studentName, level, map, characterClass, characterImage
+                });
+                return <div>Game Over! Redirecting to results...</div>;
+            }
+
+            const currentQuestion = questions[currentQuestionIndex];
+
+            return (
+                <div className="flex flex-col h-full">
+                    <header className="flex justify-between items-center p-4 bg-slate-800/50 rounded-t-lg">
+                        <div className="flex items-center gap-3">
+                            <img src={characterImage} alt={characterClass.name} className="w-12 h-12 rounded-full border-2 border-violet-400" />
+                            <div>
+                                <h3 className="font-bold text-lg text-slate-100">{studentName || 'Adventurer'}</h3>
+                                <p className="text-sm text-slate-400">{characterClass.name}</p>
+                            </div>
+                        </div>
+                        <div className="flex items-center gap-4 text-2xl font-bold">
+                            <div className="flex items-center gap-2 text-red-500">
+                                <IconHeart /> <span>{hearts}</span>
+                            </div>
+                            <div className="flex items-center gap-2 text-yellow-400">
+                                <IconTrophy /> <span>{score}</span>
+                            </div>
+                        </div>
+                    </header>
+                    <div className="flex-grow p-6 sm:p-8 bg-slate-900/60 rounded-b-lg">
+                        <div className="text-lg md:text-xl text-slate-300 leading-relaxed mb-8">
+                            {passageData.map(part => {
+                                if (part.type === 'text') {
+                                    return <span key={part.id}>{part.content}</span>;
+                                }
+                                const qIndex = questions.findIndex(q => q.id === part.id);
+                                const answer = answers[qIndex];
+                                if (answer) {
+                                    const isCorrect = answer === part.correct;
+                                    return <strong key={part.id} className={isCorrect ? 'text-green-400' : 'text-red-400 line-through'}>{answer}</strong>;
+                                }
+                                if (qIndex === currentQuestionIndex) {
+                                     return <strong key={part.id} className="text-violet-400 bg-slate-800 px-2 py-1 rounded-md"> [ ? ] </strong>;
+                                }
+                                return <span key={part.id}>____</span>;
+                            })}
+                        </div>
+                        
+                        <div className="mt- auto">
+                            <h4 className="text-xl font-bold text-center text-slate-100 mb-4">Choose the best word:</h4>
+                            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+                                {currentQuestion.options.map(option => {
+                                    const isSelected = selectedOption && selectedOption.option === option;
+                                    const buttonClass = isSelected
+                                        ? (selectedOption.isCorrect ? 'bg-green-600' : 'bg-red-600')
+                                        : 'bg-slate-700 hover:bg-slate-600';
+
+                                    return (
+                                        <button key={option} onClick={() => handleAnswer(option, currentQuestion.id)} disabled={!!selectedOption}
+                                            className={`p-4 rounded-lg text-white font-semibold text-lg transition ${buttonClass}`}>
+                                            {option}
+                                        </button>
+                                    );
+                                })}
+                            </div>
+                            {isPractice && !selectedOption && <p className="text-center text-slate-400 mt-4 text-sm">Hint: The correct answer is <strong className="italic">{currentQuestion.correct}</strong>.</p>}
+                        </div>
+                    </div>
+                </div>
+            );
+        }
+
+        // --- Results Screen Component ---
+        function ResultsScreen({ results, onRestart, leaderboard, onUpdateLeaderboard }) {
+            const { score, hearts, time, correctAnswers, totalQuestions, studentName, level, map, characterClass, characterImage } = results;
+            const accuracy = totalQuestions > 0 ? (correctAnswers / totalQuestions * 100).toFixed(1) : 0;
+            const [pseudonym, setPseudonym] = useState('');
+            const [submitted, setSubmitted] = useState(false);
+
+            const handleSubmitScore = () => {
+                // In a real environment, this would be a POST request.
+                // fetch('/api/literacy-launchpad/leaderboard', {
+                //     method: 'POST',
+                //     headers: { 'Content-Type': 'application/json' },
+                //     body: JSON.stringify({ pseudonym, score, level, map, character: characterClass.name })
+                // })
+                // .then(() => {
+                //     setSubmitted(true);
+                //     onUpdateLeaderboard(); // Refresh leaderboard data
+                // })
+                // .catch(err => console.error("Failed to submit score:", err));
+
+                console.log("Submitting score (mocked for preview):", { pseudonym, score });
+                setSubmitted(true);
+            };
+            
+             const handlePrint = () => {
+                const printWindow = window.open('', '_blank');
+                printWindow.document.write(`
+                    <html>
+                        <head>
+                            <title>Literacy Launchpad Report</title>
+                            <script src="https://cdn.tailwindcss.com"><\/script>
+                            <style> body { font-family: sans-serif; background-color: #1a202c; color: #e2e8f0; } </style>
+                        </head>
+                        <body class="p-8">
+                            <div class="max-w-4xl mx-auto bg-slate-800 p-8 rounded-lg shadow-lg border border-violet-700">
+                                <h1 class="text-4xl font-bold text-violet-400 mb-2">Literacy Launchpad Report</h1>
+                                <p class="text-lg text-slate-400 mb-6">For: ${studentName || 'N/A'}</p>
+                                
+                                <div class="grid grid-cols-2 gap-6 text-center">
+                                    <div class="bg-slate-700 p-4 rounded-lg">
+                                        <p class="text-sm text-slate-400">Final Score</p>
+                                        <p class="text-3xl font-bold text-yellow-400">${score}</p>
+                                    </div>
+                                     <div class="bg-slate-700 p-4 rounded-lg">
+                                        <p class="text-sm text-slate-400">Accuracy</p>
+                                        <p class="text-3xl font-bold text-green-400">${accuracy}%</p>
+                                    </div>
+                                    <div class="bg-slate-700 p-4 rounded-lg">
+                                        <p class="text-sm text-slate-400">Time Taken</p>
+                                        <p class="text-3xl font-bold text-cyan-400">${time.toFixed(1)}s</p>
+                                    </div>
+                                     <div class="bg-slate-700 p-4 rounded-lg">
+                                        <p class="text-sm text-slate-400">Hearts Remaining</p>
+                                        <p class="text-3xl font-bold text-red-400">${hearts}</p>
+                                    </div>
+                                </div>
+
+                                <div class="mt-8">
+                                    <h2 class="text-2xl font-bold text-slate-100 mb-4">Session Details</h2>
+                                    <ul class="space-y-2 text-slate-300">
+                                        <li><strong>Level:</strong> Grades ${level}</li>
+                                        <li><strong>Map:</strong> ${map}</li>
+                                        <li><strong>Class:</strong> ${characterClass.name}</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </body>
+                    </html>
+                `);
+                printWindow.document.close();
+                printWindow.print();
+            };
+
+            return (
+                <div className="text-center">
+                    <h2 className="text-4xl font-bold text-violet-400 mb-2">Adventure Complete!</h2>
+                    <p className="text-lg text-slate-300 mb-8">Here's how you did, {studentName || 'adventurer'}.</p>
+
+                    <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 max-w-4xl mx-auto mb-8">
+                        <div className="bg-slate-800/70 p-4 rounded-lg flex flex-col items-center justify-center">
+                            <IconTrophy />
+                            <p className="mt-2 text-slate-400">Score</p>
+                            <p className="text-3xl font-bold text-yellow-400">{score}</p>
+                        </div>
+                        <div className="bg-slate-800/70 p-4 rounded-lg flex flex-col items-center justify-center">
+                             <IconCheckCircle />
+                            <p className="mt-2 text-slate-400">Accuracy</p>
+                            <p className="text-3xl font-bold text-green-400">{accuracy}%</p>
+                        </div>
+                         <div className="bg-slate-800/70 p-4 rounded-lg flex flex-col items-center justify-center">
+                             <IconClock />
+                            <p className="mt-2 text-slate-400">Time</p>
+                            <p className="text-3xl font-bold text-cyan-400">{time.toFixed(1)}s</p>
+                        </div>
+                        <div className="bg-slate-800/70 p-4 rounded-lg flex flex-col items-center justify-center">
+                            <IconHeart className="w-6 h-6"/>
+                            <p className="mt-2 text-slate-400">Hearts</p>
+                            <p className="text-3xl font-bold">{hearts}</p>
+                        </div>
+                    </div>
+                    
+                    {!submitted && (
+                         <div className="max-w-md mx-auto my-8 p-4 bg-slate-800 rounded-lg">
+                            <h3 className="text-lg font-bold text-yellow-400">Add to Leaderboard?</h3>
+                            <p className="text-sm text-slate-400 mb-3">Enter a name to appear on the Top Scores list.</p>
+                            <div className="flex gap-2">
+                                <input type="text" value={pseudonym} onChange={e => setPseudonym(e.target.value)} placeholder="Enter a pseudonym" className="flex-grow p-2 rounded-md bg-slate-700 text-slate-200 border border-slate-600 focus:outline-none focus:ring-2 focus:ring-yellow-500" />
+                                <button onClick={handleSubmitScore} disabled={!pseudonym} className="bg-yellow-600 hover:bg-yellow-700 text-white font-bold py-2 px-4 rounded-md transition disabled:bg-slate-600 disabled:cursor-not-allowed">Submit</button>
+                            </div>
+                        </div>
+                    )}
+                    {submitted && <p className="text-green-400 my-8">Score submitted to leaderboard!</p>}
+
+                    <div className="flex justify-center gap-4 mt-8">
+                        <button onClick={onRestart} className="bg-violet-600 hover:bg-violet-700 text-white font-bold py-3 px-6 rounded-lg transition">Play Again</button>
+                        {studentName && <button onClick={handlePrint} className="bg-slate-600 hover:bg-slate-700 text-white font-bold py-3 px-6 rounded-lg transition">Print Report</button>}
+                    </div>
+                </div>
+            );
+        }
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
     </script>
 {% endraw %}
 {% endblock %}
+
 
