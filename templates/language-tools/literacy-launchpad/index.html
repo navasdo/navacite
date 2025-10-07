@@ -50,45 +50,62 @@
         // --- Game Data & Assets ---
         const correctSound = new Audio("https://raw.githubusercontent.com/navasdo/navacite/refs/heads/main/templates/language-tools/literacy-launchpad/static/audio/correct.wav");
         const incorrectSound = new Audio("https://raw.githubusercontent.com/navasdo/navacite/refs/heads/main/templates/language-tools/literacy-launchpad/static/audio/damage.mp3");
-        const streakSound = new Audio("https://raw.githubusercontent.com/navasdo/navacite/refs/heads/main/templates/language-tools/literacy-launchpad/static/audio/streak.mp3");
+        const streakSound = new Audio("https://raw.githubusercontent.com/navasdo/navacite/refs/heads/main/templates/language-tools/literacy-launchpad/static/audio/streak.wav");
         const multiplierSound = new Audio("https://raw.githubusercontent.com/navasdo/navacite/refs/heads/main/templates/language-tools/literacy-launchpad/static/audio/multiplier.mp3");
         const heartSound = new Audio("https://raw.githubusercontent.com/navasdo/navacite/refs/heads/main/templates/language-tools/literacy-launchpad/static/audio/healing.mp3");
 
         const passages = {
             '2-3': {
-                'Jungle of Syntax': "A little monkey likes to [play|plays|playing]. He swings from a [branch|leaf|root] all day long. His mom tells him to be [careful|carefully|caring] so he does not fall down. The monkey sees a bright yellow [banana|rock|flower] hanging from a vine. He gets very [excited|exciting|excite] and chatters happily.",
+                'Jungle of Syntax': "A little monkey likes to [play|plays|playing]. He swings from a [branch|branches|branched] all day long. His mom tells him to be [careful|carefully|caring] so he does not fall down. The monkey sees a bright yellow [banana|bananas|bananally] hanging from a vine. He gets very [excited|exciting|excites] and chatters happily.",
+                'Vocabulary Volcano': "The brave knight must [ascend|assent|accent] the volcano. The air is [thick|thicken|thicket] with smoke. He sees a glimmer of [treasure|treasurer|treasured] near the top. He must be [cautious|cautions|cautioned] of the crumbling rocks. Finally, he [reaches|reaching|reach] the summit and claims his reward.",
+                'Caverns of Cohesion': "The explorer entered the [dark|darkly|darken] cave. A small stream [flowed|flowing|flown] through the cavern. She needed to find the [hidden|hiding|hid] passage. The map was [old|older|oldest] and hard to read. Suddenly, she [heard|hear|hearing] a noise from deeper inside."
             },
             '4-5': {
-                'Vocabulary Volcano': "The ancient volcano was [dormant|sleeping|sleep], meaning it had not erupted for a long time. The villagers felt safe living nearby. They cultivated the [fertile|good|fast] soil on its slopes, growing delicious fruits and vegetables. One day, a scientist came to [inspect|look|looking] the volcano. She said there was no immediate [danger|bad|dangerous], but it was wise to be prepared.",
+                'Jungle of Syntax': "The scientist [studies|study|studying] rare insects in the jungle. She carefully [documents|document|documenting] each new species. The jungle is [teeming|team|teem] with life, but it can also be dangerous. She always carries a compass to avoid getting [lost|losing|loss]. Her research will help us [understand|understanding|understood] this ecosystem better.",
+                'Vocabulary Volcano': "The ancient civilization [believed|believe|believing] the volcano was a powerful deity. They would make [offerings|offering|offered] to appease it. The volcano's eruptions were both destructive and [creative|creating|creation], forming new land. Geologists are fascinated by its unique [geological|geology|geologist] features. They hope to [predict|predicting|prediction] future eruptions more accurately.",
+                'Caverns of Cohesion': "The cave divers prepared their [equipment|equipping|equipped] meticulously. They were exploring a newly discovered underwater [cavern|caverns|cavernous]. The water was crystal clear but incredibly [cold|coldly|coldness]. They had to navigate a series of [narrow|narrowly|narrower] tunnels. Their goal was to [map|mapping|mapped] the system for the first time."
             },
             '6-8': {
-                'Caverns of Cohesion': "Space exploration presents immense challenges; [furthermore|however|because], it offers incredible rewards. The journey to Mars, for example, will require unprecedented technological [innovation|idea|invent]. Scientists must develop systems for life support, radiation shielding, and sustainable energy. [Despite|Although|Therefore] these obstacles, the quest to explore the red planet continues, driven by human curiosity and the search for knowledge.",
+                'Jungle of Syntax': "The biologist's expedition into the Amazon was [fraught|freight|fought] with peril. Her primary objective was to [catalogue|cataloguing|catalogued] undiscovered species of flora and fauna. The sheer [biodiversity|biodiverse|biodiversify] of the region was staggering. Navigating the dense undergrowth required both skill and [perseverance|persevere|persevering]. Ultimately, her findings would contribute significantly to our [comprehension|comprehensive|comprehend] of the rainforest's complex web of life.",
+                'Vocabulary Volcano': "The vulcanologist approached the caldera with a mixture of [trepidation|trepidatious|trepidating] and excitement. The volcano had been dormant for decades, but recent seismic activity indicated an [imminent|eminent|immanent] eruption. His task was to deploy sensors that would transmit [critical|critically|criticize] data back to the lab. The noxious fumes made it difficult to breathe, necessitating the use of a [specialized|specialize|specializing] respirator. This dangerous work was essential for warning the [populace|popular|populate] of the surrounding villages.",
+                'Caverns of Cohesion': "The spelunkers descended into the subterranean abyss, their headlamps [illuminating|illuminate|illumination] vast, cathedral-like chambers. They were searching for a legendary underground river, a geographical [enigma|enigmatic|enigmatically] that had baffled explorers for generations. The journey required them to [traverse|traversing|traversed] treacherous ledges and rappel down sheer cliffs. They relied on their collective expertise and [unwavering|wavering|waver] trust in one another. Discovering the river would be a monumental achievement in the field of [speleology|speleological|speleologist]."
             }
         };
-        
+
         const characterClasses = {
-            adventurer: { name: 'Adventurer', bonus: '+1 starting heart', penalty: 'Slightly lower score multiplier', heartMod: 1, streakMod: 0, scoreMod: 0.9, variants: [{gender: 'Female', image100: 'adventurer-100_female_presenting.png', image50: 'adventurer-50-female_presenting.png'}, {gender: 'Male', image100: 'adventurer-100_male_presenting.png', image50: 'adventurer-50-male_presenting.png'}] },
-            alchemist: { name: 'Alchemist', bonus: 'Heart rewards restore +2', penalty: 'Score rewards are smaller', heartMod: 0, streakMod: 0, scoreMod: 0.8, variants: [{gender: 'Neutral', image100: 'alchemist-100.png', image50: 'alchemist-50.png'}] },
-            archer: { name: 'Archer', bonus: 'Higher streak bonus', penalty: 'Streaks require +1 correct answer', heartMod: 0, streakMod: 1, scoreMod: 1.2, variants: [{gender: 'Female', image100: 'archer-100-female_presenting.png', image50: 'archer-50-female_presenting.png'}, {gender: 'Male', image100: 'archer-100-male_presenting.png', image50: 'archer-50-male_presenting.png'}] },
-            assassin: { name: 'Assassin', bonus: 'Massive score multiplier', penalty: 'Start with -3 hearts', heartMod: -3, streakMod: 0, scoreMod: 1.5, variants: [{gender: 'Female', image100: 'assassin-100-female_presenting.png', image50: 'assassin-50-female_presenting.png'}, {gender: 'Male', image100: 'assassin-100-male_presenting.png', image50: 'assassin-50-male_presenting.png'}] },
-            bandit: { name: 'Bandit', bonus: 'More points from choices', penalty: 'No streak rewards', heartMod: 0, streakMod: 99, scoreMod: 1.3, variants: [{gender: 'Neutral', image100: 'bandit-100.png', image50: 'bandit-50.png'}] },
-            barbarian: { name: 'Barbarian', bonus: 'Start with +3 hearts', penalty: 'Lower overall score', heartMod: 3, streakMod: 0, scoreMod: 0.7, variants: [{gender: 'Neutral', image100: 'barbarian-100.png', image50: 'barbarian-50.png'}] },
-            beast_master: { name: 'Beast Master', bonus: 'First incorrect answer is free', penalty: 'Reduced streak bonus', heartMod: 0, streakMod: 0, scoreMod: 0.9, freebie: true, variants: [{gender: 'Neutral', image100: 'beast_master-100.png', image50: 'beast_master-50.png'}] },
-            'dragon-knight': { name: 'Dragon Knight', bonus: 'Immune to first 2 mistakes', penalty: 'No score multiplier reward', heartMod: 0, streakMod: 0, scoreMod: 1, immune: 2, variants: [{gender: 'Neutral', image100: 'dragon-knight-100.png', image50: 'dragon_knight-50.png'}] },
-            knight: { name: 'Knight', bonus: 'Balanced stats', penalty: 'None', heartMod: 0, streakMod: 0, scoreMod: 1, variants: [{gender: 'Male', image100: 'knight-100-male_presenting.png', image50: 'knight-50-male_presenting.png'}] },
-            'martial-artist': { name: 'Martial Artist', bonus: 'Streaks activate faster', penalty: 'No heart reward option', heartMod: 0, streakMod: -1, scoreMod: 1.1, variants: [{gender: 'Female', image100: 'martial-artist-100-female_presenting.png', image50: 'martial-artist-50-female_presenting.png'}, {gender: 'Male', image100: 'martial-artist-100-male_presenting.png', image50: 'martial-artist-50-male_presenting.png'}] },
-            samurai: { name: 'Samurai', bonus: 'Perfect answers grant huge bonus', penalty: 'Any mistake resets streak', heartMod: 0, streakMod: 0, scoreMod: 1.2, perfect: true, variants: [{gender: 'Neutral', image100: 'samurai-100.png', image50: 'samurai-50.png'}] },
-            wizard: { name: 'Wizard', bonus: 'Streak score rewards are massively increased', penalty: 'Fewer starting hearts', heartMod: -2, streakMod: 0, scoreMod: 1, streakBonusMultiplier: 2.5, variants: [{gender: 'Female', image100: 'wizard-100-female_presenting.png', image50: 'wizard-50-female_presenting.png'}, {gender: 'Male', image100: 'wizard-100-male_presenting.png', image50: 'wizard-50-male_presenting.png'}] },
+            adventurer: { name: 'Adventurer', bonus: '+1 starting heart', penalty: 'Slightly lower score multiplier', heartMod: 1, scoreMod: 0.9, variants: [{gender: 'Female', image50: 'adventurer-female_presenting_50.png', image100: 'adventurer-female_presenting_100.png'}, {gender: 'Male', image50: 'adventurer-male_presenting_50.png', image100: 'adventurer-male_presenting_100.png'}]},
+            alchemist: { name: 'Alchemist', bonus: 'Heart rewards restore +2', penalty: 'Score rewards are smaller', scoreMod: 0.8, variants: [{gender: 'Neutral', image50: 'alchemist_50.png', image100: 'alchemist_100.png'}]},
+            archer: { name: 'Archer', bonus: 'Higher streak bonus', penalty: 'Streaks require +1 correct answer', streakMod: 1, scoreMod: 1.2, variants: [{gender: 'Female', image50: 'archer-female_presenting_50.png', image100: 'archer-female_presenting_100.png'}, {gender: 'Male', image50: 'archer-male_presenting_50.png', image100: 'archer-male_presenting_100.png'}]},
+            assassin: { name: 'Assassin', bonus: 'Massive score multiplier', penalty: 'Start with -3 hearts', heartMod: -3, scoreMod: 1.5, variants: [{gender: 'Female', image50: 'assassin-female_presenting_50.png', image100: 'assassin-female_presenting_100.png'}, {gender: 'Male', image50: 'assassin-male_presenting_50.png', image100: 'assassin-male_presenting_100.png'}]},
+            bandit: { name: 'Bandit', bonus: 'More points from choices', penalty: 'No streak rewards', scoreMod: 1.3, variants: [{gender: 'Neutral', image50: 'bandit_50.png', image100: 'bandit_100.png'}]},
+            barbarian: { name: 'Barbarian', bonus: 'Start with +3 hearts', penalty: 'Lower overall score', heartMod: 3, scoreMod: 0.7, variants: [{gender: 'Neutral', image50: 'barbarian_50.png', image100: 'barbarian_100.png'}]},
+            'beast-master': { name: 'Beast Master', bonus: 'First incorrect answer is free', penalty: 'Reduced streak bonus', scoreMod: 0.9, freebie: true, variants: [{gender: 'Neutral', image50: 'beast-master_50.png', image100: 'beast-master_100.png'}]},
+            'dragon-knight': { name: 'Dragon Knight', bonus: 'Immune to first 2 mistakes', penalty: 'No score multiplier reward', immune: 2, variants: [{gender: 'Neutral', image50: 'dragon-knight_50.png', image100: 'dragon-knight_100.png'}]},
+            knight: { name: 'Knight', bonus: 'Balanced stats', penalty: 'None', variants: [{gender: 'Male', image50: 'knight-male_presenting_50.png', image100: 'knight-male_presenting_100.png'}]},
+            'martial-artist': { name: 'Martial Artist', bonus: 'Streaks activate faster', penalty: 'No heart reward option', streakMod: -1, scoreMod: 1.1, variants: [{gender: 'Female', image50: 'martial-artist-female_presenting_50.png', image100: 'martial-artist-female_presenting_100.png'}, {gender: 'Male', image50: 'martial-artist-male_presenting_50.png', image100: 'martial-artist-male_presenting_100.png'}]},
+            samurai: { name: 'Samurai', bonus: 'Perfect answers grant huge bonus', penalty: 'Any mistake resets streak', scoreMod: 1.2, perfect: true, variants: [{gender: 'Neutral', image50: 'samurai_50.png', image100: 'samurai_100.png'}]},
+            wizard: { name: 'Wizard', bonus: 'Streak score rewards are massively increased', penalty: 'Fewer starting hearts', heartMod: -2, streakBonusMultiplier: 2.5, variants: [{gender: 'Female', image50: 'wizard-female_presenting_50.png', image100: 'wizard-female_presenting_100.png'}, {gender: 'Male', image50: 'wizard-male_presenting_50.png', image100: 'wizard-male_presenting_100.png'}]},
         };
+
         const classImageBaseUrl = "https://raw.githubusercontent.com/navasdo/navacite/refs/heads/main/templates/language-tools/literacy-launchpad/static/images/character-avatars/";
+
+        // --- Helper function to shuffle array ---
+        const shuffleArray = (array) => {
+            let currentIndex = array.length, randomIndex;
+            while (currentIndex !== 0) {
+                randomIndex = Math.floor(Math.random() * currentIndex);
+                currentIndex--;
+                [array[currentIndex], array[randomIndex]] = [array[randomIndex], array[currentIndex]];
+            }
+            return array;
+        };
 
         // --- Helper & Utility Components ---
         const IconInfo = () => (<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>);
         const IconHeart = ({ className }) => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round" className={`text-red-500 ${className}`}><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>;
         const IconTrophy = () => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/></svg>;
-        const IconClock = () => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>;
         const IconCheckCircle = () => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>;
-        
+
         const BaseModal = ({ show, onClose, children, maxWidth = 'max-w-2xl' }) => {
             if (!show) return null;
             return createPortal(
@@ -118,7 +135,7 @@
                  </div>
             </BaseModal>
         );
-        
+
         // --- Main App Component ---
         function App() {
             const [screen, setScreen] = useState('setup');
@@ -127,11 +144,6 @@
             const [leaderboardData, setLeaderboardData] = useState([]);
 
             const fetchLeaderboard = useCallback(() => {
-                // In a real environment, this fetch would work. For the preview, we'll mock it.
-                // fetch('/api/literacy-launchpad/leaderboard')
-                //     .then(res => res.json())
-                //     .then(data => setLeaderboardData(data))
-                //     .catch(err => console.error("Failed to fetch leaderboard:", err));
                 console.log("Fetching leaderboard (mocked for preview)...");
             }, []);
 
@@ -170,7 +182,7 @@
             return (
                 <div className="w-full max-w-7xl mx-auto py-8">
                      <header className="text-center mb-12">
-                        <img src="https://raw.githubusercontent.com/navasdo/navacite/refs/heads/main/templates/navacite-images/literacy-launchpad.png" alt="Literacy Launchpad Logo" className="w-48 mx-auto mb-4" style={{filter: 'drop-shadow(0 0 15px rgba(167, 139, 250, 0.4))'}} />
+                        <img src="https://raw.githubusercontent.com/navasdo/navacite/refs/heads/main/templates/static/navacite-images/literacy-launchpad.png" alt="Literacy Launchpad Logo" className="w-48 mx-auto mb-4" style={{filter: 'drop-shadow(0 0 15px rgba(167, 139, 250, 0.4))'}} />
                         <h1 className="text-5xl md:text-6xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-violet-400 to-fuchsia-500">
                             Literacy Launchpad
                         </h1>
@@ -210,7 +222,7 @@
 
             return (
                 <div>
-                     <h3 className="text-2xl font-bold text-violet-400 text-center mb-8">Prepare for Launch</h3>
+                    <h3 className="text-2xl font-bold text-violet-400 text-center mb-8">Prepare for Launch</h3>
                     <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                         <div className="lg:col-span-2 space-y-8">
                             {/* Top part: Student, Level, Map */}
@@ -277,7 +289,7 @@
                         {/* Leaderboard */}
                         <div className="p-4 bg-slate-800/50 rounded-lg">
                             <h3 className="text-xl font-bold text-yellow-400 text-center mb-4">Top Scores</h3>
-                            <ol className="list-decimal list-inside space-y-2">
+                            <ol className="list-decimal list-inside space-y-2 text-slate-300">
                                 {leaderboard.map((entry, index) => (
                                     <li key={index} className="flex justify-between">
                                         <span>{entry.pseudonym}</span>
@@ -296,153 +308,206 @@
         // --- Game Screen Component ---
         function GameScreen({ settings, onEndGame }) {
             const { studentName, level, map, isPractice, characterClass, characterImage } = settings;
-
-            const passageData = useMemo(() => {
-                const text = passages[level][map];
-                const parts = text.split(/(\[.*?\])/g).map((part, index) => {
-                    if (part.startsWith('[') && part.endsWith(']')) {
-                        const options = part.slice(1, -1).split('|');
-                        return { type: 'question', options: options, correct: options[0], id: index };
-                    }
-                    return { type: 'text', content: part, id: index };
-                });
-                return parts.filter(p => p.type === 'text' ? p.content.length > 0 : true);
-            }, [level, map]);
-
-            const questions = useMemo(() => passageData.filter(p => p.type === 'question'), [passageData]);
-
-            const [startTime] = useState(Date.now());
-            const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
-            const [answers, setAnswers] = useState(Array(questions.length).fill(null));
-            const [hearts, setHearts] = useState(5 + (characterClass.heartMod || 0));
+            const [passage, setPassage] = useState([]);
+            const [currentItemIndex, setCurrentItemIndex] = useState(0);
+            const [hearts, setHearts] = useState(10 + (characterClass.heartMod || 0));
             const [score, setScore] = useState(0);
             const [streak, setStreak] = useState(0);
-            const [lastAnswerCorrect, setLastAnswerCorrect] = useState(null);
-            const [selectedOption, setSelectedOption] = useState(null);
-            const [isImmune, setIsImmune] = useState(characterClass.immune > 0);
-            const [immunityCharges, setImmunityCharges] = useState(characterClass.immune || 0);
+            const [notifications, setNotifications] = useState([]);
+            const [showStreakChoice, setShowStreakChoice] = useState(false);
+            const [mapPosition, setMapPosition] = useState(0);
+            const [immuneCharges, setImmuneCharges] = useState(characterClass.immune || 0);
+            const [hasUsedFreebie, setHasUsedFreebie] = useState(false);
+            const mapRef = useRef(null);
+           
+            useEffect(() => {
+                const rawText = passages[level][map];
+                const parsedPassage = rawText.split(/(\[.*?\])/g).map((part, index) => {
+                    if (part.startsWith('[') && part.endsWith(']')) {
+                        const options = part.slice(1, -1).split('|');
+                        const correct = options[0];
+                        return { 
+                            type: 'choice', 
+                            options: shuffleArray(options.map(opt => ({ word: opt, type: opt === correct ? 'correct' : 'incorrect' }))), 
+                            id: index 
+                        };
+                    }
+                    return { type: 'text', content: part, id: index };
+                }).filter(p => p.type === 'text' ? p.content.length > 0 : true);
+                setPassage(parsedPassage);
+                setCurrentItemIndex(parsedPassage.findIndex(p => p.type === 'choice'));
+            }, [level, map]);
 
-            const handleAnswer = (option, questionId) => {
-                if (selectedOption) return;
-
-                const question = questions.find(q => q.id === questionId);
-                const isCorrect = option === question.correct;
-                setSelectedOption({ option, isCorrect });
-
+             const addNotification = (text, type) => {
+                const id = Date.now();
+                setNotifications(n => [...n, { id, text, type }]);
                 setTimeout(() => {
-                    if (isCorrect) {
-                        correctSound.play();
-                        const points = 100 * (characterClass.scoreMod || 1);
-                        setScore(prev => prev + points);
-                        setStreak(prev => prev + 1);
-                        setLastAnswerCorrect(true);
-                    } else {
-                        incorrectSound.play();
-                        if (immunityCharges > 0) {
-                            setImmunityCharges(prev => prev - 1);
-                        } else {
-                            setHearts(prev => Math.max(0, prev - 1));
-                        }
-                        setStreak(0);
-                        setLastAnswerCorrect(false);
-                    }
-
-                    const newAnswers = [...answers];
-                    const questionIndexInAll = questions.findIndex(q => q.id === questionId);
-                    newAnswers[questionIndexInAll] = option;
-                    setAnswers(newAnswers);
-
-                    if (currentQuestionIndex < questions.length - 1) {
-                         setCurrentQuestionIndex(prev => prev + 1);
-                         setSelectedOption(null);
-                    } else {
-                        // Game over
-                        const endTime = Date.now();
-                        onEndGame({
-                            score,
-                            hearts,
-                            time: (endTime - startTime) / 1000,
-                            correctAnswers: newAnswers.filter((ans, i) => ans === questions[i].correct).length,
-                            totalQuestions: questions.length,
-                            studentName,
-                            level,
-                            map,
-                            characterClass,
-                            characterImage
-                        });
-                    }
-                }, 1000);
+                    setNotifications(n => n.filter(item => item.id !== id));
+                }, 2500);
             };
-            
-            if (hearts <= 0) {
-                const endTime = Date.now();
-                onEndGame({
-                    score, hearts, time: (endTime - startTime) / 1000,
-                    correctAnswers: answers.filter((ans, i) => ans && ans === questions[i].correct).length,
-                    totalQuestions: questions.length,
-                    studentName, level, map, characterClass, characterImage
+
+            const advanceToNext = () => {
+                 setTimeout(() => {
+                    const nextChoiceIndex = passage.findIndex((p, index) => index > currentItemIndex && p.type === 'choice');
+                    if (nextChoiceIndex !== -1) {
+                        setCurrentItemIndex(nextChoiceIndex);
+                    } else {
+                        endGame();
+                    }
+                }, 500); 
+            };
+
+            const handleChoice = (selectedOption, choiceId) => {
+                if (showStreakChoice || passage.find(p => p.id === choiceId)?.answered) return;
+
+                setPassage(p => p.map(part => part.id === choiceId ? {...part, answered: true, selection: selectedOption.word} : part));
+
+                if (selectedOption.type === 'correct') {
+                    correctSound.play();
+                    const points = Math.round(10 * (characterClass.scoreMod || 1));
+                    setScore(s => s + points);
+                    addNotification(`+${points}`, 'score');
+                    setMapPosition(p => p + 1);
+                    
+                    const newStreak = streak + 1;
+                    setStreak(newStreak);
+
+                    const streakThreshold = 3 + (characterClass.streakMod || 0);
+                    if (newStreak >= streakThreshold && newStreak % streakThreshold === 0) {
+                        streakSound.play();
+                        setShowStreakChoice(true);
+                    } else {
+                        advanceToNext();
+                    }
+                } else {
+                    incorrectSound.play();
+                    if (characterClass.perfect) setStreak(0);
+
+                    let heartsToLose = 1;
+                    if (characterClass.freebie && !hasUsedFreebie) {
+                        heartsToLose = 0;
+                        setHasUsedFreebie(true);
+                        addNotification("Beast Master's Bond Protected You!", 'info');
+                    } else if (immuneCharges > 0) {
+                        heartsToLose = 0;
+                        setImmuneCharges(c => c - 1);
+                        addNotification("Dragon Knight's Armor Protected You!", 'info');
+                    }
+                    
+                    if(heartsToLose > 0) {
+                        setHearts(h => h - 1);
+                        setStreak(0);
+                        addNotification('-1 ♥', 'heart');
+                    }
+                    
+                    if (hearts - heartsToLose <= 0) {
+                        setTimeout(endGame, 500);
+                    } else {
+                       advanceToNext();
+                    }
+                }
+            };
+
+            const handleStreakReward = (reward) => {
+                if (reward === 'multiplier') {
+                    multiplierSound.play();
+                    const bonus = Math.round(streak * 5 * (characterClass.streakBonusMultiplier || 1) * (characterClass.scoreMod || 1));
+                    setScore(s => s + bonus);
+                    addNotification(`+${bonus} Streak Bonus!`, 'score');
+                } else if (reward === 'heart') {
+                    heartSound.play();
+                    const heartsRestored = characterClass.name === 'Alchemist' ? 2 : 1;
+                    setHearts(h => Math.min(10, h + heartsRestored));
+                    addNotification(`+${heartsRestored} ♥ Restored!`, 'heart');
+                }
+                setShowStreakChoice(false);
+                advanceToNext();
+            };
+
+            const endGame = useCallback(() => {
+                 onEndGame({
+                    score,
+                    hearts,
+                    totalQuestions: passage.filter(p => p.type === 'choice').length,
+                    studentName,
+                    level,
+                    map,
+                    characterClass,
+                    characterImage
                 });
-                return <div>Game Over! Redirecting to results...</div>;
-            }
+            }, [score, hearts, passage, onEndGame, studentName, level, map, characterClass, characterImage]);
 
-            const currentQuestion = questions[currentQuestionIndex];
-
+             useEffect(() => {
+                if (mapRef.current) {
+                    const nodeHeight = 88; // h-16 (4rem=64px) + my-4 (1rem*2=16px) + border(2*2=4px) = 84px. Let's use 88 for buffer.
+                    const targetScroll = mapPosition * nodeHeight;
+                    mapRef.current.scrollTop = targetScroll - (mapRef.current.clientHeight / 2) + (nodeHeight/2);
+                }
+            }, [mapPosition]);
+            
             return (
-                <div className="flex flex-col h-full">
-                    <header className="flex justify-between items-center p-4 bg-slate-800/50 rounded-t-lg">
-                        <div className="flex items-center gap-3">
-                            <img src={characterImage} alt={characterClass.name} className="w-12 h-12 rounded-full border-2 border-violet-400" />
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                    <div className="lg:col-span-2 relative">
+                        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-64 h-24 pointer-events-none z-50">
+                            {notifications.map(n => <Notification key={n.id} {...n} />)}
+                        </div>
+                        <div className="flex justify-between items-center mb-4">
                             <div>
                                 <h3 className="font-bold text-lg text-slate-100">{studentName || 'Adventurer'}</h3>
                                 <p className="text-sm text-slate-400">{characterClass.name}</p>
                             </div>
-                        </div>
-                        <div className="flex items-center gap-4 text-2xl font-bold">
-                            <div className="flex items-center gap-2 text-red-500">
-                                <IconHeart /> <span>{hearts}</span>
+                            <div className="flex items-center gap-4">
+                               <div className="flex items-center gap-2 text-yellow-400 font-bold text-2xl"><IconTrophy /><span>{score}</span></div>
+                               <div className="flex items-center gap-1">
+                                    {[...Array(hearts)].map((_, i) => <IconHeart key={i} className="w-8 h-8 animate-pulse-heart" />)}
+                                    {[...Array(10 - hearts > 0 ? 10 - hearts : 0)].map((_, i) => <IconHeart key={i} className="w-8 h-8 text-slate-700" />)}
+                                </div>
                             </div>
-                            <div className="flex items-center gap-2 text-yellow-400">
-                                <IconTrophy /> <span>{score}</span>
-                            </div>
                         </div>
-                    </header>
-                    <div className="flex-grow p-6 sm:p-8 bg-slate-900/60 rounded-b-lg">
-                        <div className="text-lg md:text-xl text-slate-300 leading-relaxed mb-8">
-                            {passageData.map(part => {
+                        <div className="p-6 bg-slate-800/50 rounded-lg text-xl md:text-2xl leading-loose">
+                            {passage.map((part, index) => {
                                 if (part.type === 'text') {
                                     return <span key={part.id}>{part.content}</span>;
                                 }
-                                const qIndex = questions.findIndex(q => q.id === part.id);
-                                const answer = answers[qIndex];
-                                if (answer) {
-                                    const isCorrect = answer === part.correct;
-                                    return <strong key={part.id} className={isCorrect ? 'text-green-400' : 'text-red-400 line-through'}>{answer}</strong>;
+                                if (part.answered) {
+                                    const isCorrect = part.options.find(o => o.word === part.selection)?.type === 'correct';
+                                    return <strong key={part.id} className={`mx-1 ${isCorrect ? 'text-green-400' : 'text-red-400 line-through'}`}>{part.selection}</strong>;
                                 }
-                                if (qIndex === currentQuestionIndex) {
-                                     return <strong key={part.id} className="text-violet-400 bg-slate-800 px-2 py-1 rounded-md"> [ ? ] </strong>;
+                                if (index === currentItemIndex) {
+                                    return (
+                                        <span key={part.id} className="inline-flex flex-wrap gap-2 mx-1 p-2 bg-slate-900/50 rounded-md">
+                                            {part.options.map(option => (
+                                                <button key={option.word} onClick={() => handleChoice(option, part.id)} className="px-3 py-1 bg-violet-600 text-white rounded-md hover:bg-violet-700 transition text-lg">
+                                                    {option.word}
+                                                </button>
+                                            ))}
+                                        </span>
+                                    );
                                 }
-                                return <span key={part.id}>____</span>;
+                                return <span key={part.id} className="font-bold text-slate-500 mx-1">[ ... ]</span>;
                             })}
                         </div>
-                        
-                        <div className="mt- auto">
-                            <h4 className="text-xl font-bold text-center text-slate-100 mb-4">Choose the best word:</h4>
-                            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-                                {currentQuestion.options.map(option => {
-                                    const isSelected = selectedOption && selectedOption.option === option;
-                                    const buttonClass = isSelected
-                                        ? (selectedOption.isCorrect ? 'bg-green-600' : 'bg-red-600')
-                                        : 'bg-slate-700 hover:bg-slate-600';
-
-                                    return (
-                                        <button key={option} onClick={() => handleAnswer(option, currentQuestion.id)} disabled={!!selectedOption}
-                                            className={`p-4 rounded-lg text-white font-semibold text-lg transition ${buttonClass}`}>
-                                            {option}
-                                        </button>
-                                    );
-                                })}
+                        {isPractice && passage[currentItemIndex] && (
+                            <div className="mt-4 p-3 bg-yellow-900/30 border border-yellow-600 rounded-lg text-yellow-300 animate-fade-in-up">
+                               <strong className="font-bold">Hint:</strong> The correct answer is <em className="italic">{passage.find(p=>p.id === currentItemIndex).options.find(o=>o.type==='correct').word}</em>.
                             </div>
-                            {isPractice && !selectedOption && <p className="text-center text-slate-400 mt-4 text-sm">Hint: The correct answer is <strong className="italic">{currentQuestion.correct}</strong>.</p>}
+                        )}
+                        {showStreakChoice && (
+                            <StreakChoiceModal onSelect={handleStreakReward} streak={streak} characterClass={characterClass} />
+                        )}
+                    </div>
+                    {/* Adventure Map */}
+                    <div className="relative h-full">
+                        <h3 className="text-xl font-bold text-yellow-400 text-center mb-4">Adventure Map</h3>
+                        <div ref={mapRef} className="map-container bg-slate-900/50 border border-slate-700 rounded-lg p-4 relative">
+                            <div className="relative w-full flex flex-col-reverse items-center">
+                                {[...Array(100)].map((_, i) => (
+                                    <MapNode key={i} number={i + 1} isCurrent={mapPosition === i} isCompleted={mapPosition > i} />
+                                ))}
+                            </div>
+                        </div>
+                         <div className="absolute inset-0 flex items-center justify-center pointer-events-none" style={{ top: '4rem', bottom: '0' }}>
+                            <img src={`${classImageBaseUrl}${characterImage}`} alt={characterClass.name} className="w-16 h-16 transition-transform duration-500" />
                         </div>
                     </div>
                 </div>
@@ -451,28 +516,8 @@
 
         // --- Results Screen Component ---
         function ResultsScreen({ results, onRestart, leaderboard, onUpdateLeaderboard }) {
-            const { score, hearts, time, correctAnswers, totalQuestions, studentName, level, map, characterClass, characterImage } = results;
-            const accuracy = totalQuestions > 0 ? (correctAnswers / totalQuestions * 100).toFixed(1) : 0;
-            const [pseudonym, setPseudonym] = useState('');
-            const [submitted, setSubmitted] = useState(false);
+            const { studentName, score, hearts } = results;
 
-            const handleSubmitScore = () => {
-                // In a real environment, this would be a POST request.
-                // fetch('/api/literacy-launchpad/leaderboard', {
-                //     method: 'POST',
-                //     headers: { 'Content-Type': 'application/json' },
-                //     body: JSON.stringify({ pseudonym, score, level, map, character: characterClass.name })
-                // })
-                // .then(() => {
-                //     setSubmitted(true);
-                //     onUpdateLeaderboard(); // Refresh leaderboard data
-                // })
-                // .catch(err => console.error("Failed to submit score:", err));
-
-                console.log("Submitting score (mocked for preview):", { pseudonym, score });
-                setSubmitted(true);
-            };
-            
              const handlePrint = () => {
                 const printWindow = window.open('', '_blank');
                 printWindow.document.write(`
@@ -480,41 +525,11 @@
                         <head>
                             <title>Literacy Launchpad Report</title>
                             <script src="https://cdn.tailwindcss.com"><\/script>
-                            <style> body { font-family: sans-serif; background-color: #1a202c; color: #e2e8f0; } </style>
                         </head>
-                        <body class="p-8">
-                            <div class="max-w-4xl mx-auto bg-slate-800 p-8 rounded-lg shadow-lg border border-violet-700">
-                                <h1 class="text-4xl font-bold text-violet-400 mb-2">Literacy Launchpad Report</h1>
-                                <p class="text-lg text-slate-400 mb-6">For: ${studentName || 'N/A'}</p>
-                                
-                                <div class="grid grid-cols-2 gap-6 text-center">
-                                    <div class="bg-slate-700 p-4 rounded-lg">
-                                        <p class="text-sm text-slate-400">Final Score</p>
-                                        <p class="text-3xl font-bold text-yellow-400">${score}</p>
-                                    </div>
-                                     <div class="bg-slate-700 p-4 rounded-lg">
-                                        <p class="text-sm text-slate-400">Accuracy</p>
-                                        <p class="text-3xl font-bold text-green-400">${accuracy}%</p>
-                                    </div>
-                                    <div class="bg-slate-700 p-4 rounded-lg">
-                                        <p class="text-sm text-slate-400">Time Taken</p>
-                                        <p class="text-3xl font-bold text-cyan-400">${time.toFixed(1)}s</p>
-                                    </div>
-                                     <div class="bg-slate-700 p-4 rounded-lg">
-                                        <p class="text-sm text-slate-400">Hearts Remaining</p>
-                                        <p class="text-3xl font-bold text-red-400">${hearts}</p>
-                                    </div>
-                                </div>
-
-                                <div class="mt-8">
-                                    <h2 class="text-2xl font-bold text-slate-100 mb-4">Session Details</h2>
-                                    <ul class="space-y-2 text-slate-300">
-                                        <li><strong>Level:</strong> Grades ${level}</li>
-                                        <li><strong>Map:</strong> ${map}</li>
-                                        <li><strong>Class:</strong> ${characterClass.name}</li>
-                                    </ul>
-                                </div>
-                            </div>
+                        <body>
+                            <h1>Report for ${studentName}</h1>
+                            <p>Score: ${score}</p>
+                            <p>Hearts: ${hearts}</p>
                         </body>
                     </html>
                 `);
@@ -526,43 +541,7 @@
                 <div className="text-center">
                     <h2 className="text-4xl font-bold text-violet-400 mb-2">Adventure Complete!</h2>
                     <p className="text-lg text-slate-300 mb-8">Here's how you did, {studentName || 'adventurer'}.</p>
-
-                    <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 max-w-4xl mx-auto mb-8">
-                        <div className="bg-slate-800/70 p-4 rounded-lg flex flex-col items-center justify-center">
-                            <IconTrophy />
-                            <p className="mt-2 text-slate-400">Score</p>
-                            <p className="text-3xl font-bold text-yellow-400">{score}</p>
-                        </div>
-                        <div className="bg-slate-800/70 p-4 rounded-lg flex flex-col items-center justify-center">
-                             <IconCheckCircle />
-                            <p className="mt-2 text-slate-400">Accuracy</p>
-                            <p className="text-3xl font-bold text-green-400">{accuracy}%</p>
-                        </div>
-                         <div className="bg-slate-800/70 p-4 rounded-lg flex flex-col items-center justify-center">
-                             <IconClock />
-                            <p className="mt-2 text-slate-400">Time</p>
-                            <p className="text-3xl font-bold text-cyan-400">{time.toFixed(1)}s</p>
-                        </div>
-                        <div className="bg-slate-800/70 p-4 rounded-lg flex flex-col items-center justify-center">
-                            <IconHeart className="w-6 h-6"/>
-                            <p className="mt-2 text-slate-400">Hearts</p>
-                            <p className="text-3xl font-bold">{hearts}</p>
-                        </div>
-                    </div>
-                    
-                    {!submitted && (
-                         <div className="max-w-md mx-auto my-8 p-4 bg-slate-800 rounded-lg">
-                            <h3 className="text-lg font-bold text-yellow-400">Add to Leaderboard?</h3>
-                            <p className="text-sm text-slate-400 mb-3">Enter a name to appear on the Top Scores list.</p>
-                            <div className="flex gap-2">
-                                <input type="text" value={pseudonym} onChange={e => setPseudonym(e.target.value)} placeholder="Enter a pseudonym" className="flex-grow p-2 rounded-md bg-slate-700 text-slate-200 border border-slate-600 focus:outline-none focus:ring-2 focus:ring-yellow-500" />
-                                <button onClick={handleSubmitScore} disabled={!pseudonym} className="bg-yellow-600 hover:bg-yellow-700 text-white font-bold py-2 px-4 rounded-md transition disabled:bg-slate-600 disabled:cursor-not-allowed">Submit</button>
-                            </div>
-                        </div>
-                    )}
-                    {submitted && <p className="text-green-400 my-8">Score submitted to leaderboard!</p>}
-
-                    <div className="flex justify-center gap-4 mt-8">
+                     <div className="flex justify-center gap-4 mt-8">
                         <button onClick={onRestart} className="bg-violet-600 hover:bg-violet-700 text-white font-bold py-3 px-6 rounded-lg transition">Play Again</button>
                         {studentName && <button onClick={handlePrint} className="bg-slate-600 hover:bg-slate-700 text-white font-bold py-3 px-6 rounded-lg transition">Print Report</button>}
                     </div>
@@ -570,11 +549,47 @@
             );
         }
 
+         const Notification = ({ text, type }) => {
+            const colorClass = type === 'score' ? 'text-green-400' : type === 'heart' ? 'text-red-400' : 'text-yellow-400';
+            return (
+                <div className={`notification-item absolute top-0 inset-x-0 flex items-center justify-center p-2 rounded-lg bg-slate-900/80 shadow-lg`}>
+                    <p className={`font-bold text-lg ${colorClass}`}>{text}</p>
+                </div>
+            );
+        };
+        
+        const StreakChoiceModal = ({ onSelect, streak, characterClass }) => (
+            <div className="absolute inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center rounded-2xl z-40">
+                <div className="text-center p-8 bg-slate-900 border-2 border-violet-500 rounded-xl shadow-lg animate-fade-in-up">
+                    <h3 className="text-3xl font-bold text-yellow-400">{streak} in a row!</h3>
+                    <p className="text-slate-300 my-4">Choose your reward!</p>
+                    <div className="flex gap-4">
+                        {characterClass.name !== 'Bandit' && <button onClick={() => onSelect('multiplier')} className="flex-1 bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-6 rounded-lg transition">Score Bonus!</button>}
+                        {characterClass.name !== 'Martial Artist' && <button onClick={() => onSelect('heart')} className="flex-1 bg-red-600 hover:bg-red-700 text-white font-bold py-3 px-6 rounded-lg transition">+1 Heart!</button>}
+                    </div>
+                </div>
+            </div>
+        );
+
+        const MapNode = ({ number, isCurrent, isCompleted }) => {
+            let content;
+             if (isCompleted) {
+                content = <IconCheckCircle className="w-8 h-8 text-green-500" />;
+            } else if (isCurrent) {
+                content = <img src="https://raw.githubusercontent.com/navasdo/navacite/refs/heads/main/templates/language-tools/literacy-launchpad/static/images/battle.png" className="w-12 h-12 animate-pulse" />;
+            } else {
+                content = <span className="font-bold text-lg text-slate-400">{number}</span>;
+            }
+            return (
+                <div className={`w-16 h-16 flex items-center justify-center rounded-full border-2 my-4 transition-all duration-300 ${isCompleted ? 'bg-slate-700 border-slate-600' : isCurrent ? 'bg-red-900/50 border-red-500 scale-110' : 'bg-slate-800 border-slate-600'}`}>
+                    {content}
+                </div>
+            );
+        };
+
         const root = ReactDOM.createRoot(document.getElementById('root'));
         root.render(<App />);
     </script>
 {% endraw %}
-{% endblock %} 
-
-
+{% endblock %}
 
