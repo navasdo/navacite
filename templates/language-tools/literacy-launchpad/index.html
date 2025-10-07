@@ -15,8 +15,8 @@
         .modal.hidden .modal-content { opacity: 0; transform: scale(0.95); }
         .modal:not(.hidden) .modal-content { opacity: 1; transform: scale(1); }
         .modal-scroll::-webkit-scrollbar { width: 8px; }
-        .modal-scroll::-webkit-scrollbar-track { background: #1e293b; }
-        .modal-scroll::-webkit-scrollbar-thumb { background-color: #4c1d95; border-radius: 10px; border: 2px solid #1e293b; }
+        .modal-scroll::-webkit-scrollbar-track { background: #1e2b3c; }
+        .modal-scroll::-webkit-scrollbar-thumb { background-color: #4c1d95; border-radius: 10px; border: 2px solid #1e2b3c; }
         
         @keyframes fade-in-up { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
         .animate-fade-in-up { animation: fade-in-up 0.5s ease-out forwards; }
@@ -25,7 +25,7 @@
         .animate-pulse-heart { animation: pulse-heart 0.5s ease-in-out; }
 
         @keyframes pop-and-fade {
-            0% { opacity: 0; transform: scale(0.5); }
+            0% { opacity: 0; transform: scale(0.5) translateY(0); }
             20% { opacity: 1; transform: scale(1.1); }
             80% { opacity: 1; transform: scale(1); }
             100% { opacity: 0; transform: scale(0.8) translateY(-50px); }
@@ -35,7 +35,7 @@
         }
         .map-container {
             aspect-ratio: 9 / 16;
-            overflow-y: hidden; /* Changed from scroll to hidden */
+            overflow-y: hidden;
             scroll-behavior: smooth;
         }
         .map-container::-webkit-scrollbar { display: none; }
@@ -224,6 +224,13 @@
 
             const fetchLeaderboard = useCallback(() => {
                 console.log("Fetching leaderboard (mocked for preview)...");
+                 setLeaderboardData([
+                    { pseudonym: 'DragonSlayer', score: 2450 },
+                    { pseudonym: 'SyntaxWizard', score: 2100 },
+                    { pseudonym: 'GrammarGamer', score: 1980 },
+                    { pseudonym: 'VocabVanquisher', score: 1800 },
+                    { pseudonym: 'ProsePro', score: 1750 },
+                ]);
             }, []);
 
             useEffect(() => {
@@ -251,7 +258,7 @@
                     case 'game':
                         return <GameScreen settings={gameSettings} onEndGame={handleEndGame} />;
                     case 'results':
-                        return <ResultsScreen results={gameResults} onRestart={handleRestart} />;
+                        return <ResultsScreen results={gameResults} onRestart={handleRestart} leaderboard={leaderboardData} onUpdateLeaderboard={fetchLeaderboard} />;
                     case 'setup':
                     default:
                         return <SetupScreen onStartGame={handleStartGame} leaderboard={leaderboardData} />;
@@ -371,7 +378,7 @@
                             <ol className="list-decimal list-inside space-y-2 text-slate-300">
                                 {leaderboard.map((entry, index) => (
                                     <li key={index} className="flex justify-between">
-                                        <span>{entry.pseudonym}</span>
+                                        <span>{index + 1}. {entry.pseudonym}</span>
                                         <span className="font-bold">{entry.score}</span>
                                     </li>
                                 ))}
@@ -540,8 +547,10 @@
             return (
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                     <div className="lg:col-span-2 relative">
-                        <div className="absolute inset-0 pointer-events-none z-50">
-                            {notifications.map(n => <Notification key={n.id} {...n} />)}
+                         <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-50">
+                             <div className="relative w-64 h-64">
+                                {notifications.map(n => <Notification key={n.id} {...n} />)}
+                             </div>
                         </div>
                         <div className="flex justify-between items-center mb-4">
                             <div>
@@ -586,7 +595,7 @@
                             </div>
                         )}
                         {showStreakChoice && (
-                            <StreakChoiceModal onSelect={handleStreakReward} streak={streak} characterClass={characterClass} />
+                            <StreakChoiceModal onSelect={handleStreakReward} streak={streak} characterClass={characterClass} score={score} hearts={hearts} />
                         )}
                     </div>
                     {/* Adventure Map */}
@@ -614,8 +623,12 @@
         }
 
         // --- Results Screen Component ---
-        function ResultsScreen({ results, onRestart }) {
+        function ResultsScreen({ results, onRestart, leaderboard, onUpdateLeaderboard }) {
             const { studentName, score, hearts, gameLog = [], outOfHearts } = results;
+            const [clinicianUser, setClinicianUser] = useState('');
+            const [clinicianPass, setClinicianPass] = useState('');
+            const [submitStatus, setSubmitStatus] = useState('idle'); // idle, submitting, success, error
+
             const semanticErrors = gameLog.filter(log => log.type === 'semantic').length;
             const syntacticErrors = gameLog.filter(log => log.type === 'syntactic').length;
             const totalCorrect = gameLog.filter(log => log.type === 'correct').length;
@@ -623,8 +636,27 @@
             const accuracy = gameLog.length > 0 ? (totalCorrect / gameLog.length * 100).toFixed(1) : 0;
             const avgLatency = gameLog.length > 0 ? (gameLog.reduce((acc, log) => acc + log.latency, 0) / gameLog.length).toFixed(0) : 0;
 
+            const isHighScore = useMemo(() => {
+                if (!leaderboard || leaderboard.length < 5) return true;
+                return score > leaderboard[leaderboard.length - 1].score;
+            }, [score, leaderboard]);
 
-             const handlePrint = () => {
+            const handleLeaderboardSubmit = (e) => {
+                e.preventDefault();
+                setSubmitStatus('submitting');
+                console.log("Submitting score with credentials:", { studentName, score, clinicianUser });
+                // Mock API call
+                setTimeout(() => {
+                    if (clinicianUser === 'admin' && clinicianPass === 'password') {
+                         setSubmitStatus('success');
+                         onUpdateLeaderboard(); // Refresh leaderboard data
+                    } else {
+                        setSubmitStatus('error');
+                    }
+                }, 1500);
+            };
+
+            const handlePrint = () => {
                 const printWindow = window.open('', '_blank');
                 let reportHTML = `
                     <html>
@@ -691,15 +723,37 @@
 
             return (
                 <div className="text-center">
-                    <h2 className="text-4xl font-bold text-violet-400 mb-2">${outOfHearts ? "You Ran Out of Hearts!" : "Adventure Complete!"}</h2>
-                    <p className="text-lg text-slate-300 mb-8">Here's how you did, ${studentName || 'adventurer'}.</p>
+                    <h2 className="text-4xl font-bold text-violet-400 mb-2">{outOfHearts ? "You Ran Out of Hearts!" : "Adventure Complete!"}</h2>
+                    <p className="text-lg text-slate-300 mb-8">Here's how you did, {studentName || 'adventurer'}.</p>
                     
                      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 max-w-4xl mx-auto mb-8">
-                        <div class="bg-slate-800/70 p-4 rounded-lg flex flex-col items-center justify-center"><p class="text-slate-400">Score</p><p class="text-3xl font-bold text-yellow-400">${score}</p></div>
-                        <div class="bg-slate-800/70 p-4 rounded-lg flex flex-col items-center justify-center"><p class="text-slate-400">Accuracy</p><p class="text-3xl font-bold text-green-400">${accuracy}%</p></div>
-                        <div class="bg-slate-800/70 p-4 rounded-lg flex flex-col items-center justify-center"><p class="text-slate-400">Semantic Errors</p><p class="text-3xl font-bold text-red-400">${semanticErrors}</p></div>
-                        <div class="bg-slate-800/70 p-4 rounded-lg flex flex-col items-center justify-center"><p class="text-slate-400">Syntactic Errors</p><p class="text-3xl font-bold text-red-400">${syntacticErrors}</p></div>
+                        <div className="bg-slate-800/70 p-4 rounded-lg flex flex-col items-center justify-center"><p className="text-slate-400">Score</p><p className="text-3xl font-bold text-yellow-400">{score}</p></div>
+                        <div className="bg-slate-800/70 p-4 rounded-lg flex flex-col items-center justify-center"><p className="text-slate-400">Accuracy</p><p className="text-3xl font-bold text-green-400">{accuracy}%</p></div>
+                        <div className="bg-slate-800/70 p-4 rounded-lg flex flex-col items-center justify-center"><p className="text-slate-400">Semantic Errors</p><p className="text-3xl font-bold text-red-400">{semanticErrors}</p></div>
+                        <div className="bg-slate-800/70 p-4 rounded-lg flex flex-col items-center justify-center"><p className="text-slate-400">Syntactic Errors</p><p className="text-3xl font-bold text-red-400">{syntacticErrors}</p></div>
                     </div>
+
+                    {isHighScore && submitStatus !== 'success' && (
+                         <div className="max-w-md mx-auto my-8 p-6 bg-slate-800 rounded-lg border border-yellow-500/50">
+                            <h3 className="text-xl font-bold text-yellow-400">New High Score!</h3>
+                            <p className="text-sm text-slate-400 mb-4">Submit to the leaderboard with clinician credentials.</p>
+                            <form onSubmit={handleLeaderboardSubmit} className="space-y-4">
+                                <div>
+                                    <label className="block text-sm font-medium text-slate-300 text-left mb-1">Clinician Username</label>
+                                    <input type="text" value={clinicianUser} onChange={e => setClinicianUser(e.target.value)} className="w-full p-2 rounded-md bg-slate-700 text-slate-200 border border-slate-600" required />
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-slate-300 text-left mb-1">Clinician Password</label>
+                                    <input type="password" value={clinicianPass} onChange={e => setClinicianPass(e.target.value)} className="w-full p-2 rounded-md bg-slate-700 text-slate-200 border border-slate-600" required />
+                                </div>
+                                <button type="submit" disabled={submitStatus === 'submitting'} className="w-full bg-yellow-600 hover:bg-yellow-700 text-white font-bold py-2 px-4 rounded-md transition disabled:bg-slate-600">
+                                    {submitStatus === 'submitting' ? 'Submitting...' : 'Submit Score'}
+                                </button>
+                                {submitStatus === 'error' && <p className="text-red-400 text-sm mt-2">Invalid credentials. Please try again.</p>}
+                            </form>
+                        </div>
+                    )}
+                    {submitStatus === 'success' && <p className="text-green-400 my-8 font-bold text-lg">High score submitted successfully!</p>}
                     
                      <div className="flex justify-center gap-4 mt-8">
                         <button onClick={onRestart} className="bg-violet-600 hover:bg-violet-700 text-white font-bold py-3 px-6 rounded-lg transition">Play Again</button>
@@ -712,7 +766,7 @@
         const Notification = ({ text, type }) => {
             const colorClass = type === 'score' ? 'text-green-400' : type === 'heart' ? 'text-red-400' : 'text-yellow-400';
             return (
-                <div className="notification-item absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2">
+                <div className="notification-item absolute top-0 left-0">
                     <div className="p-4 rounded-lg bg-slate-900/80 shadow-2xl border-2 border-violet-500/50">
                         <p className={`font-extrabold text-5xl drop-shadow-lg ${colorClass}`}>{text}</p>
                     </div>
@@ -720,9 +774,16 @@
             );
         };
         
-        const StreakChoiceModal = ({ onSelect, streak, characterClass }) => (
+        const StreakChoiceModal = ({ onSelect, streak, characterClass, score, hearts }) => (
             <div className="absolute inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center rounded-2xl z-40">
                 <div className="text-center p-8 bg-slate-900 border-2 border-violet-500 rounded-xl shadow-lg animate-fade-in-up">
+                    <div className="flex justify-center items-center gap-6 mb-4">
+                        <div className="flex items-center gap-2 text-yellow-400 font-bold text-2xl"><IconTrophy /><span>{score}</span></div>
+                        <div className="flex items-center gap-1">
+                            {[...Array(hearts)].map((_, i) => <IconHeart key={i} className="w-7 h-7" />)}
+                            {[...Array(10 - hearts > 0 ? 10 - hearts : 0)].map((_, i) => <IconHeart key={i} className="w-7 h-7 text-slate-700" />)}
+                        </div>
+                    </div>
                     <h3 className="text-3xl font-bold text-yellow-400">{streak} in a row!</h3>
                     <p className="text-slate-300 my-4">Choose your reward!</p>
                     <div className="flex gap-4">
