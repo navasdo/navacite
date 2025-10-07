@@ -26,7 +26,6 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['GEMINI_API_KEY_COGNITION'] = os.environ.get('GEMINI_API_KEY_COGNITION')
 app.config['GEMINI_API_KEY_SLP'] = os.environ.get('GEMINI_API_KEY_SLP')
 app.config['LITERACY_LAUNCHPAD_API_KEY'] = os.environ.get('LITERACY-LAUNCHPAD')
-# NEW: Add a secret key for leaderboard resets
 app.config['LEADERBOARD_RESET_SECRET'] = os.environ.get('LEADERBOARD_RESET_SECRET', 'change-this-secret-key')
 
 
@@ -138,12 +137,10 @@ def token_required(f):
 @app.route('/api/register', methods=['POST'])
 def register_api():
     data = request.get_json()
-    # UPDATED: Check for all new required fields from the multi-step form
     required_fields = ['username', 'password', 'email', 'firstName', 'lastName']
     if not data or not all(field in data and data[field] for field in required_fields):
         return jsonify({"error": "All fields are required"}), 400
     
-    # Check if username or email is already taken
     if User.query.filter_by(username=data['username']).first():
         return jsonify({"error": "Username is already taken"}), 400
     if User.query.filter_by(email=data['email']).first():
@@ -151,20 +148,18 @@ def register_api():
 
     hashed_password = bcrypt.generate_password_hash(data['password']).decode('utf-8')
     
-    # UPDATED: Create new user with all the new details
     new_user = User(
         username=data['username'],
         password=hashed_password,
         email=data['email'],
         first_name=data['firstName'],
         last_name=data['lastName'],
-        real_name=f"{data['firstName']} {data['lastName']}" # Set real_name by default
+        real_name=f"{data['firstName']} {data['lastName']}"
     )
     
     db.session.add(new_user)
     db.session.commit()
     
-    # This is where the email verification process will be triggered in the future.
     return jsonify({"message": "User registered successfully. Please verify your email."}), 201
 
 
@@ -307,21 +302,13 @@ def handle_compliance_check():
     
     schema = {
         "type": "OBJECT",
-        "properties": {
-            "violations": {
-                "type": "ARRAY",
-                "items": { "type": "STRING" }
-            }
-        }
+        "properties": { "violations": { "type": "ARRAY", "items": { "type": "STRING" } } }
     }
 
     payload = {
         "contents": [{"parts": [{"text": user_input}]}],
         "systemInstruction": {"parts": [{"text": system_prompt}]},
-        "generationConfig": {
-            "responseMimeType": "application/json",
-            "responseSchema": schema
-        }
+        "generationConfig": { "responseMimeType": "application/json", "responseSchema": schema }
     }
 
     try:
@@ -351,20 +338,13 @@ def handle_generate_note():
     
     prompt = f"""
     Based on the following shorthand notes and glossary, please generate a professional therapy note.
-
-    Shorthand Notes:
-    "{user_input}"
-
-    Glossary of Terms:
-    {glossary_text}
+    Shorthand Notes: "{user_input}"
+    Glossary of Terms: {glossary_text}
     """
     
     system_prompt = "You are an expert Speech-Language Pathologist. Your task is to expand shorthand clinical notes into a complete, professional, and compliant therapy note. Write the note in the third-person, past tense. Ensure the output is a single, concise paragraph. Do not add a date."
 
-    payload = {
-        "contents": [{"parts": [{"text": prompt}]}],
-        "systemInstruction": {"parts": [{"text": system_prompt}]},
-    }
+    payload = { "contents": [{"parts": [{"text": prompt}]}], "systemInstruction": {"parts": [{"text": system_prompt}]} }
 
     try:
         response = requests.post(url, json=payload)
@@ -376,76 +356,8 @@ def handle_generate_note():
 
 # --- NEW LITERACY LAUNCHPAD API ROUTES ---
 @app.route('/api/literacy-launchpad/leaderboard', methods=['GET'])
-@token_required
 def get_leaderboard():
     entries = Leaderboard.query.order_by(desc(Leaderboard.score)).limit(10).all()
-    return jsonify([{'pseudonym': e.pseudonym, 'score': e.score} for e in entries])
-
-@app.route('/api/literacy-launchpad/leaderboard', methods=['POST'])
-@token_required
-def add_to_leaderboard():
-    data = request.get_json()
-    pseudonym = data.get('pseudonym')
-    score = data.get('score')
-    password = data.get('password')
-
-    if not all([pseudonym, score, password]):
-        return jsonify({"error": "Missing data"}), 400
-
-    # Authenticate the clinician
-    if not g.user or not bcrypt.check_password_hash(g.user.password, password):
-        return jsonify({"error": "Invalid credentials"}), 401
-
-    # Add the new entry
-    new_entry = Leaderboard(pseudonym=pseudonym, score=score)
-    db.session.add(new_entry)
-    
-    # Keep only the top 10 scores
-    entry_count = Leaderboard.query.count()
-    if entry_count > 10:
-        lowest_entry = Leaderboard.query.order_by(Leaderboard.score.asc()).first()
-        db.session.delete(lowest_entry)
-        
-    db.session.commit()
-    return jsonify({"message": "Leaderboard updated successfully"}), 201
-    
-@app.route('/api/literacy-launchpad/scaffold', methods=['POST'])
-@token_required
-def get_scaffold():
-    data = request.get_json()
-    passage = data.get('passage')
-    incorrect_word = data.get('incorrect_word')
-    
-    api_key = app.config.get('LITERACY_LAUNCHPAD_API_KEY')
-    if not api_key:
-        return jsonify({"error": "API key not configured for Literacy Launchpad"}), 500
-
-    url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key={api_key}"
-    
-    prompt = f"""
-    A student was reading the following passage and made an error.
-    Passage: "{passage}"
-    The student incorrectly chose the word "{incorrect_word}".
-    Provide a brief, student-friendly explanation of why that word does not fit grammatically or semantically.
-    Also, identify the contextual clue in the passage that points to the correct answer.
-    Respond ONLY with a JSON object with two keys: "explanation" and "clue".
-    Example: {{"explanation": "The word 'running' is an action, but the sentence needs a describing word for the apple.", "clue": "The apple was..."}}
-    """
-    
-    try:
-        response = requests.post(url, json={"contents": [{"parts": [{"text": prompt}]}]})
-        response.raise_for_status()
-        # The AI response will be a stringified JSON, so we return it directly
-        return jsonify(response.json())
-    except requests.exceptions.RequestException as e:
-        app.logger.error(f"Literacy Launchpad API call failed: {e}")
-        return jsonify({"error": "Failed to get help from the AI service"}), 500
-# --- NEW LITERACY LAUNCHPAD API ROUTES ---
-@app.route('/api/literacy-launchpad/leaderboard', methods=['GET'])
-def get_leaderboard():
-    entries = Leaderboard.query.order_by(desc(Leaderboard.score)).limit(10).all()
-    
-    # Calculate the next reset date (first day of the next month)
     today = date.today()
     next_reset_date = (today + relativedelta(months=1)).replace(day=1)
     
@@ -465,15 +377,12 @@ def add_to_leaderboard():
     if not all([pseudonym, score, password]):
         return jsonify({"error": "Missing data"}), 400
 
-    # Authenticate the clinician
     if not g.user or not bcrypt.check_password_hash(g.user.password, password):
         return jsonify({"error": "Invalid credentials"}), 401
 
-    # Add the new entry
     new_entry = Leaderboard(pseudonym=pseudonym, score=score)
     db.session.add(new_entry)
     
-    # Keep only the top 10 scores
     entry_count = Leaderboard.query.count()
     if entry_count > 10:
         lowest_entry = Leaderboard.query.order_by(Leaderboard.score.asc()).first()
@@ -482,12 +391,10 @@ def add_to_leaderboard():
     db.session.commit()
     return jsonify({"message": "Leaderboard updated successfully"}), 201
 
-# NEW: Route to handle resetting the leaderboard
 @app.route('/api/literacy-launchpad/reset-leaderboard', methods=['POST'])
 def reset_leaderboard():
-    # Protect this endpoint with a secret key
     if request.headers.get('X-Admin-Secret') != app.config['LEADERBOARD_RESET_SECRET']:
-        abort(403) # Forbidden
+        abort(403)
     try:
         db.session.query(Leaderboard).delete()
         db.session.commit()
@@ -500,7 +407,7 @@ def reset_leaderboard():
 @app.route('/api/literacy-launchpad/scaffold', methods=['POST'])
 @token_required
 def get_scaffold():
- data = request.get_json()
+    data = request.get_json()
     passage = data.get('passage')
     incorrect_word = data.get('incorrect_word')
     
@@ -523,7 +430,6 @@ def get_scaffold():
     try:
         response = requests.post(url, json={"contents": [{"parts": [{"text": prompt}]}]})
         response.raise_for_status()
-        # The AI response will be a stringified JSON, so we return it directly
         return jsonify(response.json())
     except requests.exceptions.RequestException as e:
         app.logger.error(f"Literacy Launchpad API call failed: {e}")
@@ -578,75 +484,55 @@ def profile_page(username):
         
     return render_template('profile.html', user=profile_user, is_own_profile=is_own_profile)
 
-# --- Articulation Tools ---
+# --- Tool Page Routes ---
 @app.route('/articulation-tools')
 @token_required
-def articulation_tools():
-    return render_template('articulation-tools/index.html')
+def articulation_tools(): return render_template('articulation-tools/index.html')
 
-# --- Dynamic Route for Individual Phoneme Pages ---
 @app.route('/articulation-tools/<phoneme_slug>')
 @token_required
 def phoneme_page(phoneme_slug):
-    # Sanitize slug to prevent directory traversal
-    if '..' in phoneme_slug or '/' in phoneme_slug:
-        abort(404)
+    if '..' in phoneme_slug or '/' in phoneme_slug: abort(404)
     return render_template(f'articulation-tools/{phoneme_slug}/index.html')
 
-# --- Language Tools ---
 @app.route('/language-tools')
 @token_required
-def language_tools():
-    return render_template('language-tools/index.html')
+def language_tools(): return render_template('language-tools/index.html')
 
-# --- Dynamic Route for Individual Language Pages ---
 @app.route('/language-tools/<languageTools_slug>')
 @token_required
 def language_page(languageTools_slug):
-    if '..' in languageTools_slug or '/' in languageTools_slug:
-        abort(404)
+    if '..' in languageTools_slug or '/' in languageTools_slug: abort(404)
     return render_template(f'language-tools/{languageTools_slug}/index.html')
 
-# --- Fluency Tools ---
 @app.route('/fluency-tools')
 @token_required
-def fluency_tools():
-    return render_template('fluency-tools/index.html')
+def fluency_tools(): return render_template('fluency-tools/index.html')
 
-# --- Dynamic Route for Individual Fluency-Tool Pages ---
 @app.route('/fluency-tools/<fluencyTools_slug>')
 @token_required
 def fluency_page(fluencyTools_slug):
-    if '..' in fluencyTools_slug or '/' in fluencyTools_slug:
-        abort(404)
+    if '..' in fluencyTools_slug or '/' in fluencyTools_slug: abort(404)
     return render_template(f'fluency-tools/{fluencyTools_slug}/index.html')
 
-# --- SLP Tools ---
 @app.route('/slp-tools')
 @token_required
-def slp_tools():
-    return render_template('slp-tools/index.html')
+def slp_tools(): return render_template('slp-tools/index.html')
 
-# --- Dynamic Route for Individual SLP-Tool Pages ---
 @app.route('/slp-tools/<slpTools_slug>')
 @token_required
 def slp_page(slpTools_slug):
-    if '..' in slpTools_slug or '/' in slpTools_slug:
-        abort(404)
+    if '..' in slpTools_slug or '/' in slpTools_slug: abort(404)
     return render_template(f'slp-tools/{slpTools_slug}/index.html')
 
-# --- Cognition Tools ---
 @app.route('/cognition-tools')
 @token_required
-def cognition_tools():
-    return render_template('cognition-tools/index.html')
+def cognition_tools(): return render_template('cognition-tools/index.html')
 
-# --- Dynamic Route for Individual Cognition-Tool Pages ---
 @app.route('/cognition-tools/<cognitionTools_slug>')
 @token_required
 def cognition_page(cognitionTools_slug):
-    if '..' in cognitionTools_slug or '/' in cognitionTools_slug:
-        abort(404)
+    if '..' in cognitionTools_slug or '/' in cognitionTools_slug: abort(404)
     return render_template(f'cognition-tools/{cognitionTools_slug}/index.html')
 
 
@@ -658,3 +544,4 @@ def page_not_found(e):
 # --- This block should be the VERY LAST thing in your file ---
 if __name__ == '__main__':
     app.run(debug=True)
+
