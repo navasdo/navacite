@@ -24,9 +24,14 @@
         @keyframes pulse-heart { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.2); } }
         .animate-pulse-heart { animation: pulse-heart 0.5s ease-in-out; }
 
-        @keyframes fade-out-up { from { opacity: 1; transform: translateY(0); } to { opacity: 0; transform: translateY(-20px); } }
+        @keyframes pop-and-fade {
+            0% { opacity: 0; transform: scale(0.5); }
+            20% { opacity: 1; transform: scale(1.1); }
+            80% { opacity: 1; transform: scale(1); }
+            100% { opacity: 0; transform: scale(0.8) translateY(-50px); }
+        }
         .notification-item {
-            animation: fade-in-up 0.5s ease-out forwards, fade-out-up 0.5s ease-in forwards 2s;
+            animation: pop-and-fade 2.5s ease-in-out forwards;
         }
         .map-container {
             aspect-ratio: 9 / 16;
@@ -396,6 +401,7 @@
             const [gameLog, setGameLog] = useState([]);
             const [questionTimestamp, setQuestionTimestamp] = useState(0);
             const mapRef = useRef(null);
+            const currentMapNodeRef = useRef(null);
            
             const loadPassage = useCallback(() => {
                 const passageData = passages[level][map][passageIndex % passages[level][map].length];
@@ -522,23 +528,19 @@
                 });
             }, [score, hearts, gameLog, onEndGame, studentName, level, map, characterClass]);
 
-             useEffect(() => {
-                if (mapRef.current) {
-                    const nodeHeight = 88;
-                    const containerHeight = mapRef.current.clientHeight;
-                    const totalNodes = 100;
-                    // The position needs to be calculated from the top of the reversed flex container
-                    const targetNodeTop = (totalNodes - 1 - mapPosition) * nodeHeight;
-                    const targetScroll = targetNodeTop - (containerHeight / 2) + (nodeHeight / 2);
-
-                    mapRef.current.scrollTop = targetScroll;
+            useEffect(() => {
+                if (currentMapNodeRef.current) {
+                    currentMapNodeRef.current.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'center'
+                    });
                 }
             }, [mapPosition]);
             
             return (
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                     <div className="lg:col-span-2 relative">
-                        <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none z-50">
+                        <div className="absolute inset-0 pointer-events-none z-50">
                             {notifications.map(n => <Notification key={n.id} {...n} />)}
                         </div>
                         <div className="flex justify-between items-center mb-4">
@@ -591,9 +593,15 @@
                     <div className="relative h-full">
                         <h3 className="text-xl font-bold text-yellow-400 text-center mb-4">Adventure Map</h3>
                         <div ref={mapRef} className="map-container bg-slate-900/50 border border-slate-700 rounded-lg p-4 relative">
-                            <div className="relative w-full flex flex-col-reverse items-center pt-96 pb-96">
+                            <div className="relative w-full flex flex-col-reverse items-center">
                                 {[...Array(100)].map((_, i) => (
-                                    <MapNode key={i} number={i + 1} isCurrent={mapPosition === i} isCompleted={mapPosition > i} />
+                                    <MapNode
+                                        ref={mapPosition === i ? currentMapNodeRef : null}
+                                        key={i}
+                                        number={i + 1}
+                                        isCurrent={mapPosition === i}
+                                        isCompleted={mapPosition > i}
+                                    />
                                 ))}
                             </div>
                         </div>
@@ -701,11 +709,13 @@
             );
         }
 
-         const Notification = ({ text, type }) => {
+        const Notification = ({ text, type }) => {
             const colorClass = type === 'score' ? 'text-green-400' : type === 'heart' ? 'text-red-400' : 'text-yellow-400';
             return (
-                <div className={`notification-item absolute top-0 inset-x-0 flex items-center justify-center p-2 rounded-lg bg-slate-900/80 shadow-lg`}>
-                    <p className={`font-bold text-lg ${colorClass}`}>{text}</p>
+                <div className="notification-item absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2">
+                    <div className="p-4 rounded-lg bg-slate-900/80 shadow-2xl border-2 border-violet-500/50">
+                        <p className={`font-extrabold text-5xl drop-shadow-lg ${colorClass}`}>{text}</p>
+                    </div>
                 </div>
             );
         };
@@ -723,7 +733,7 @@
             </div>
         );
 
-        const MapNode = ({ number, isCurrent, isCompleted }) => {
+        const MapNode = React.forwardRef(({ number, isCurrent, isCompleted }, ref) => {
             let content;
              if (isCompleted) {
                 content = <IconCheckCircle className="w-8 h-8 text-green-500" />;
@@ -733,11 +743,11 @@
                 content = <span className="font-bold text-lg text-slate-400">{number}</span>;
             }
             return (
-                <div className={`w-16 h-16 flex items-center justify-center rounded-full border-2 my-4 transition-all duration-300 ${isCompleted ? 'bg-slate-700 border-slate-600' : isCurrent ? 'bg-red-900/50 border-red-500 scale-110' : 'bg-slate-800 border-slate-600'}`}>
+                <div ref={ref} className={`w-16 h-16 flex items-center justify-center rounded-full border-2 my-4 transition-all duration-300 ${isCompleted ? 'bg-slate-700 border-slate-600' : isCurrent ? 'bg-red-900/50 border-red-500 scale-110' : 'bg-slate-800 border-slate-600'}`}>
                     {content}
                 </div>
             );
-        };
+        });
 
         const root = ReactDOM.createRoot(document.getElementById('root'));
         root.render(<App />);
