@@ -30,7 +30,7 @@
         }
         .map-container {
             aspect-ratio: 9 / 16;
-            overflow-y: scroll;
+            overflow-y: hidden; /* Changed from scroll to hidden */
             scroll-behavior: smooth;
         }
         .map-container::-webkit-scrollbar { display: none; }
@@ -48,7 +48,7 @@
         const { createPortal } = ReactDOM;
 
         // --- Game Data & Assets ---
-        const correctSound = new Audio("https://raw.githubusercontent.com/navasdo/navacite/refs/heads/main/templates/language-tools/literacy-launchpad/static/audio/correct.wav");
+        const correctSound = new Audio("https://raw.githubusercontent.com/navasdo/navacite/refs/heads/main/templates/language-tools/literacy-launchpad/static/audio/correct.mp3");
         const incorrectSound = new Audio("https://raw.githubusercontent.com/navasdo/navacite/refs/heads/main/templates/language-tools/literacy-launchpad/static/audio/damage.mp3");
         const streakSound = new Audio("https://raw.githubusercontent.com/navasdo/navacite/refs/heads/main/templates/language-tools/literacy-launchpad/static/audio/streak.wav");
         const multiplierSound = new Audio("https://raw.githubusercontent.com/navasdo/navacite/refs/heads/main/templates/language-tools/literacy-launchpad/static/audio/multiplier.mp3");
@@ -56,19 +56,91 @@
 
         const passages = {
             '2-3': {
-                'Jungle of Syntax': "A little monkey likes to [play|plays|playing]. He swings from a [branch|branches|branched] all day long. His mom tells him to be [careful|carefully|caring] so he does not fall down. The monkey sees a bright yellow [banana|bananas|bananally] hanging from a vine. He gets very [excited|exciting|excites] and chatters happily.",
-                'Vocabulary Volcano': "The brave knight must [ascend|assent|accent] the volcano. The air is [thick|thicken|thicket] with smoke. He sees a glimmer of [treasure|treasurer|treasured] near the top. He must be [cautious|cautions|cautioned] of the crumbling rocks. Finally, he [reaches|reaching|reach] the summit and claims his reward.",
-                'Caverns of Cohesion': "The explorer entered the [dark|darkly|darken] cave. A small stream [flowed|flowing|flown] through the cavern. She needed to find the [hidden|hiding|hid] passage. The map was [old|older|oldest] and hard to read. Suddenly, she [heard|hear|hearing] a noise from deeper inside."
+                'Jungle of Syntax': [
+                    [
+                        "A little monkey likes to ", { options: [{ word: 'play', type: 'correct' }, { word: 'plays', type: 'semantic' }, { word: 'playing', type: 'syntactic' }] },
+                        ". He swings from a ", { options: [{ word: 'branch', type: 'correct' }, { word: 'branches', type: 'semantic' }, { word: 'branched', type: 'syntactic' }] },
+                        " all day long. His mom tells him to be ", { options: [{ word: 'careful', type: 'correct' }, { word: 'carefully', type: 'semantic' }, { word: 'caring', type: 'syntactic' }] },
+                        " so he does not fall down. The monkey sees a bright yellow ", { options: [{ word: 'banana', type: 'correct' }, { word: 'bananas', type: 'semantic' }, { word: 'bananally', type: 'syntactic' }] },
+                        " hanging from a vine. He gets very ", { options: [{ word: 'excited', type: 'correct' }, { word: 'exciting', type: 'semantic' }, { word: 'excites', type: 'syntactic' }] }, " and chatters happily."
+                    ]
+                ],
+                'Vocabulary Volcano': [
+                    [
+                        "The brave knight must ", { options: [{ word: 'ascend', type: 'correct' }, { word: 'assent', type: 'semantic' }, { word: 'accent', type: 'syntactic' }] },
+                        " the volcano. The air is ", { options: [{ word: 'thick', type: 'correct' }, { word: 'thicken', type: 'semantic' }, { word: 'thicket', type: 'syntactic' }] },
+                        " with smoke. He sees a glimmer of ", { options: [{ word: 'treasure', type: 'correct' }, { word: 'treasurer', type: 'semantic' }, { word: 'treasured', type: 'syntactic' }] },
+                        " near the top. He must be ", { options: [{ word: 'cautious', type: 'correct' }, { word: 'cautions', type: 'semantic' }, { word: 'cautioned', type: 'syntactic' }] },
+                        " of the crumbling rocks. Finally, he ", { options: [{ word: 'reaches', type: 'correct' }, { word: 'reaching', type: 'semantic' }, { word: 'reach', type: 'syntactic' }] }, " the summit and claims his reward."
+                    ]
+                ],
+                'Caverns of Cohesion': [
+                    [
+                        "The explorer entered the ", { options: [{ word: 'dark', type: 'correct' }, { word: 'darkly', type: 'semantic' }, { word: 'darken', type: 'syntactic' }] },
+                        " cave. A small stream ", { options: [{ word: 'flowed', type: 'correct' }, { word: 'flowing', type: 'semantic' }, { word: 'flown', type: 'syntactic' }] },
+                        " through the cavern. She needed to find the ", { options: [{ word: 'hidden', type: 'correct' }, { word: 'hiding', type: 'semantic' }, { word: 'hid', type: 'syntactic' }] },
+                        " passage. The map was ", { options: [{ word: 'old', type: 'correct' }, { word: 'older', type: 'semantic' }, { word: 'oldest', type: 'syntactic' }] },
+                        " and hard to read. Suddenly, she ", { options: [{ word: 'heard', type: 'correct' }, { word: 'hear', type: 'semantic' }, { word: 'hearing', type: 'syntactic' }] }, " a noise from deeper inside."
+                    ]
+                ]
             },
             '4-5': {
-                'Jungle of Syntax': "The scientist [studies|study|studying] rare insects in the jungle. She carefully [documents|document|documenting] each new species. The jungle is [teeming|team|teem] with life, but it can also be dangerous. She always carries a compass to avoid getting [lost|losing|loss]. Her research will help us [understand|understanding|understood] this ecosystem better.",
-                'Vocabulary Volcano': "The ancient civilization [believed|believe|believing] the volcano was a powerful deity. They would make [offerings|offering|offered] to appease it. The volcano's eruptions were both destructive and [creative|creating|creation], forming new land. Geologists are fascinated by its unique [geological|geology|geologist] features. They hope to [predict|predicting|prediction] future eruptions more accurately.",
-                'Caverns of Cohesion': "The cave divers prepared their [equipment|equipping|equipped] meticulously. They were exploring a newly discovered underwater [cavern|caverns|cavernous]. The water was crystal clear but incredibly [cold|coldly|coldness]. They had to navigate a series of [narrow|narrowly|narrower] tunnels. Their goal was to [map|mapping|mapped] the system for the first time."
+                 'Jungle of Syntax': [
+                    [
+                        "The scientist ", { options: [{ word: 'studies', type: 'correct' }, { word: 'study', type: 'semantic' }, { word: 'studying', type: 'syntactic' }] },
+                        " rare insects in the jungle. She carefully ", { options: [{ word: 'documents', type: 'correct' }, { word: 'document', type: 'semantic' }, { word: 'documenting', type: 'syntactic' }] },
+                        " each new species. The jungle is ", { options: [{ word: 'teeming', type: 'correct' }, { word: 'team', type: 'semantic' }, { word: 'teem', type: 'syntactic' }] },
+                        " with life, but it can also be dangerous. She always carries a compass to avoid getting ", { options: [{ word: 'lost', type: 'correct' }, { word: 'losing', type: 'semantic' }, { word: 'loss', type: 'syntactic' }] },
+                        ". Her research will help us ", { options: [{ word: 'understand', type: 'correct' }, { word: 'understanding', type: 'semantic' }, { word: 'understood', type: 'syntactic' }] }, " this ecosystem better."
+                    ]
+                ],
+                'Vocabulary Volcano': [
+                    [
+                        "The ancient civilization ", { options: [{ word: 'believed', type: 'correct' }, { word: 'believe', type: 'semantic' }, { word: 'believing', type: 'syntactic' }] },
+                        " the volcano was a powerful deity. They would make ", { options: [{ word: 'offerings', type: 'correct' }, { word: 'offering', type: 'semantic' }, { word: 'offered', type: 'syntactic' }] },
+                        " to appease it. The volcano's eruptions were both destructive and ", { options: [{ word: 'creative', type: 'correct' }, { word: 'creating', type: 'semantic' }, { word: 'creation', type: 'syntactic' }] },
+                        ", forming new land. Geologists are fascinated by its unique ", { options: [{ word: 'geological', type: 'correct' }, { word: 'geology', type: 'semantic' }, { word: 'geologist', type: 'syntactic' }] },
+                        " features. They hope to ", { options: [{ word: 'predict', type: 'correct' }, { word: 'predicting', type: 'semantic' }, { word: 'prediction', type: 'syntactic' }] }, " future eruptions more accurately."
+                    ]
+                ],
+                'Caverns of Cohesion': [
+                    [
+                       "The cave divers prepared their ", { options: [{ word: 'equipment', type: 'correct' }, { word: 'equipping', type: 'semantic' }, { word: 'equipped', type: 'syntactic' }] },
+                        " meticulously. They were exploring a newly discovered underwater ", { options: [{ word: 'cavern', type: 'correct' }, { word: 'caverns', type: 'semantic' }, { word: 'cavernous', type: 'syntactic' }] },
+                        ". The water was crystal clear but incredibly ", { options: [{ word: 'cold', type: 'correct' }, { word: 'coldly', type: 'semantic' }, { word: 'coldness', type: 'syntactic' }] },
+                        ". They had to navigate a series of ", { options: [{ word: 'narrow', type: 'correct' }, { word: 'narrowly', type: 'semantic' }, { word: 'narrower', type: 'syntactic' }] },
+                        " tunnels. Their goal was to ", { options: [{ word: 'map', type: 'correct' }, { word: 'mapping', type: 'semantic' }, { word: 'mapped', type: 'syntactic' }] }, " the system for the first time."
+                    ]
+                ]
             },
             '6-8': {
-                'Jungle of Syntax': "The biologist's expedition into the Amazon was [fraught|freight|fought] with peril. Her primary objective was to [catalogue|cataloguing|catalogued] undiscovered species of flora and fauna. The sheer [biodiversity|biodiverse|biodiversify] of the region was staggering. Navigating the dense undergrowth required both skill and [perseverance|persevere|persevering]. Ultimately, her findings would contribute significantly to our [comprehension|comprehensive|comprehend] of the rainforest's complex web of life.",
-                'Vocabulary Volcano': "The vulcanologist approached the caldera with a mixture of [trepidation|trepidatious|trepidating] and excitement. The volcano had been dormant for decades, but recent seismic activity indicated an [imminent|eminent|immanent] eruption. His task was to deploy sensors that would transmit [critical|critically|criticize] data back to the lab. The noxious fumes made it difficult to breathe, necessitating the use of a [specialized|specialize|specializing] respirator. This dangerous work was essential for warning the [populace|popular|populate] of the surrounding villages.",
-                'Caverns of Cohesion': "The spelunkers descended into the subterranean abyss, their headlamps [illuminating|illuminate|illumination] vast, cathedral-like chambers. They were searching for a legendary underground river, a geographical [enigma|enigmatic|enigmatically] that had baffled explorers for generations. The journey required them to [traverse|traversing|traversed] treacherous ledges and rappel down sheer cliffs. They relied on their collective expertise and [unwavering|wavering|waver] trust in one another. Discovering the river would be a monumental achievement in the field of [speleology|speleological|speleologist]."
+                 'Jungle of Syntax': [
+                    [
+                        "The biologist's expedition into the Amazon was ", { options: [{ word: 'fraught', type: 'correct' }, { word: 'freight', type: 'semantic' }, { word: 'fought', type: 'syntactic' }] },
+                        " with peril. Her primary objective was to ", { options: [{ word: 'catalogue', type: 'correct' }, { word: 'cataloguing', type: 'semantic' }, { word: 'catalogued', type: 'syntactic' }] },
+                        " undiscovered species of flora and fauna. The sheer ", { options: [{ word: 'biodiversity', type: 'correct' }, { word: 'biodiverse', type: 'semantic' }, { word: 'biodiversify', type: 'syntactic' }] },
+                        " of the region was staggering. Navigating the dense undergrowth required both skill and ", { options: [{ word: 'perseverance', type: 'correct' }, { word: 'persevere', type: 'semantic' }, { word: 'persevering', type: 'syntactic' }] },
+                        ". Ultimately, her findings would contribute significantly to our ", { options: [{ word: 'comprehension', type: 'correct' }, { word: 'comprehensive', type: 'semantic' }, { word: 'comprehend', type: 'syntactic' }] }, " of the rainforest's complex web of life."
+                    ]
+                ],
+                'Vocabulary Volcano': [
+                    [
+                        "The vulcanologist approached the caldera with a mixture of ", { options: [{ word: 'trepidation', type: 'correct' }, { word: 'trepidatious', type: 'semantic' }, { word: 'trepidating', type: 'syntactic' }] },
+                        " and excitement. The volcano had been dormant for decades, but recent seismic activity indicated an ", { options: [{ word: 'imminent', type: 'correct' }, { word: 'eminent', type: 'semantic' }, { word: 'immanent', type: 'syntactic' }] },
+                        " eruption. His task was to deploy sensors that would transmit ", { options: [{ word: 'critical', type: 'correct' }, { word: 'critically', type: 'semantic' }, { word: 'criticize', type: 'syntactic' }] },
+                        " data back to the lab. The noxious fumes made it difficult to breathe, necessitating the use of a ", { options: [{ word: 'specialized', type: 'correct' }, { word: 'specialize', type: 'semantic' }, { word: 'specializing', type: 'syntactic' }] },
+                        " respirator. This dangerous work was essential for warning the ", { options: [{ word: 'populace', type: 'correct' }, { word: 'popular', type: 'semantic' }, { word: 'populate', type: 'syntactic' }] }, " of the surrounding villages."
+                    ]
+                ],
+                'Caverns of Cohesion': [
+                    [
+                        "The spelunkers descended into the subterranean abyss, their headlamps ", { options: [{ word: 'illuminating', type: 'correct' }, { word: 'illuminate', type: 'semantic' }, { word: 'illumination', type: 'syntactic' }] },
+                        " vast, cathedral-like chambers. They were searching for a legendary underground river, a geographical ", { options: [{ word: 'enigma', type: 'correct' }, { word: 'enigmatic', type: 'semantic' }, { word: 'enigmatically', type: 'syntactic' }] },
+                        " that had baffled explorers for generations. The journey required them to ", { options: [{ word: 'traverse', type: 'correct' }, { word: 'traversing', type: 'semantic' }, { word: 'traversed', type: 'syntactic' }] },
+                        " treacherous ledges and rappel down sheer cliffs. They relied on their collective expertise and ", { options: [{ word: 'unwavering', type: 'correct' }, { word: 'wavering', type: 'semantic' }, { word: 'waver', type: 'syntactic' }] },
+                        " trust in one another. Discovering the river would be a monumental achievement in the field of ", { options: [{ word: 'speleology', type: 'correct' }, { word: 'speleological', type: 'semantic' }, { word: 'speleologist', type: 'syntactic' }] }, "."
+                    ]
+                ]
             }
         };
 
@@ -92,12 +164,13 @@
         // --- Helper function to shuffle array ---
         const shuffleArray = (array) => {
             let currentIndex = array.length, randomIndex;
+            const newArray = [...array];
             while (currentIndex !== 0) {
                 randomIndex = Math.floor(Math.random() * currentIndex);
                 currentIndex--;
-                [array[currentIndex], array[randomIndex]] = [array[randomIndex], array[currentIndex]];
+                [newArray[currentIndex], newArray[randomIndex]] = [newArray[randomIndex], newArray[currentIndex]];
             }
-            return array;
+            return newArray;
         };
 
         // --- Helper & Utility Components ---
@@ -105,6 +178,7 @@
         const IconHeart = ({ className }) => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round" className={`text-red-500 ${className}`}><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>;
         const IconTrophy = () => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/></svg>;
         const IconCheckCircle = () => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>;
+        const IconXCircle = () => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="15" y1="9" x2="9" y2="15"></line><line x1="9" y1="9" x2="15" y2="15"></line></svg>;
 
         const BaseModal = ({ show, onClose, children, maxWidth = 'max-w-2xl' }) => {
             if (!show) return null;
@@ -172,7 +246,7 @@
                     case 'game':
                         return <GameScreen settings={gameSettings} onEndGame={handleEndGame} />;
                     case 'results':
-                        return <ResultsScreen results={gameResults} onRestart={handleRestart} leaderboard={leaderboardData} onUpdateLeaderboard={fetchLeaderboard} />;
+                        return <ResultsScreen results={gameResults} onRestart={handleRestart} />;
                     case 'setup':
                     default:
                         return <SetupScreen onStartGame={handleStartGame} leaderboard={leaderboardData} />;
@@ -309,6 +383,7 @@
         function GameScreen({ settings, onEndGame }) {
             const { studentName, level, map, isPractice, characterClass, characterImage } = settings;
             const [passage, setPassage] = useState([]);
+            const [passageIndex, setPassageIndex] = useState(0);
             const [currentItemIndex, setCurrentItemIndex] = useState(0);
             const [hearts, setHearts] = useState(10 + (characterClass.heartMod || 0));
             const [score, setScore] = useState(0);
@@ -318,25 +393,31 @@
             const [mapPosition, setMapPosition] = useState(0);
             const [immuneCharges, setImmuneCharges] = useState(characterClass.immune || 0);
             const [hasUsedFreebie, setHasUsedFreebie] = useState(false);
+            const [gameLog, setGameLog] = useState([]);
+            const [questionTimestamp, setQuestionTimestamp] = useState(0);
             const mapRef = useRef(null);
            
-            useEffect(() => {
-                const rawText = passages[level][map];
-                const parsedPassage = rawText.split(/(\[.*?\])/g).map((part, index) => {
-                    if (part.startsWith('[') && part.endsWith(']')) {
-                        const options = part.slice(1, -1).split('|');
-                        const correct = options[0];
-                        return { 
-                            type: 'choice', 
-                            options: shuffleArray(options.map(opt => ({ word: opt, type: opt === correct ? 'correct' : 'incorrect' }))), 
-                            id: index 
-                        };
+            const loadPassage = useCallback(() => {
+                const passageData = passages[level][map][passageIndex % passages[level][map].length];
+                const processedPassage = passageData.map((part, index) => {
+                    if (typeof part === 'string') {
+                        return { type: 'text', content: part, id: `p${passageIndex}-t${index}` };
                     }
-                    return { type: 'text', content: part, id: index };
-                }).filter(p => p.type === 'text' ? p.content.length > 0 : true);
-                setPassage(parsedPassage);
-                setCurrentItemIndex(parsedPassage.findIndex(p => p.type === 'choice'));
-            }, [level, map]);
+                    return { ...part, type: 'choice', id: `p${passageIndex}-q${index}`, shuffledOptions: shuffleArray(part.options) };
+                });
+                setPassage(processedPassage);
+                setCurrentItemIndex(processedPassage.findIndex(p => p.type === 'choice'));
+            }, [level, map, passageIndex]);
+
+            useEffect(() => {
+                loadPassage();
+            }, [loadPassage]);
+
+            useEffect(() => {
+                if(passage.length > 0 && currentItemIndex !== -1) {
+                    setQuestionTimestamp(Date.now());
+                }
+            }, [currentItemIndex, passage]);
 
              const addNotification = (text, type) => {
                 const id = Date.now();
@@ -352,13 +433,17 @@
                     if (nextChoiceIndex !== -1) {
                         setCurrentItemIndex(nextChoiceIndex);
                     } else {
-                        endGame();
+                        setPassageIndex(p => p + 1); // Load next passage
                     }
                 }, 500); 
             };
-
+            
             const handleChoice = (selectedOption, choiceId) => {
                 if (showStreakChoice || passage.find(p => p.id === choiceId)?.answered) return;
+
+                const latency = Date.now() - questionTimestamp;
+                const questionText = passage.slice(0, passage.findIndex(p => p.id === choiceId)).filter(p => p.type === 'text').map(p => p.content).join('').trim().split(' ').slice(-10).join(' ') + '...';
+                setGameLog(prev => [...prev, { question: questionText, selection: selectedOption.word, type: selectedOption.type, latency }]);
 
                 setPassage(p => p.map(part => part.id === choiceId ? {...part, answered: true, selection: selectedOption.word} : part));
 
@@ -401,7 +486,7 @@
                     }
                     
                     if (hearts - heartsToLose <= 0) {
-                        setTimeout(endGame, 500);
+                        setTimeout(() => endGame(true), 500);
                     } else {
                        advanceToNext();
                     }
@@ -424,24 +509,25 @@
                 advanceToNext();
             };
 
-            const endGame = useCallback(() => {
+            const endGame = useCallback((outOfHearts = false) => {
                  onEndGame({
                     score,
                     hearts,
-                    totalQuestions: passage.filter(p => p.type === 'choice').length,
+                    gameLog,
                     studentName,
                     level,
                     map,
                     characterClass,
-                    characterImage
+                    outOfHearts
                 });
-            }, [score, hearts, passage, onEndGame, studentName, level, map, characterClass, characterImage]);
+            }, [score, hearts, gameLog, onEndGame, studentName, level, map, characterClass]);
 
              useEffect(() => {
                 if (mapRef.current) {
-                    const nodeHeight = 88; // h-16 (4rem=64px) + my-4 (1rem*2=16px) + border(2*2=4px) = 84px. Let's use 88 for buffer.
-                    const targetScroll = mapPosition * nodeHeight;
-                    mapRef.current.scrollTop = targetScroll - (mapRef.current.clientHeight / 2) + (nodeHeight/2);
+                    const nodeHeight = 88;
+                    const containerHeight = mapRef.current.clientHeight;
+                    const targetScroll = (mapPosition * nodeHeight) - (containerHeight / 2) + (nodeHeight / 2);
+                    mapRef.current.scrollTop = targetScroll;
                 }
             }, [mapPosition]);
             
@@ -456,7 +542,8 @@
                                 <h3 className="font-bold text-lg text-slate-100">{studentName || 'Adventurer'}</h3>
                                 <p className="text-sm text-slate-400">{characterClass.name}</p>
                             </div>
-                            <div className="flex items-center gap-4">
+                             <div className="flex items-center gap-4">
+                               <button onClick={() => endGame(false)} className="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-lg transition text-sm">Return to Camp</button>
                                <div className="flex items-center gap-2 text-yellow-400 font-bold text-2xl"><IconTrophy /><span>{score}</span></div>
                                <div className="flex items-center gap-1">
                                     {[...Array(hearts)].map((_, i) => <IconHeart key={i} className="w-8 h-8 animate-pulse-heart" />)}
@@ -464,7 +551,7 @@
                                 </div>
                             </div>
                         </div>
-                        <div className="p-6 bg-slate-800/50 rounded-lg text-xl md:text-2xl leading-loose">
+                        <div className="p-6 bg-slate-800/50 rounded-lg text-xl md:text-2xl leading-loose text-slate-300">
                             {passage.map((part, index) => {
                                 if (part.type === 'text') {
                                     return <span key={part.id}>{part.content}</span>;
@@ -476,7 +563,7 @@
                                 if (index === currentItemIndex) {
                                     return (
                                         <span key={part.id} className="inline-flex flex-wrap gap-2 mx-1 p-2 bg-slate-900/50 rounded-md">
-                                            {part.options.map(option => (
+                                            {part.shuffledOptions.map(option => (
                                                 <button key={option.word} onClick={() => handleChoice(option, part.id)} className="px-3 py-1 bg-violet-600 text-white rounded-md hover:bg-violet-700 transition text-lg">
                                                     {option.word}
                                                 </button>
@@ -487,9 +574,9 @@
                                 return <span key={part.id} className="font-bold text-slate-500 mx-1">[ ... ]</span>;
                             })}
                         </div>
-                        {isPractice && passage.length > 0 && passage.find(p=>p.id === currentItemIndex) && (
+                        {isPractice && passage.length > 0 && passage[currentItemIndex] && (
                             <div className="mt-4 p-3 bg-yellow-900/30 border border-yellow-600 rounded-lg text-yellow-300 animate-fade-in-up">
-                               <strong className="font-bold">Hint:</strong> The correct answer is <em className="italic">{passage.find(p=>p.id === currentItemIndex).options.find(o=>o.type==='correct').word}</em>.
+                               <strong className="font-bold">Hint:</strong> The correct answer is <em className="italic">{passage[currentItemIndex].options.find(o=>o.type==='correct').word}</em>.
                             </div>
                         )}
                         {showStreakChoice && (
@@ -500,7 +587,7 @@
                     <div className="relative h-full">
                         <h3 className="text-xl font-bold text-yellow-400 text-center mb-4">Adventure Map</h3>
                         <div ref={mapRef} className="map-container bg-slate-900/50 border border-slate-700 rounded-lg p-4 relative">
-                            <div className="relative w-full flex flex-col-reverse items-center">
+                            <div className="relative w-full flex flex-col-reverse items-center pt-96 pb-96">
                                 {[...Array(100)].map((_, i) => (
                                     <MapNode key={i} number={i + 1} isCurrent={mapPosition === i} isCompleted={mapPosition > i} />
                                 ))}
@@ -515,32 +602,93 @@
         }
 
         // --- Results Screen Component ---
-        function ResultsScreen({ results, onRestart, leaderboard, onUpdateLeaderboard }) {
-            const { studentName, score, hearts } = results;
+        function ResultsScreen({ results, onRestart }) {
+            const { studentName, score, hearts, gameLog = [], outOfHearts } = results;
+            const semanticErrors = gameLog.filter(log => log.type === 'semantic').length;
+            const syntacticErrors = gameLog.filter(log => log.type === 'syntactic').length;
+            const totalCorrect = gameLog.filter(log => log.type === 'correct').length;
+            const totalErrors = semanticErrors + syntacticErrors;
+            const accuracy = gameLog.length > 0 ? (totalCorrect / gameLog.length * 100).toFixed(1) : 0;
+            const avgLatency = gameLog.length > 0 ? (gameLog.reduce((acc, log) => acc + log.latency, 0) / gameLog.length).toFixed(0) : 0;
+
 
              const handlePrint = () => {
                 const printWindow = window.open('', '_blank');
-                printWindow.document.write(`
+                let reportHTML = `
                     <html>
                         <head>
-                            <title>Literacy Launchpad Report</title>
+                            <title>Literacy Launchpad Report for ${studentName}</title>
                             <script src="https://cdn.tailwindcss.com"><\/script>
+                            <style>body { font-family: sans-serif; -webkit-print-color-adjust: exact; }</style>
                         </head>
-                        <body>
-                            <h1>Report for ${studentName}</h1>
-                            <p>Score: ${score}</p>
-                            <p>Hearts: ${hearts}</p>
+                        <body class="bg-slate-100 p-8">
+                            <div class="max-w-4xl mx-auto bg-white p-8 rounded-lg shadow-lg">
+                                <h1 class="text-3xl font-bold text-violet-700 mb-2">Literacy Launchpad Report</h1>
+                                <p class="text-lg text-slate-600 mb-6">For: <strong class="text-slate-800">${studentName}</strong></p>
+                                
+                                <div class="grid grid-cols-2 gap-6 text-center mb-8">
+                                    <div class="bg-slate-200 p-4 rounded-lg">
+                                        <p class="text-sm text-slate-500">Final Score</p><p class="text-3xl font-bold text-yellow-600">${score}</p>
+                                    </div>
+                                    <div class="bg-slate-200 p-4 rounded-lg">
+                                        <p class="text-sm text-slate-500">Accuracy</p><p class="text-3xl font-bold text-green-600">${accuracy}%</p>
+                                    </div>
+                                    <div class="bg-slate-200 p-4 rounded-lg">
+                                        <p class="text-sm text-slate-500">Avg. Response Time</p><p class="text-3xl font-bold text-cyan-600">${avgLatency} ms</p>
+                                    </div>
+                                    <div class="bg-slate-200 p-4 rounded-lg">
+                                        <p class="text-sm text-slate-500">Errors</p><p class="text-3xl font-bold text-red-600">${totalErrors}</p>
+                                    </div>
+                                </div>
+
+                                <h2 class="text-2xl font-bold text-slate-800 mb-4">Detailed Log</h2>
+                                <div class="overflow-x-auto">
+                                <table class="w-full text-left border-collapse">
+                                    <thead>
+                                        <tr>
+                                            <th class="border-b-2 p-2 bg-slate-200">Question Context</th>
+                                            <th class="border-b-2 p-2 bg-slate-200">Your Answer</th>
+                                            <th class="border-b-2 p-2 bg-slate-200">Result</th>
+                                            <th class="border-b-2 p-2 bg-slate-200">Time (ms)</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>`;
+                gameLog.forEach(log => {
+                    const resultClass = log.type === 'correct' ? 'text-green-600' : 'text-red-600';
+                    reportHTML += `
+                        <tr class="border-b">
+                            <td class="p-2 italic text-slate-600">"${log.question}"</td>
+                            <td class="p-2 font-mono">${log.selection}</td>
+                            <td class="p-2 font-semibold ${resultClass}">${log.type.charAt(0).toUpperCase() + log.type.slice(1)}</td>
+                            <td class="p-2">${log.latency}</td>
+                        </tr>
+                    `;
+                });
+                reportHTML += `
+                                    </tbody>
+                                </table>
+                                </div>
+                            </div>
                         </body>
                     </html>
-                `);
+                `;
+                printWindow.document.write(reportHTML);
                 printWindow.document.close();
                 printWindow.print();
             };
 
             return (
                 <div className="text-center">
-                    <h2 className="text-4xl font-bold text-violet-400 mb-2">Adventure Complete!</h2>
-                    <p className="text-lg text-slate-300 mb-8">Here's how you did, {studentName || 'adventurer'}.</p>
+                    <h2 className="text-4xl font-bold text-violet-400 mb-2">${outOfHearts ? "You Ran Out of Hearts!" : "Adventure Complete!"}</h2>
+                    <p className="text-lg text-slate-300 mb-8">Here's how you did, ${studentName || 'adventurer'}.</p>
+                    
+                     <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 max-w-4xl mx-auto mb-8">
+                        <div class="bg-slate-800/70 p-4 rounded-lg flex flex-col items-center justify-center"><p class="text-slate-400">Score</p><p class="text-3xl font-bold text-yellow-400">${score}</p></div>
+                        <div class="bg-slate-800/70 p-4 rounded-lg flex flex-col items-center justify-center"><p class="text-slate-400">Accuracy</p><p class="text-3xl font-bold text-green-400">${accuracy}%</p></div>
+                        <div class="bg-slate-800/70 p-4 rounded-lg flex flex-col items-center justify-center"><p class="text-slate-400">Semantic Errors</p><p class="text-3xl font-bold text-red-400">${semanticErrors}</p></div>
+                        <div class="bg-slate-800/70 p-4 rounded-lg flex flex-col items-center justify-center"><p class="text-slate-400">Syntactic Errors</p><p class="text-3xl font-bold text-red-400">${syntacticErrors}</p></div>
+                    </div>
+                    
                      <div className="flex justify-center gap-4 mt-8">
                         <button onClick={onRestart} className="bg-violet-600 hover:bg-violet-700 text-white font-bold py-3 px-6 rounded-lg transition">Play Again</button>
                         {studentName && <button onClick={handlePrint} className="bg-slate-600 hover:bg-slate-700 text-white font-bold py-3 px-6 rounded-lg transition">Print Report</button>}
