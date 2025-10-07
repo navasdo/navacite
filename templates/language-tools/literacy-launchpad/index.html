@@ -73,18 +73,18 @@
         };
 
         const characterClasses = {
-            adventurer: { name: 'Adventurer', bonus: '+1 starting heart', penalty: 'Slightly lower score multiplier', heartMod: 1, scoreMod: 0.9, variants: [{gender: 'Female', image50: 'adventurer-female_presenting_50.png', image100: 'adventurer-female_presenting_100.png'}, {gender: 'Male', image50: 'adventurer-male_presenting_50.png', image100: 'adventurer-male_presenting_100.png'}]},
-            alchemist: { name: 'Alchemist', bonus: 'Heart rewards restore +2', penalty: 'Score rewards are smaller', scoreMod: 0.8, variants: [{gender: 'Neutral', image50: 'alchemist_50.png', image100: 'alchemist_100.png'}]},
-            archer: { name: 'Archer', bonus: 'Higher streak bonus', penalty: 'Streaks require +1 correct answer', streakMod: 1, scoreMod: 1.2, variants: [{gender: 'Female', image50: 'archer-female_presenting_50.png', image100: 'archer-female_presenting_100.png'}, {gender: 'Male', image50: 'archer-male_presenting_50.png', image100: 'archer-male_presenting_100.png'}]},
-            assassin: { name: 'Assassin', bonus: 'Massive score multiplier', penalty: 'Start with -3 hearts', heartMod: -3, scoreMod: 1.5, variants: [{gender: 'Female', image50: 'assassin-female_presenting_50.png', image100: 'assassin-female_presenting_100.png'}, {gender: 'Male', image50: 'assassin-male_presenting_50.png', image100: 'assassin-male_presenting_100.png'}]},
-            bandit: { name: 'Bandit', bonus: 'More points from choices', penalty: 'No streak rewards', scoreMod: 1.3, variants: [{gender: 'Neutral', image50: 'bandit_50.png', image100: 'bandit_100.png'}]},
-            barbarian: { name: 'Barbarian', bonus: 'Start with +3 hearts', penalty: 'Lower overall score', heartMod: 3, scoreMod: 0.7, variants: [{gender: 'Neutral', image50: 'barbarian_50.png', image100: 'barbarian_100.png'}]},
-            'beast-master': { name: 'Beast Master', bonus: 'First incorrect answer is free', penalty: 'Reduced streak bonus', scoreMod: 0.9, freebie: true, variants: [{gender: 'Neutral', image50: 'beast-master_50.png', image100: 'beast-master_100.png'}]},
-            'dragon-knight': { name: 'Dragon Knight', bonus: 'Immune to first 2 mistakes', penalty: 'No score multiplier reward', immune: 2, variants: [{gender: 'Neutral', image50: 'dragon-knight_50.png', image100: 'dragon-knight_100.png'}]},
-            knight: { name: 'Knight', bonus: 'Balanced stats', penalty: 'None', variants: [{gender: 'Male', image50: 'knight-male_presenting_50.png', image100: 'knight-male_presenting_100.png'}]},
-            'martial-artist': { name: 'Martial Artist', bonus: 'Streaks activate faster', penalty: 'No heart reward option', streakMod: -1, scoreMod: 1.1, variants: [{gender: 'Female', image50: 'martial-artist-female_presenting_50.png', image100: 'martial-artist-female_presenting_100.png'}, {gender: 'Male', image50: 'martial-artist-male_presenting_50.png', image100: 'martial-artist-male_presenting_100.png'}]},
-            samurai: { name: 'Samurai', bonus: 'Perfect answers grant huge bonus', penalty: 'Any mistake resets streak', scoreMod: 1.2, perfect: true, variants: [{gender: 'Neutral', image50: 'samurai_50.png', image100: 'samurai_100.png'}]},
-            wizard: { name: 'Wizard', bonus: 'Streak score rewards are massively increased', penalty: 'Fewer starting hearts', heartMod: -2, streakBonusMultiplier: 2.5, variants: [{gender: 'Female', image50: 'wizard-female_presenting_50.png', image100: 'wizard-female_presenting_100.png'}, {gender: 'Male', image50: 'wizard-male_presenting_50.png', image100: 'wizard-male_presenting_100.png'}]},
+            adventurer: { name: 'Adventurer', bonus: '+1 starting heart', penalty: 'Slightly lower score multiplier', heartMod: 1, scoreMod: 0.9, variants: [{gender: 'Female', image50: 'adventurer-50-female_presenting.png', image100: 'adventurer-100_female_presenting.png'}, {gender: 'Male', image50: 'adventurer-50-male_presenting.png', image100: 'adventurer-100_male_presenting.png'}]},
+            alchemist: { name: 'Alchemist', bonus: 'Heart rewards restore +2', penalty: 'Score rewards are smaller', scoreMod: 0.8, variants: [{gender: 'Neutral', image50: 'alchemist-50.png', image100: 'alchemist-100.png'}]},
+            archer: { name: 'Archer', bonus: 'Higher streak bonus', penalty: 'Streaks require +1 correct answer', streakMod: 1, scoreMod: 1.2, variants: [{gender: 'Female', image50: 'archer-50-female_presenting.png', image100: 'archer-100-female_presenting.png'}, {gender: 'Male', image50: 'archer-50-male_presenting.png', image100: 'archer-100-male_presenting.png'}]},
+            assassin: { name: 'Assassin', bonus: 'Massive score multiplier', penalty: 'Start with -3 hearts', heartMod: -3, scoreMod: 1.5, variants: [{gender: 'Female', image50: 'assassin-50-female_presenting.png', image100: 'assassin-100-female_presenting.png'}, {gender: 'Male', image50: 'assassin-50-male_presenting.png', image100: 'assassin-100-male_presenting.png'}]},
+            bandit: { name: 'Bandit', bonus: 'More points from choices', penalty: 'No streak rewards', scoreMod: 1.3, variants: [{gender: 'Neutral', image50: 'bandit-50.png', image100: 'bandit-100.png'}]},
+            barbarian: { name: 'Barbarian', bonus: 'Start with +3 hearts', penalty: 'Lower overall score', heartMod: 3, scoreMod: 0.7, variants: [{gender: 'Neutral', image50: 'barbarian-50.png', image100: 'barbarian-100.png'}]},
+            'beast-master': { name: 'Beast Master', bonus: 'First incorrect answer is free', penalty: 'Reduced streak bonus', scoreMod: 0.9, freebie: true, variants: [{gender: 'Neutral', image50: 'beast_master-50.png', image100: 'beast_master-100.png'}]},
+            'dragon-knight': { name: 'Dragon Knight', bonus: 'Immune to first 2 mistakes', penalty: 'No score multiplier reward', immune: 2, variants: [{gender: 'Neutral', image50: 'dragon_knight-50.png', image100: 'dragon-knight-100.png'}]},
+            knight: { name: 'Knight', bonus: 'Balanced stats', penalty: 'None', variants: [{gender: 'Male', image50: 'knight-50-male_presenting.png', image100: 'knight-100-male_presenting.png'}]},
+            'martial-artist': { name: 'Martial Artist', bonus: 'Streaks activate faster', penalty: 'No heart reward option', streakMod: -1, scoreMod: 1.1, variants: [{gender: 'Female', image50: 'martial-artist-50-female_presenting.png', image100: 'martial-artist-100-female_presenting.png'}, {gender: 'Male', image50: 'martial-artist-50-male_presenting.png', image100: 'martial-artist-100-male_presenting.png'}]},
+            samurai: { name: 'Samurai', bonus: 'Perfect answers grant huge bonus', penalty: 'Any mistake resets streak', scoreMod: 1.2, perfect: true, variants: [{gender: 'Neutral', image50: 'samurai-50.png', image100: 'samurai-100.png'}]},
+            wizard: { name: 'Wizard', bonus: 'Streak score rewards are massively increased', penalty: 'Fewer starting hearts', heartMod: -2, streakBonusMultiplier: 2.5, variants: [{gender: 'Female', image50: 'wizard-50-female_presenting.png', image100: 'wizard-100-female_presenting.png'}, {gender: 'Male', image50: 'wizard-50-male_presenting.png', image100: 'wizard-100-male_presenting.png'}]},
         };
 
         const classImageBaseUrl = "https://raw.githubusercontent.com/navasdo/navacite/refs/heads/main/templates/language-tools/literacy-launchpad/static/images/character-avatars/";
@@ -487,7 +487,7 @@
                                 return <span key={part.id} className="font-bold text-slate-500 mx-1">[ ... ]</span>;
                             })}
                         </div>
-                        {isPractice && passage[currentItemIndex] && (
+                        {isPractice && passage.length > 0 && passage.find(p=>p.id === currentItemIndex) && (
                             <div className="mt-4 p-3 bg-yellow-900/30 border border-yellow-600 rounded-lg text-yellow-300 animate-fade-in-up">
                                <strong className="font-bold">Hint:</strong> The correct answer is <em className="italic">{passage.find(p=>p.id === currentItemIndex).options.find(o=>o.type==='correct').word}</em>.
                             </div>
@@ -507,7 +507,7 @@
                             </div>
                         </div>
                          <div className="absolute inset-0 flex items-center justify-center pointer-events-none" style={{ top: '4rem', bottom: '0' }}>
-                            <img src={`${classImageBaseUrl}${characterImage}`} alt={characterClass.name} className="w-16 h-16 transition-transform duration-500" />
+                            <img src={characterImage} alt={characterClass.name} className="w-16 h-16 transition-transform duration-500" />
                         </div>
                     </div>
                 </div>
