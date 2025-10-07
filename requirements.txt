@@ -5,3 +5,5 @@ requests
 Flask-SQLAlchemy
 Flask-Bcrypt
 psycopg2-binary
+PyJWT
+python-dateutil
