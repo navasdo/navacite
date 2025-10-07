@@ -135,8 +135,311 @@ def token_required(f):
     return decorated
 
 # --- API Routes (User, Profile, etc.) ---
-# ... (existing user, profile, notification routes are unchanged) ...
+@app.route('/api/register', methods=['POST'])
+def register_api():
+    data = request.get_json()
+    # UPDATED: Check for all new required fields from the multi-step form
+    required_fields = ['username', 'password', 'email', 'firstName', 'lastName']
+    if not data or not all(field in data and data[field] for field in required_fields):
+        return jsonify({"error": "All fields are required"}), 400
+    
+    # Check if username or email is already taken
+    if User.query.filter_by(username=data['username']).first():
+        return jsonify({"error": "Username is already taken"}), 400
+    if User.query.filter_by(email=data['email']).first():
+        return jsonify({"error": "An account with that email already exists"}), 400
 
+    hashed_password = bcrypt.generate_password_hash(data['password']).decode('utf-8')
+    
+    # UPDATED: Create new user with all the new details
+    new_user = User(
+        username=data['username'],
+        password=hashed_password,
+        email=data['email'],
+        first_name=data['firstName'],
+        last_name=data['lastName'],
+        real_name=f"{data['firstName']} {data['lastName']}" # Set real_name by default
+    )
+    
+    db.session.add(new_user)
+    db.session.commit()
+    
+    # This is where the email verification process will be triggered in the future.
+    return jsonify({"message": "User registered successfully. Please verify your email."}), 201
+
+
+@app.route('/api/login', methods=['POST'])
+def login_api():
+    data = request.get_json()
+    if not data or not data.get('username') or not data.get('password'):
+        return {"error": "Username and password are required"}, 400
+    
+    try:
+        user = User.query.filter_by(username=data.get('username')).first()
+        if user and bcrypt.check_password_hash(user.password, data.get('password')):
+            token = jwt.encode({
+                'user': user.username,
+                'exp': datetime.utcnow() + timedelta(hours=24)
+            }, app.config['SECRET_KEY'], algorithm="HS256")
+            response = make_response(jsonify({"message": "Login successful"}))
+            response.set_cookie('token', token, httponly=True, secure=True, samesite='Lax')
+            return response
+        else:
+            return jsonify({"error": "Invalid credentials"}), 401
+    except Exception as e:
+        db.session.rollback()
+        app.logger.error(f"Database error during login: {e}")
+        return jsonify({"error": "A server error occurred during login. Please try again."}), 500
+
+@app.route('/api/profile', methods=['POST'])
+@token_required
+def update_profile_api():
+    data = request.get_json()
+    user = g.user
+
+    forbidden_keywords = ['politics', 'religion', 'racism', 'bigotry']
+    about_me_text = data.get('about_me', '').lower()
+    if any(keyword in about_me_text for keyword in forbidden_keywords):
+        return jsonify({"error": "Profile contains forbidden topics. Please revise."}), 400
+
+    user.real_name = data.get('real_name', user.real_name)
+    user.location = data.get('location', user.location)
+    user.email = data.get('email', user.email)
+    user.about_me = data.get('about_me', user.about_me)
+    user.fields = data.get('fields', user.fields)
+    user.interests = data.get('interests', user.interests)
+    user.hobbies = data.get('hobbies', user.hobbies)
+    user.specializations = data.get('specializations', user.specializations)
+    
+    preference = data.get('display_preference', user.display_preference)
+    user.display_preference = preference
+    if preference == 'real_name':
+        user.display_name = data.get('real_name', user.username)
+    else:
+        user.display_name = user.username
+
+    photo_b64 = data.get('profile_photo_b64')
+    if photo_b64:
+        user.profile_photo_url = photo_b64
+    
+    db.session.commit()
+    return jsonify({"message": "Profile updated successfully"})
+
+@app.route('/api/collaborate', methods=['POST'])
+@token_required
+def request_collaboration():
+    data = request.get_json()
+    recipient_username = data.get('recipient_username')
+    if not recipient_username:
+        return jsonify({"error": "Recipient username is required"}), 400
+
+    recipient = User.query.filter_by(username=recipient_username).first()
+    if not recipient:
+        return jsonify({"error": "Recipient not found"}), 404
+    
+    if recipient.id == g.user.id:
+        return jsonify({"error": "You cannot send a collaboration request to yourself."}), 400
+
+    existing_notification = Notification.query.filter_by(
+        sender_id=g.user.id,
+        recipient_id=recipient.id,
+        type='collaboration_request'
+    ).first()
+
+    if existing_notification:
+        return jsonify({"message": "Collaboration request already sent."}), 200
+
+    new_notification = Notification(
+        recipient_id=recipient.id,
+        sender_id=g.user.id,
+        type='collaboration_request'
+    )
+    db.session.add(new_notification)
+    db.session.commit()
+    
+    return jsonify({"message": "Collaboration request sent successfully."}), 201
+
+@app.route('/api/notifications', methods=['GET'])
+@token_required
+def get_notifications():
+    notifications = Notification.query.filter_by(recipient_id=g.user.id).order_by(desc(Notification.timestamp)).all()
+    
+    output = []
+    for notification in notifications:
+        output.append({
+            'id': notification.id,
+            'sender_username': notification.sender.username,
+            'sender_photo': notification.sender.profile_photo_url or f"https://placehold.co/40x40/1e293b/a78bfa?text={notification.sender.username[0].upper()}",
+            'type': notification.type,
+            'is_read': notification.is_read,
+            'timestamp': notification.timestamp.isoformat() + "Z"
+        })
+    return jsonify(output)
+
+@app.route('/api/notifications/mark-read', methods=['POST'])
+@token_required
+def mark_notifications_as_read():
+    try:
+        Notification.query.filter_by(recipient_id=g.user.id, is_read=False).update({'is_read': True})
+        db.session.commit()
+        return jsonify({"message": "Notifications marked as read."}), 200
+    except Exception as e:
+        db.session.rollback()
+        app.logger.error(f"Error marking notifications as read: {e}")
+        return jsonify({"error": "An internal error occurred."}), 500
+
+# --- NEW SESSION SCRIBE API ROUTES ---
+@app.route('/api/compliance-check', methods=['POST'])
+@token_required
+def handle_compliance_check():
+    data = request.get_json()
+    user_input = data.get('userInput')
+    if not user_input:
+        return jsonify({"error": "No input provided"}), 400
+
+    api_key = app.config.get('GEMINI_API_KEY_SLP')
+    if not api_key:
+        return jsonify({"error": "API key not configured"}), 500
+    
+    url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key={api_key}"
+    
+    system_prompt = "You are a compliance officer reviewing therapy notes for FERPA and HIPAA. Identify any potential personally identifiable information (PII) like names, specific locations, or other identifying details. Do NOT flag common acronyms used in the field. Respond ONLY with a JSON object. The JSON object should have a single key, 'violations', which is an array of strings. Each string should be a word or phrase you identified as a potential violation. If there are no violations, return an empty array: {\"violations\": []}."
+    
+    schema = {
+        "type": "OBJECT",
+        "properties": {
+            "violations": {
+                "type": "ARRAY",
+                "items": { "type": "STRING" }
+            }
+        }
+    }
+
+    payload = {
+        "contents": [{"parts": [{"text": user_input}]}],
+        "systemInstruction": {"parts": [{"text": system_prompt}]},
+        "generationConfig": {
+            "responseMimeType": "application/json",
+            "responseSchema": schema
+        }
+    }
+
+    try:
+        response = requests.post(url, json=payload)
+        response.raise_for_status()
+        return jsonify(response.json())
+    except requests.exceptions.RequestException as e:
+        app.logger.error(f"API call failed: {e}")
+        return jsonify({"error": "Failed to communicate with AI service"}), 500
+
+@app.route('/api/generate-note', methods=['POST'])
+@token_required
+def handle_generate_note():
+    data = request.get_json()
+    user_input = data.get('userInput')
+    glossary = data.get('glossary', {})
+    if not user_input:
+        return jsonify({"error": "No input provided"}), 400
+
+    api_key = app.config.get('GEMINI_API_KEY_SLP')
+    if not api_key:
+        return jsonify({"error": "API key not configured"}), 500
+
+    url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key={api_key}"
+    
+    glossary_text = "\n".join([f"- {key}: {value}" for key, value in glossary.items()])
+    
+    prompt = f"""
+    Based on the following shorthand notes and glossary, please generate a professional therapy note.
+
+    Shorthand Notes:
+    "{user_input}"
+
+    Glossary of Terms:
+    {glossary_text}
+    """
+    
+    system_prompt = "You are an expert Speech-Language Pathologist. Your task is to expand shorthand clinical notes into a complete, professional, and compliant therapy note. Write the note in the third-person, past tense. Ensure the output is a single, concise paragraph. Do not add a date."
+
+    payload = {
+        "contents": [{"parts": [{"text": prompt}]}],
+        "systemInstruction": {"parts": [{"text": system_prompt}]},
+    }
+
+    try:
+        response = requests.post(url, json=payload)
+        response.raise_for_status()
+        return jsonify(response.json())
+    except requests.exceptions.RequestException as e:
+        app.logger.error(f"API call failed: {e}")
+        return jsonify({"error": "Failed to communicate with AI service"}), 500
+
+# --- NEW LITERACY LAUNCHPAD API ROUTES ---
+@app.route('/api/literacy-launchpad/leaderboard', methods=['GET'])
+@token_required
+def get_leaderboard():
+    entries = Leaderboard.query.order_by(desc(Leaderboard.score)).limit(10).all()
+    return jsonify([{'pseudonym': e.pseudonym, 'score': e.score} for e in entries])
+
+@app.route('/api/literacy-launchpad/leaderboard', methods=['POST'])
+@token_required
+def add_to_leaderboard():
+    data = request.get_json()
+    pseudonym = data.get('pseudonym')
+    score = data.get('score')
+    password = data.get('password')
+
+    if not all([pseudonym, score, password]):
+        return jsonify({"error": "Missing data"}), 400
+
+    # Authenticate the clinician
+    if not g.user or not bcrypt.check_password_hash(g.user.password, password):
+        return jsonify({"error": "Invalid credentials"}), 401
+
+    # Add the new entry
+    new_entry = Leaderboard(pseudonym=pseudonym, score=score)
+    db.session.add(new_entry)
+    
+    # Keep only the top 10 scores
+    entry_count = Leaderboard.query.count()
+    if entry_count > 10:
+        lowest_entry = Leaderboard.query.order_by(Leaderboard.score.asc()).first()
+        db.session.delete(lowest_entry)
+        
+    db.session.commit()
+    return jsonify({"message": "Leaderboard updated successfully"}), 201
+    
+@app.route('/api/literacy-launchpad/scaffold', methods=['POST'])
+@token_required
+def get_scaffold():
+    data = request.get_json()
+    passage = data.get('passage')
+    incorrect_word = data.get('incorrect_word')
+    
+    api_key = app.config.get('LITERACY_LAUNCHPAD_API_KEY')
+    if not api_key:
+        return jsonify({"error": "API key not configured for Literacy Launchpad"}), 500
+
+    url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key={api_key}"
+    
+    prompt = f"""
+    A student was reading the following passage and made an error.
+    Passage: "{passage}"
+    The student incorrectly chose the word "{incorrect_word}".
+    Provide a brief, student-friendly explanation of why that word does not fit grammatically or semantically.
+    Also, identify the contextual clue in the passage that points to the correct answer.
+    Respond ONLY with a JSON object with two keys: "explanation" and "clue".
+    Example: {{"explanation": "The word 'running' is an action, but the sentence needs a describing word for the apple.", "clue": "The apple was..."}}
+    """
+    
+    try:
+        response = requests.post(url, json={"contents": [{"parts": [{"text": prompt}]}]})
+        response.raise_for_status()
+        # The AI response will be a stringified JSON, so we return it directly
+        return jsonify(response.json())
+    except requests.exceptions.RequestException as e:
+        app.logger.error(f"Literacy Launchpad API call failed: {e}")
+        return jsonify({"error": "Failed to get help from the AI service"}), 500
 # --- NEW LITERACY LAUNCHPAD API ROUTES ---
 @app.route('/api/literacy-launchpad/leaderboard', methods=['GET'])
 def get_leaderboard():
@@ -197,11 +500,160 @@ def reset_leaderboard():
 @app.route('/api/literacy-launchpad/scaffold', methods=['POST'])
 @token_required
 def get_scaffold():
-    # ... (existing scaffold route is unchanged) ...
-    pass
+ data = request.get_json()
+    passage = data.get('passage')
+    incorrect_word = data.get('incorrect_word')
+    
+    api_key = app.config.get('LITERACY_LAUNCHPAD_API_KEY')
+    if not api_key:
+        return jsonify({"error": "API key not configured for Literacy Launchpad"}), 500
+
+    url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key={api_key}"
+    
+    prompt = f"""
+    A student was reading the following passage and made an error.
+    Passage: "{passage}"
+    The student incorrectly chose the word "{incorrect_word}".
+    Provide a brief, student-friendly explanation of why that word does not fit grammatically or semantically.
+    Also, identify the contextual clue in the passage that points to the correct answer.
+    Respond ONLY with a JSON object with two keys: "explanation" and "clue".
+    Example: {{"explanation": "The word 'running' is an action, but the sentence needs a describing word for the apple.", "clue": "The apple was..."}}
+    """
+    
+    try:
+        response = requests.post(url, json={"contents": [{"parts": [{"text": prompt}]}]})
+        response.raise_for_status()
+        # The AI response will be a stringified JSON, so we return it directly
+        return jsonify(response.json())
+    except requests.exceptions.RequestException as e:
+        app.logger.error(f"Literacy Launchpad API call failed: {e}")
+        return jsonify({"error": "Failed to get help from the AI service"}), 500    
 
 # --- Page Routes ---
-# ... (existing page routes are unchanged) ...
+@app.route('/')
+def landing_page():
+    if g.user:
+        return redirect(url_for('library_page'))
+    return render_template('landing.html')
+
+@app.route('/login')
+def login_page():
+    return render_template('login.html')
+
+@app.route('/register')
+def register_page():
+    return render_template('register.html')
+    
+@app.route('/apply')
+def apply_page():
+    return render_template('apply.html')
+
+@app.route('/logout')
+def logout():
+    response = make_response(redirect(url_for('login_page')))
+    response.set_cookie('token', '', expires=0)
+    return response
+
+@app.route('/library')
+@token_required
+def library_page():
+    return render_template('index.html')
+
+@app.route('/profile')
+@token_required
+def my_profile_page():
+    if g.user:
+        return redirect(url_for('profile_page', username=g.user.username))
+    else:
+        return redirect(url_for('login_page'))
+
+@app.route('/profile/<username>')
+@token_required
+def profile_page(username):
+    profile_user = User.query.filter_by(username=username).first_or_404()
+    
+    is_own_profile = False
+    if g.user and g.user.id == profile_user.id:
+        is_own_profile = True
+        
+    return render_template('profile.html', user=profile_user, is_own_profile=is_own_profile)
+
+# --- Articulation Tools ---
+@app.route('/articulation-tools')
+@token_required
+def articulation_tools():
+    return render_template('articulation-tools/index.html')
+
+# --- Dynamic Route for Individual Phoneme Pages ---
+@app.route('/articulation-tools/<phoneme_slug>')
+@token_required
+def phoneme_page(phoneme_slug):
+    # Sanitize slug to prevent directory traversal
+    if '..' in phoneme_slug or '/' in phoneme_slug:
+        abort(404)
+    return render_template(f'articulation-tools/{phoneme_slug}/index.html')
+
+# --- Language Tools ---
+@app.route('/language-tools')
+@token_required
+def language_tools():
+    return render_template('language-tools/index.html')
+
+# --- Dynamic Route for Individual Language Pages ---
+@app.route('/language-tools/<languageTools_slug>')
+@token_required
+def language_page(languageTools_slug):
+    if '..' in languageTools_slug or '/' in languageTools_slug:
+        abort(404)
+    return render_template(f'language-tools/{languageTools_slug}/index.html')
+
+# --- Fluency Tools ---
+@app.route('/fluency-tools')
+@token_required
+def fluency_tools():
+    return render_template('fluency-tools/index.html')
+
+# --- Dynamic Route for Individual Fluency-Tool Pages ---
+@app.route('/fluency-tools/<fluencyTools_slug>')
+@token_required
+def fluency_page(fluencyTools_slug):
+    if '..' in fluencyTools_slug or '/' in fluencyTools_slug:
+        abort(404)
+    return render_template(f'fluency-tools/{fluencyTools_slug}/index.html')
+
+# --- SLP Tools ---
+@app.route('/slp-tools')
+@token_required
+def slp_tools():
+    return render_template('slp-tools/index.html')
+
+# --- Dynamic Route for Individual SLP-Tool Pages ---
+@app.route('/slp-tools/<slpTools_slug>')
+@token_required
+def slp_page(slpTools_slug):
+    if '..' in slpTools_slug or '/' in slpTools_slug:
+        abort(404)
+    return render_template(f'slp-tools/{slpTools_slug}/index.html')
+
+# --- Cognition Tools ---
+@app.route('/cognition-tools')
+@token_required
+def cognition_tools():
+    return render_template('cognition-tools/index.html')
+
+# --- Dynamic Route for Individual Cognition-Tool Pages ---
+@app.route('/cognition-tools/<cognitionTools_slug>')
+@token_required
+def cognition_page(cognitionTools_slug):
+    if '..' in cognitionTools_slug or '/' in cognitionTools_slug:
+        abort(404)
+    return render_template(f'cognition-tools/{cognitionTools_slug}/index.html')
+
+
+# --- Error Handling ---
+@app.errorhandler(404)
+def page_not_found(e):
+    return render_template('404.html'), 404
 
 # --- This block should be the VERY LAST thing in your file ---
 if __name__ == '__main__':
