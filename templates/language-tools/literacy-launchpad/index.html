@@ -220,17 +220,29 @@
             const [screen, setScreen] = useState('setup');
             const [gameSettings, setGameSettings] = useState(null);
             const [gameResults, setGameResults] = useState(null);
-            const [leaderboardData, setLeaderboardData] = useState([]);
+            const [leaderboard, setLeaderboard] = useState({ entries: [], nextReset: null });
 
             const fetchLeaderboard = useCallback(() => {
-                console.log("Fetching leaderboard (mocked for preview)...");
-                 setLeaderboardData([
-                    { pseudonym: 'DragonSlayer', score: 2450 },
-                    { pseudonym: 'SyntaxWizard', score: 2100 },
-                    { pseudonym: 'GrammarGamer', score: 1980 },
-                    { pseudonym: 'VocabVanquisher', score: 1800 },
-                    { pseudonym: 'ProsePro', score: 1750 },
-                ]);
+                fetch('/api/literacy-launchpad/leaderboard')
+                    .then(res => res.json())
+                    .then(data => {
+                        setLeaderboard({
+                            entries: data.entries,
+                            nextReset: data.nextReset
+                        });
+                    })
+                    .catch(err => {
+                        console.error("Failed to fetch leaderboard:", err)
+                        // Fallback for local testing
+                        setLeaderboard({
+                             entries: [
+                                { pseudonym: 'DragonSlayer', score: 2450 }, { pseudonym: 'SyntaxWizard', score: 2100 },
+                                { pseudonym: 'GrammarGamer', score: 1980 }, { pseudonym: 'VocabVanquisher', score: 1800 },
+                                { pseudonym: 'ProsePro', score: 1750 },
+                            ],
+                            nextReset: new Date(new Date().getFullYear(), new Date().getMonth() + 1, 1).toISOString()
+                        })
+                    });
             }, []);
 
             useEffect(() => {
@@ -258,17 +270,17 @@
                     case 'game':
                         return <GameScreen settings={gameSettings} onEndGame={handleEndGame} />;
                     case 'results':
-                        return <ResultsScreen results={gameResults} onRestart={handleRestart} leaderboard={leaderboardData} onUpdateLeaderboard={fetchLeaderboard} />;
+                        return <ResultsScreen results={gameResults} onRestart={handleRestart} leaderboard={leaderboard.entries} onUpdateLeaderboard={fetchLeaderboard} />;
                     case 'setup':
                     default:
-                        return <SetupScreen onStartGame={handleStartGame} leaderboard={leaderboardData} />;
+                        return <SetupScreen onStartGame={handleStartGame} leaderboard={leaderboard} />;
                 }
             };
 
             return (
                 <div className="w-full max-w-7xl mx-auto py-8">
                      <header className="text-center mb-12">
-                        <img src="https://raw.githubusercontent.com/navasdo/navacite/refs/heads/main/templates/navacite-images/literacy-launchpad.png" alt="Literacy Launchpad Logo" className="w-48 mx-auto mb-4" style={{filter: 'drop-shadow(0 0 15px rgba(167, 139, 250, 0.4))'}} />
+                        <img src="https://raw.githubusercontent.com/navasdo/navacite/refs/heads/main/templates/static/navacite-images/literacy-launchpad.png" alt="Literacy Launchpad Logo" className="w-48 mx-auto mb-4" style={{filter: 'drop-shadow(0 0 15px rgba(167, 139, 250, 0.4))'}} />
                         <h1 className="text-5xl md:text-6xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-violet-400 to-fuchsia-500">
                             Literacy Launchpad
                         </h1>
@@ -304,6 +316,17 @@
             const currentClass = characterClasses[selectedClass];
             const currentVariant = currentClass.variants[selectedVariant];
             const largeImageUrl = `${classImageBaseUrl}${currentVariant.image100}`;
+            
+            const daysUntilReset = useMemo(() => {
+                if (!leaderboard.nextReset) return null;
+                const today = new Date();
+                const resetDate = new Date(leaderboard.nextReset);
+                // Set time to 0 to compare dates only
+                today.setHours(0,0,0,0);
+                resetDate.setHours(0,0,0,0);
+                const diffTime = resetDate - today;
+                return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+            }, [leaderboard.nextReset]);
 
 
             return (
@@ -375,14 +398,15 @@
                         {/* Leaderboard */}
                         <div className="p-4 bg-slate-800/50 rounded-lg">
                             <h3 className="text-xl font-bold text-yellow-400 text-center mb-4">Top Scores</h3>
+                            {daysUntilReset !== null && <p className="text-center text-sm text-cyan-400 mb-3 italic">{daysUntilReset} days until monthly reset!</p>}
                             <ol className="list-decimal list-inside space-y-2 text-slate-300">
-                                {leaderboard.map((entry, index) => (
+                                {leaderboard.entries.map((entry, index) => (
                                     <li key={index} className="flex justify-between">
                                         <span>{index + 1}. {entry.pseudonym}</span>
                                         <span className="font-bold">{entry.score}</span>
                                     </li>
                                 ))}
-                                {leaderboard.length === 0 && <p className="text-slate-400 text-center">No scores yet!</p>}
+                                {leaderboard.entries.length === 0 && <p className="text-slate-400 text-center">No scores yet!</p>}
                             </ol>
                         </div>
                     </div>
@@ -644,16 +668,31 @@
             const handleLeaderboardSubmit = (e) => {
                 e.preventDefault();
                 setSubmitStatus('submitting');
-                console.log("Submitting score with credentials:", { studentName, score, clinicianUser });
-                // Mock API call
-                setTimeout(() => {
-                    if (clinicianUser === 'admin' && clinicianPass === 'password') {
-                         setSubmitStatus('success');
-                         onUpdateLeaderboard(); // Refresh leaderboard data
-                    } else {
-                        setSubmitStatus('error');
+                
+                // Real API Call
+                fetch('/api/literacy-launchpad/leaderboard', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        pseudonym: studentName, // Using student name for the leaderboard
+                        score: score,
+                        password: clinicianPass
+                    })
+                })
+                .then(res => {
+                    if (!res.ok) {
+                        throw new Error('Submission failed');
                     }
-                }, 1500);
+                    return res.json();
+                })
+                .then(() => {
+                    setSubmitStatus('success');
+                    onUpdateLeaderboard(); // Refresh leaderboard data
+                })
+                .catch(err => {
+                    console.error("Failed to submit score:", err);
+                    setSubmitStatus('error');
+                });
             };
 
             const handlePrint = () => {
@@ -739,17 +778,13 @@
                             <p className="text-sm text-slate-400 mb-4">Submit to the leaderboard with clinician credentials.</p>
                             <form onSubmit={handleLeaderboardSubmit} className="space-y-4">
                                 <div>
-                                    <label className="block text-sm font-medium text-slate-300 text-left mb-1">Clinician Username</label>
-                                    <input type="text" value={clinicianUser} onChange={e => setClinicianUser(e.target.value)} className="w-full p-2 rounded-md bg-slate-700 text-slate-200 border border-slate-600" required />
-                                </div>
-                                <div>
                                     <label className="block text-sm font-medium text-slate-300 text-left mb-1">Clinician Password</label>
                                     <input type="password" value={clinicianPass} onChange={e => setClinicianPass(e.target.value)} className="w-full p-2 rounded-md bg-slate-700 text-slate-200 border border-slate-600" required />
                                 </div>
                                 <button type="submit" disabled={submitStatus === 'submitting'} className="w-full bg-yellow-600 hover:bg-yellow-700 text-white font-bold py-2 px-4 rounded-md transition disabled:bg-slate-600">
                                     {submitStatus === 'submitting' ? 'Submitting...' : 'Submit Score'}
                                 </button>
-                                {submitStatus === 'error' && <p className="text-red-400 text-sm mt-2">Invalid credentials. Please try again.</p>}
+                                {submitStatus === 'error' && <p className="text-red-400 text-sm mt-2">Invalid password. Please try again.</p>}
                             </form>
                         </div>
                     )}
@@ -815,4 +850,5 @@
     </script>
 {% endraw %}
 {% endblock %}
+    
 
