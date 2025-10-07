@@ -256,7 +256,7 @@
             return (
                 <div className="w-full max-w-7xl mx-auto py-8">
                      <header className="text-center mb-12">
-                        <img src="https://raw.githubusercontent.com/navasdo/navacite/refs/heads/main/templates/static/navacite-images/literacy-launchpad.png" alt="Literacy Launchpad Logo" className="w-48 mx-auto mb-4" style={{filter: 'drop-shadow(0 0 15px rgba(167, 139, 250, 0.4))'}} />
+                        <img src="https://raw.githubusercontent.com/navasdo/navacite/refs/heads/main/templates/navacite-images/literacy-launchpad.png" alt="Literacy Launchpad Logo" className="w-48 mx-auto mb-4" style={{filter: 'drop-shadow(0 0 15px rgba(167, 139, 250, 0.4))'}} />
                         <h1 className="text-5xl md:text-6xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-violet-400 to-fuchsia-500">
                             Literacy Launchpad
                         </h1>
@@ -421,7 +421,7 @@
 
              const addNotification = (text, type) => {
                 const id = Date.now();
-                setNotifications(n => [...n, { id, text, type }]);
+                setNotifications(n => [{ id, text, type }, ...n]);
                 setTimeout(() => {
                     setNotifications(n => n.filter(item => item.id !== id));
                 }, 2500);
@@ -526,7 +526,11 @@
                 if (mapRef.current) {
                     const nodeHeight = 88;
                     const containerHeight = mapRef.current.clientHeight;
-                    const targetScroll = (mapPosition * nodeHeight) - (containerHeight / 2) + (nodeHeight / 2);
+                    const totalNodes = 100;
+                    // The position needs to be calculated from the top of the reversed flex container
+                    const targetNodeTop = (totalNodes - 1 - mapPosition) * nodeHeight;
+                    const targetScroll = targetNodeTop - (containerHeight / 2) + (nodeHeight / 2);
+
                     mapRef.current.scrollTop = targetScroll;
                 }
             }, [mapPosition]);
@@ -534,7 +538,7 @@
             return (
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                     <div className="lg:col-span-2 relative">
-                        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-64 h-24 pointer-events-none z-50">
+                        <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none z-50">
                             {notifications.map(n => <Notification key={n.id} {...n} />)}
                         </div>
                         <div className="flex justify-between items-center mb-4">
