@@ -27,11 +27,83 @@ app.config['GEMINI_API_KEY_COGNITION'] = os.environ.get('GEMINI_API_KEY_COGNITIO
 app.config['GEMINI_API_KEY_SLP'] = os.environ.get('GEMINI_API_KEY_SLP')
 app.config['LITERACY_LAUNCHPAD_API_KEY'] = os.environ.get('LITERACY-LAUNCHPAD')
 app.config['LEADERBOARD_RESET_SECRET'] = os.environ.get('LEADERBOARD_RESET_SECRET', 'change-this-secret-key')
+app.config['GEMINI_LITERACY_LAUNCHPAD_ALE'] = os.environ.get('GEMINI_LITERACY_LAUNCHPAD_ALE')
+
 
 
 # --- Database and Encryption Setup ---
 db = SQLAlchemy(app)
 bcrypt = Bcrypt(app)
+app.logger.error(f"Literacy Launchpad API call failed: {e}")
+return jsonify({"error": "Failed to get help from the AI service"}), 500 
+
+@app.route('/api/literacy-launchpad/next-level', methods=['POST'])
+@token_required
+def get_next_level():
+    data = request.get_json()
+    current_level = data.get('current_level')
+    accuracy = data.get('accuracy')
+
+    if current_level is None or accuracy is None:
+        return jsonify({"error": "current_level and accuracy are required"}), 400
+
+    api_key = app.config.get('GEMINI_LITERACY_LAUNCHPAD_ALE')
+    if not api_key:
+        return jsonify({"error": "Adaptive Learning Engine API key not configured"}), 500
+
+    url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key={api_key}"
+    
+    system_prompt = """
+    You are an adaptive learning engine for a literacy application. Your task is to determine the next difficulty level for a student based on their performance. The difficulty levels range from 1 to 10. You must follow the provided rules precisely. Respond ONLY with a JSON object containing a single key, 'next_level', which must be an integer.
+    """
+    
+    user_prompt = f"""
+    The student is currently at difficulty level {current_level}.
+    Their accuracy on the last passage was {accuracy}%.
+
+    Apply these rules to determine the next level:
+    1. If accuracy is greater than 80%, increase the level by 1. The maximum level is 10.
+    2. If accuracy is less than 50%, decrease the level by 1. The minimum level is 1.
+    3. If accuracy is between 50% and 80% (inclusive), the level remains the same.
+    """
+
+    schema = {
+        "type": "OBJECT",
+        "properties": { "next_level": { "type": "INTEGER" } }
+    }
+
+    payload = {
+        "contents": [{"parts": [{"text": user_prompt}]}],
+        "systemInstruction": {"parts": [{"text": system_prompt}]},
+        "generationConfig": { "responseMimeType": "application/json", "responseSchema": schema }
+    }
+
+    try:
+        response = requests.post(url, json=payload)
+        response.raise_for_status()
+        # The response from Gemini comes wrapped in its own structure, so we need to parse it.
+        gemini_response = response.json()
+        
+        # Extract the text part which contains our JSON string
+        if 'candidates' in gemini_response and len(gemini_response['candidates']) > 0:
+            content_part = gemini_response['candidates'][0].get('content', {}).get('parts', [{}])[0]
+            if 'text' in content_part:
+                # The 'text' is a JSON string, so we parse it again
+                next_level_data = json.loads(content_part['text'])
+                return jsonify(next_level_data)
+
+        # Fallback to simple logic if API response is not as expected
+        raise ValueError("Unexpected API response structure")
+
+    except (requests.exceptions.RequestException, ValueError, json.JSONDecodeError) as e:
+        app.logger.error(f"ALE API call failed or returned invalid data: {e}. Using fallback logic.")
+        # Fallback logic if the API fails
+        next_level = current_level
+        if accuracy > 80:
+            next_level = min(10, current_level + 1)
+        elif accuracy < 50:
+            next_level = max(1, current_level - 1)
+        return jsonify({"next_level": next_level})
 
 # --- Database Models ---
 class User(db.Model):
