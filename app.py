@@ -39,74 +39,6 @@ app.config['GEMINI_LITERACY_LAUNCHPAD_ALE'] = os.environ.get('GEMINI_LITERACY_LA
 db = SQLAlchemy(app)
 bcrypt = Bcrypt(app)
 
-@app.route('/api/literacy-launchpad/next-level', methods=['POST'])
-@token_required
-def get_next_level():
-    data = request.get_json()
-    current_level = data.get('current_level')
-    accuracy = data.get('accuracy')
-
-    if current_level is None or accuracy is None:
-        return jsonify({"error": "current_level and accuracy are required"}), 400
-
-    api_key = app.config.get('GEMINI_LITERACY_LAUNCHPAD_ALE')
-    if not api_key:
-        return jsonify({"error": "Adaptive Learning Engine API key not configured"}), 500
-
-    url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key={api_key}"
-    
-    system_prompt = """
-    You are an adaptive learning engine for a literacy application. Your task is to determine the next difficulty level for a student based on their performance. The difficulty levels range from 1 to 10. You must follow the provided rules precisely. Respond ONLY with a JSON object containing a single key, 'next_level', which must be an integer.
-    """
-    
-    user_prompt = f"""
-    The student is currently at difficulty level {current_level}.
-    Their accuracy on the last passage was {accuracy}%.
-
-    Apply these rules to determine the next level:
-    1. If accuracy is greater than 80%, increase the level by 1. The maximum level is 10.
-    2. If accuracy is less than 50%, decrease the level by 1. The minimum level is 1.
-    3. If accuracy is between 50% and 80% (inclusive), the level remains the same.
-    """
-
-    schema = {
-        "type": "OBJECT",
-        "properties": { "next_level": { "type": "INTEGER" } }
-    }
-
-    payload = {
-        "contents": [{"parts": [{"text": user_prompt}]}],
-        "systemInstruction": {"parts": [{"text": system_prompt}]},
-        "generationConfig": { "responseMimeType": "application/json", "responseSchema": schema }
-    }
-
-    try:
-        response = requests.post(url, json=payload)
-        response.raise_for_status()
-        # The response from Gemini comes wrapped in its own structure, so we need to parse it.
-        gemini_response = response.json()
-        
-        # Extract the text part which contains our JSON string
-        if 'candidates' in gemini_response and len(gemini_response['candidates']) > 0:
-            content_part = gemini_response['candidates'][0].get('content', {}).get('parts', [{}])[0]
-            if 'text' in content_part:
-                # The 'text' is a JSON string, so we parse it again
-                next_level_data = json.loads(content_part['text'])
-                return jsonify(next_level_data)
-
-        # Fallback to simple logic if API response is not as expected
-        raise ValueError("Unexpected API response structure")
-
-    except (requests.exceptions.RequestException, ValueError, json.JSONDecodeError) as e:
-        app.logger.error(f"ALE API call failed or returned invalid data: {e}. Using fallback logic.")
-        # Fallback logic if the API fails
-        next_level = current_level
-        if accuracy > 80:
-            next_level = min(10, current_level + 1)
-        elif accuracy < 50:
-            next_level = max(1, current_level - 1)
-        return jsonify({"next_level": next_level})
-
 # --- Database Models ---
 class User(db.Model):
     __tablename__ = 'user'
@@ -116,17 +48,17 @@ class User(db.Model):
     first_name = db.Column(db.String(100))
     last_name = db.Column(db.String(100))
     email = db.Column(db.String(120), unique=True, nullable=False)
-    display_name = db.Column(db.String(100)) 
+    display_name = db.Column(db.String(100))
     real_name = db.Column(db.String(100))
     location = db.Column(db.String(100))
-    profile_photo_url = db.Column(db.Text) 
+    profile_photo_url = db.Column(db.Text)
     about_me = db.Column(db.Text)
     fields = db.Column(db.JSON)
     interests = db.Column(db.JSON)
     hobbies = db.Column(db.JSON)
     specializations = db.Column(db.JSON)
     display_preference = db.Column(db.String(20), default='username')
-    
+
     notifications_received = db.relationship(
         'Notification',
         primaryjoin="User.id == Notification.recipient_id",
@@ -147,7 +79,7 @@ class Notification(db.Model):
     type = db.Column(db.String(50), nullable=False)
     is_read = db.Column(db.Boolean, default=False, nullable=False)
     timestamp = db.Column(db.DateTime, default=datetime.utcnow)
-    
+
     sender = db.relationship(
         'User',
         primaryjoin="Notification.sender_id == User.id",
@@ -221,14 +153,14 @@ def register_api():
     required_fields = ['username', 'password', 'email', 'firstName', 'lastName']
     if not data or not all(field in data and data[field] for field in required_fields):
         return jsonify({"error": "All fields are required"}), 400
-    
+
     if User.query.filter_by(username=data['username']).first():
         return jsonify({"error": "Username is already taken"}), 400
     if User.query.filter_by(email=data['email']).first():
         return jsonify({"error": "An account with that email already exists"}), 400
 
     hashed_password = bcrypt.generate_password_hash(data['password']).decode('utf-8')
-    
+
     new_user = User(
         username=data['username'],
         password=hashed_password,
@@ -237,10 +169,10 @@ def register_api():
         last_name=data['lastName'],
         real_name=f"{data['firstName']} {data['lastName']}"
     )
-    
+
     db.session.add(new_user)
     db.session.commit()
-    
+
     return jsonify({"message": "User registered successfully. Please verify your email."}), 201
 
 
@@ -249,7 +181,7 @@ def login_api():
     data = request.get_json()
     if not data or not data.get('username') or not data.get('password'):
         return {"error": "Username and password are required"}, 400
-    
+
     try:
         user = User.query.filter_by(username=data.get('username')).first()
         if user and bcrypt.check_password_hash(user.password, data.get('password')):
@@ -286,7 +218,7 @@ def update_profile_api():
     user.interests = data.get('interests', user.interests)
     user.hobbies = data.get('hobbies', user.hobbies)
     user.specializations = data.get('specializations', user.specializations)
-    
+
     preference = data.get('display_preference', user.display_preference)
     user.display_preference = preference
     if preference == 'real_name':
@@ -297,7 +229,7 @@ def update_profile_api():
     photo_b64 = data.get('profile_photo_b64')
     if photo_b64:
         user.profile_photo_url = photo_b64
-    
+
     db.session.commit()
     return jsonify({"message": "Profile updated successfully"})
 
@@ -312,7 +244,7 @@ def request_collaboration():
     recipient = User.query.filter_by(username=recipient_username).first()
     if not recipient:
         return jsonify({"error": "Recipient not found"}), 404
-    
+
     if recipient.id == g.user.id:
         return jsonify({"error": "You cannot send a collaboration request to yourself."}), 400
 
@@ -332,14 +264,14 @@ def request_collaboration():
     )
     db.session.add(new_notification)
     db.session.commit()
-    
+
     return jsonify({"message": "Collaboration request sent successfully."}), 201
 
 @app.route('/api/notifications', methods=['GET'])
 @token_required
 def get_notifications():
     notifications = Notification.query.filter_by(recipient_id=g.user.id).order_by(desc(Notification.timestamp)).all()
-    
+
     output = []
     for notification in notifications:
         output.append({
@@ -376,11 +308,11 @@ def handle_compliance_check():
     api_key = app.config.get('GEMINI_API_KEY_SLP')
     if not api_key:
         return jsonify({"error": "API key not configured"}), 500
-    
+
     url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key={api_key}"
-    
+
     system_prompt = "You are a compliance officer reviewing therapy notes for FERPA and HIPAA. Identify any potential personally identifiable information (PII) like names, specific locations, or other identifying details. Do NOT flag common acronyms used in the field. Respond ONLY with a JSON object. The JSON object should have a single key, 'violations', which is an array of strings. Each string should be a word or phrase you identified as a potential violation. If there are no violations, return an empty array: {\"violations\": []}."
-    
+
     schema = {
         "type": "OBJECT",
         "properties": { "violations": { "type": "ARRAY", "items": { "type": "STRING" } } }
@@ -414,15 +346,15 @@ def handle_generate_note():
         return jsonify({"error": "API key not configured"}), 500
 
     url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key={api_key}"
-    
+
     glossary_text = "\n".join([f"- {key}: {value}" for key, value in glossary.items()])
-    
+
     prompt = f"""
     Based on the following shorthand notes and glossary, please generate a professional therapy note.
     Shorthand Notes: "{user_input}"
     Glossary of Terms: {glossary_text}
     """
-    
+
     system_prompt = "You are an expert Speech-Language Pathologist. Your task is to expand shorthand clinical notes into a complete, professional, and compliant therapy note. Write the note in the third-person, past tense. Ensure the output is a single, concise paragraph. Do not add a date."
 
     payload = { "contents": [{"parts": [{"text": prompt}]}], "systemInstruction": {"parts": [{"text": system_prompt}]} }
@@ -441,7 +373,7 @@ def get_leaderboard():
     entries = Leaderboard.query.order_by(desc(Leaderboard.score)).limit(10).all()
     today = date.today()
     next_reset_date = (today + relativedelta(months=1)).replace(day=1)
-    
+
     return jsonify({
         'entries': [{'pseudonym': e.pseudonym, 'score': e.score} for e in entries],
         'nextReset': next_reset_date.isoformat()
@@ -463,12 +395,12 @@ def add_to_leaderboard():
 
     new_entry = Leaderboard(pseudonym=pseudonym, score=score)
     db.session.add(new_entry)
-    
+
     entry_count = Leaderboard.query.count()
     if entry_count > 10:
         lowest_entry = Leaderboard.query.order_by(Leaderboard.score.asc()).first()
         db.session.delete(lowest_entry)
-        
+
     db.session.commit()
     return jsonify({"message": "Leaderboard updated successfully"}), 201
 
@@ -491,10 +423,10 @@ def reset_leaderboard():
 def get_passage():
     level = request.args.get('level', type=int)
     exclude_ids_str = request.args.get('exclude', '')
-    
+
     if not level:
         return jsonify({"error": "Level parameter is required"}), 400
-        
+
     exclude_ids = []
     if exclude_ids_str:
         try:
@@ -510,7 +442,7 @@ def get_passage():
     if not passages:
         fallback_query = Passage.query.filter(not_(Passage.id.in_(exclude_ids)))
         passages = fallback_query.all()
-        
+
     if not passages:
         return jsonify({"error": "No more passages available"}), 404
 
@@ -532,7 +464,7 @@ def get_next_level():
 
     if current_level is None or accuracy is None:
         return jsonify({"error": "Missing currentLevel or accuracy"}), 400
-    
+
     api_key = app.config.get('GEMINI_LITERACY_LAUNCHPAD_ALE')
     if not api_key:
         # Fallback logic if API key is not configured
@@ -545,7 +477,7 @@ def get_next_level():
         return jsonify({"nextLevel": next_level})
 
     url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key={api_key}"
-    
+
     system_prompt = """
     You are an adaptive learning engine. Your only job is to determine the next difficulty level for a student based on their performance.
     - The levels are integers from 1 to 10.
@@ -555,7 +487,7 @@ def get_next_level():
     - Do not go below level 1 or above level 10.
     Respond ONLY with a JSON object with a single key: "nextLevel". Example: {"nextLevel": 5}
     """
-    
+
     user_prompt = f"The student is at level {current_level} and scored {accuracy}%."
 
     schema = {
@@ -573,7 +505,7 @@ def get_next_level():
         response = requests.post(url, json=payload, timeout=10)
         response.raise_for_status()
         api_response = response.json()
-        
+
         # Extracting the text part which contains the JSON string
         json_string = api_response.get('candidates')[0].get('content').get('parts')[0].get('text')
         # Parsing the JSON string to a Python dictionary
@@ -598,29 +530,17 @@ def get_next_level():
 
 @app.route('/api/literacy-launchpad/scaffold', methods=['POST'])
 @token_required
-# ... existing code ...
 def get_scaffold():
     data = request.get_json()
     passage = data.get('passage')
     incorrect_word = data.get('incorrect_word')
-# ... existing code ...
-    except requests.exceptions.RequestException as e:
-        app.logger.error(f"Literacy Launchpad API call failed: {e}")
-        return jsonify({"error": "Failed to get help from the AI service"}), 500    
-    
-@app.route('/api/literacy-launchpad/scaffold', methods=['POST'])
-@token_required
-def get_scaffold():
-    data = request.get_json()
-    passage = data.get('passage')
-    incorrect_word = data.get('incorrect_word')
-    
+
     api_key = app.config.get('LITERACY_LAUNCHPAD_API_KEY')
     if not api_key:
         return jsonify({"error": "API key not configured for Literacy Launchpad"}), 500
 
     url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key={api_key}"
-    
+
     prompt = f"""
     A student was reading the following passage and made an error.
     Passage: "{passage}"
@@ -630,27 +550,14 @@ def get_scaffold():
     Respond ONLY with a JSON object with two keys: "explanation" and "clue".
     Example: {{"explanation": "The word 'running' is an action, but the sentence needs a describing word for the apple.", "clue": "The apple was..."}}
     """
-    
+
     try:
         response = requests.post(url, json={"contents": [{"parts": [{"text": prompt}]}]})
         response.raise_for_status()
         return jsonify(response.json())
     except requests.exceptions.RequestException as e:
         app.logger.error(f"Literacy Launchpad API call failed: {e}")
-        return jsonify({"error": "Failed to get help from the AI service"}), 500   
-
-# --- NEW LITERACY LAUNCHPAD API ROUTES ---
-@app.route('/api/literacy-launchpad/leaderboard', methods=['GET'])
-# ... existing code ...
-def get_leaderboard():
-    entries = Leaderboard.query.order_by(desc(Leaderboard.score)).limit(10).all()
-    today = date.today()
-    next_reset_date = (today + relativedelta(months=1)).replace(day=1)
-# ... existing code ...
-        'entries': [{'pseudonym': e.pseudonym, 'score': e.score} for e in entries],
-        'nextReset': next_reset_date.isoformat()
-
-
+        return jsonify({"error": "Failed to get help from the AI service"}), 500
 
 # --- Page Routes ---
 @app.route('/')
@@ -666,7 +573,7 @@ def login_page():
 @app.route('/register')
 def register_page():
     return render_template('register.html')
-    
+
 @app.route('/apply')
 def apply_page():
     return render_template('apply.html')
@@ -694,11 +601,11 @@ def my_profile_page():
 @token_required
 def profile_page(username):
     profile_user = User.query.filter_by(username=username).first_or_404()
-    
+
     is_own_profile = False
     if g.user and g.user.id == profile_user.id:
         is_own_profile = True
-        
+
     return render_template('profile.html', user=profile_user, is_own_profile=is_own_profile)
 
 # --- Tool Page Routes ---
@@ -761,4 +668,3 @@ def page_not_found(e):
 # --- This block should be the VERY LAST thing in your file ---
 if __name__ == '__main__':
     app.run(debug=True)
-
