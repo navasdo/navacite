@@ -13,7 +13,9 @@ from flask_bcrypt import Bcrypt
 import click
 import base64
 import re
-from sqlalchemy import desc
+from sqlalchemy import desc, func, not_
+from sqlalchemy.dialects.postgresql import JSONB
+import random
 
 # --- Basic Configuration ---
 app = Flask(__name__, template_folder='templates', static_folder='static')
@@ -21,7 +23,10 @@ logging.basicConfig(level=logging.INFO)
 
 # --- Security Configuration ---
 app.config['SECRET_KEY'] = os.environ.get('JWT_SECRET', 'a-very-secret-key-that-you-should-change')
-app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL', 'sqlite:///default.db')
+db_url = os.environ.get('DATABASE_URL', 'sqlite:///default.db')
+if db_url.startswith("postgres://"):
+    db_url = db_url.replace("postgres://", "postgresql://", 1)
+app.config['SQLALCHEMY_DATABASE_URI'] = db_url
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['GEMINI_API_KEY_COGNITION'] = os.environ.get('GEMINI_API_KEY_COGNITION')
 app.config['GEMINI_API_KEY_SLP'] = os.environ.get('GEMINI_API_KEY_SLP')
@@ -30,12 +35,9 @@ app.config['LEADERBOARD_RESET_SECRET'] = os.environ.get('LEADERBOARD_RESET_SECRE
 app.config['GEMINI_LITERACY_LAUNCHPAD_ALE'] = os.environ.get('GEMINI_LITERACY_LAUNCHPAD_ALE')
 
 
-
 # --- Database and Encryption Setup ---
 db = SQLAlchemy(app)
 bcrypt = Bcrypt(app)
-app.logger.error(f"Literacy Launchpad API call failed: {e}")
-return jsonify({"error": "Failed to get help from the AI service"}), 500 
 
 @app.route('/api/literacy-launchpad/next-level', methods=['POST'])
 @token_required
@@ -163,6 +165,13 @@ class Leaderboard(db.Model):
     pseudonym = db.Column(db.String(100), nullable=False)
     score = db.Column(db.Integer, nullable=False)
     timestamp = db.Column(db.DateTime, default=datetime.utcnow)
+
+# NEW: Database model for the Literacy Launchpad Passages
+class Passage(db.Model):
+    __tablename__ = 'passage'
+    id = db.Column(db.Integer, primary_key=True)
+    difficulty = db.Column(db.Integer, nullable=False, index=True)
+    content = db.Column(JSONB, nullable=False)
 
 # --- Custom CLI Command to Initialize DB ---
 @app.cli.command("init-db")
@@ -475,6 +484,129 @@ def reset_leaderboard():
         db.session.rollback()
         app.logger.error(f"Error resetting leaderboard: {e}")
         return jsonify({"error": "An internal server error occurred while resetting the leaderboard."}), 500
+
+# NEW: API endpoint to fetch a passage from the database
+@app.route('/api/literacy-launchpad/passage', methods=['GET'])
+@token_required
+def get_passage():
+    level = request.args.get('level', type=int)
+    exclude_ids_str = request.args.get('exclude', '')
+    
+    if not level:
+        return jsonify({"error": "Level parameter is required"}), 400
+        
+    exclude_ids = []
+    if exclude_ids_str:
+        try:
+            exclude_ids = [int(id_str) for id_str in exclude_ids_str.split(',')]
+        except ValueError:
+            return jsonify({"error": "Invalid exclude IDs format"}), 400
+
+    # Query for passages at the specified level, excluding used IDs
+    query = Passage.query.filter_by(difficulty=level).filter(not_(Passage.id.in_(exclude_ids)))
+    passages = query.all()
+
+    # Fallback: if no passages at the current level, try any other level
+    if not passages:
+        fallback_query = Passage.query.filter(not_(Passage.id.in_(exclude_ids)))
+        passages = fallback_query.all()
+        
+    if not passages:
+        return jsonify({"error": "No more passages available"}), 404
+
+    # Select a random passage from the fetched list
+    passage = random.choice(passages)
+
+    return jsonify({
+        "passage_id": passage.id,
+        "passage_difficulty": passage.difficulty,
+        "content_json": passage.content
+    })
+
+@app.route('/api/literacy-launchpad/next-level', methods=['POST'])
+@token_required
+def get_next_level():
+    data = request.get_json()
+    current_level = data.get('currentLevel')
+    accuracy = data.get('accuracy')
+
+    if current_level is None or accuracy is None:
+        return jsonify({"error": "Missing currentLevel or accuracy"}), 400
+    
+    api_key = app.config.get('GEMINI_LITERACY_LAUNCHPAD_ALE')
+    if not api_key:
+        # Fallback logic if API key is not configured
+        if accuracy >= 80:
+            next_level = min(10, current_level + 1)
+        elif accuracy < 50:
+            next_level = max(1, current_level - 1)
+        else:
+            next_level = current_level
+        return jsonify({"nextLevel": next_level})
+
+    url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key={api_key}"
+    
+    system_prompt = """
+    You are an adaptive learning engine. Your only job is to determine the next difficulty level for a student based on their performance.
+    - The levels are integers from 1 to 10.
+    - If accuracy is >= 80%, increase level by 1.
+    - If accuracy is < 50%, decrease level by 1.
+    - Otherwise, the level stays the same.
+    - Do not go below level 1 or above level 10.
+    Respond ONLY with a JSON object with a single key: "nextLevel". Example: {"nextLevel": 5}
+    """
+    
+    user_prompt = f"The student is at level {current_level} and scored {accuracy}%."
+
+    schema = {
+        "type": "OBJECT",
+        "properties": { "nextLevel": { "type": "NUMBER" } }
+    }
+
+    payload = {
+        "contents": [{"parts": [{"text": user_prompt}]}],
+        "systemInstruction": {"parts": [{"text": system_prompt}]},
+        "generationConfig": { "responseMimeType": "application/json", "responseSchema": schema }
+    }
+
+    try:
+        response = requests.post(url, json=payload, timeout=10)
+        response.raise_for_status()
+        api_response = response.json()
+        
+        # Extracting the text part which contains the JSON string
+        json_string = api_response.get('candidates')[0].get('content').get('parts')[0].get('text')
+        # Parsing the JSON string to a Python dictionary
+        result_json = json.loads(json_string)
+        next_level = result_json.get('nextLevel')
+
+        if next_level is not None:
+            return jsonify({"nextLevel": int(next_level)})
+        else:
+            raise ValueError("API did not return nextLevel")
+
+    except (requests.exceptions.RequestException, ValueError, IndexError, KeyError) as e:
+        app.logger.error(f"ALE API call failed: {e}. Using fallback logic.")
+        # Fallback logic in case of API error or timeout
+        if accuracy >= 80:
+            next_level = min(10, current_level + 1)
+        elif accuracy < 50:
+            next_level = max(1, current_level - 1)
+        else:
+            next_level = current_level
+        return jsonify({"nextLevel": next_level})
+
+@app.route('/api/literacy-launchpad/scaffold', methods=['POST'])
+@token_required
+# ... existing code ...
+def get_scaffold():
+    data = request.get_json()
+    passage = data.get('passage')
+    incorrect_word = data.get('incorrect_word')
+# ... existing code ...
+    except requests.exceptions.RequestException as e:
+        app.logger.error(f"Literacy Launchpad API call failed: {e}")
+        return jsonify({"error": "Failed to get help from the AI service"}), 500    
     
 @app.route('/api/literacy-launchpad/scaffold', methods=['POST'])
 @token_required
@@ -505,7 +637,20 @@ def get_scaffold():
         return jsonify(response.json())
     except requests.exceptions.RequestException as e:
         app.logger.error(f"Literacy Launchpad API call failed: {e}")
-        return jsonify({"error": "Failed to get help from the AI service"}), 500    
+        return jsonify({"error": "Failed to get help from the AI service"}), 500   
+
+# --- NEW LITERACY LAUNCHPAD API ROUTES ---
+@app.route('/api/literacy-launchpad/leaderboard', methods=['GET'])
+# ... existing code ...
+def get_leaderboard():
+    entries = Leaderboard.query.order_by(desc(Leaderboard.score)).limit(10).all()
+    today = date.today()
+    next_reset_date = (today + relativedelta(months=1)).replace(day=1)
+# ... existing code ...
+        'entries': [{'pseudonym': e.pseudonym, 'score': e.score} for e in entries],
+        'nextReset': next_reset_date.isoformat()
+
+
 
 # --- Page Routes ---
 @app.route('/')
