@@ -52,105 +52,37 @@
         const { useState, useEffect, useCallback, useMemo, useRef } = React;
         const { createPortal } = ReactDOM;
 
-        // --- Game Data & Assets ---
-        const correctSound = new Audio("https://raw.githubusercontent.com/navasdo/navacite/refs/heads/main/templates/language-tools/literacy-launchpad/static/audio/correct.mp3");
-        const incorrectSound = new Audio("https://raw.githubusercontent.com/navasdo/navacite/refs/heads/main/templates/language-tools/literacy-launchpad/static/audio/damage.mp3");
-        const streakSound = new Audio("https://raw.githubusercontent.com/navasdo/navacite/refs/heads/main/templates/language-tools/literacy-launchpad/static/audio/streak.wav");
-        const multiplierSound = new Audio("https://raw.githubusercontent.com/navasdo/navacite/refs/heads/main/templates/language-tools/literacy-launchpad/static/audio/multiplier.mp3");
-        const heartSound = new Audio("https://raw.githubusercontent.com/navasdo/navacite/refs/heads/main/templates/language-tools/literacy-launchpad/static/audio/healing.mp3");
+        // --- Game Sounds & Assets ---
+        const correctSound = new Audio("https://actions.google.com/sounds/v1/positive/Gong_accent_positive_v2.ogg");
+        const incorrectSound = new Audio("https://actions.google.com/sounds/v1/alarms/alarm_clock.ogg");
+        const streakSound = new Audio("https://actions.google.com/sounds/v1/light_switches/light_switch_on.ogg");
+        const multiplierSound = new Audio("https://actions.google.com/sounds/v1/coins/coin_drop.ogg");
+        const heartSound = new Audio("https://actions.google.com/sounds/v1/foley/potion_being_drunk_by_human.ogg");
+        const highScoreSound = new Audio("https://actions.google.com/sounds/v1/emergency/emergency_siren_close_and_passing.ogg");
 
-        const passages = {
-            '2-3': {
-                'Jungle of Syntax': [
-                    [
-                        "A little monkey likes to ", { options: [{ word: 'play', type: 'correct' }, { word: 'plays', type: 'semantic' }, { word: 'playing', type: 'syntactic' }] },
-                        ". He swings from a ", { options: [{ word: 'branch', type: 'correct' }, { word: 'branches', type: 'semantic' }, { word: 'branched', type: 'syntactic' }] },
-                        " all day long. His mom tells him to be ", { options: [{ word: 'careful', type: 'correct' }, { word: 'carefully', type: 'semantic' }, { word: 'caring', type: 'syntactic' }] },
-                        " so he does not fall down. The monkey sees a bright yellow ", { options: [{ word: 'banana', type: 'correct' }, { word: 'bananas', type: 'semantic' }, { word: 'bananally', type: 'syntactic' }] },
-                        " hanging from a vine. He gets very ", { options: [{ word: 'excited', type: 'correct' }, { word: 'exciting', type: 'semantic' }, { word: 'excites', type: 'syntactic' }] }, " and chatters happily."
-                    ]
-                ],
-                'Vocabulary Volcano': [
-                    [
-                        "The brave knight must ", { options: [{ word: 'ascend', type: 'correct' }, { word: 'assent', type: 'semantic' }, { word: 'accent', type: 'syntactic' }] },
-                        " the volcano. The air is ", { options: [{ word: 'thick', type: 'correct' }, { word: 'thicken', type: 'semantic' }, { word: 'thicket', type: 'syntactic' }] },
-                        " with smoke. He sees a glimmer of ", { options: [{ word: 'treasure', type: 'correct' }, { word: 'treasurer', type: 'semantic' }, { word: 'treasured', type: 'syntactic' }] },
-                        " near the top. He must be ", { options: [{ word: 'cautious', type: 'correct' }, { word: 'cautions', type: 'semantic' }, { word: 'cautioned', type: 'syntactic' }] },
-                        " of the crumbling rocks. Finally, he ", { options: [{ word: 'reaches', type: 'correct' }, { word: 'reaching', type: 'semantic' }, { word: 'reach', type: 'syntactic' }] }, " the summit and claims his reward."
-                    ]
-                ],
-                'Caverns of Cohesion': [
-                    [
-                        "The explorer entered the ", { options: [{ word: 'dark', type: 'correct' }, { word: 'darkly', type: 'semantic' }, { word: 'darken', type: 'syntactic' }] },
-                        " cave. A small stream ", { options: [{ word: 'flowed', type: 'correct' }, { word: 'flowing', type: 'semantic' }, { word: 'flown', type: 'syntactic' }] },
-                        " through the cavern. She needed to find the ", { options: [{ word: 'hidden', type: 'correct' }, { word: 'hiding', type: 'semantic' }, { word: 'hid', type: 'syntactic' }] },
-                        " passage. The map was ", { options: [{ word: 'old', type: 'correct' }, { word: 'older', type: 'semantic' }, { word: 'oldest', type: 'syntactic' }] },
-                        " and hard to read. Suddenly, she ", { options: [{ word: 'heard', type: 'correct' }, { word: 'hear', type: 'semantic' }, { word: 'hearing', type: 'syntactic' }] }, " a noise from deeper inside."
-                    ]
-                ]
-            },
-            '4-5': {
-                 'Jungle of Syntax': [
-                    [
-                        "The scientist ", { options: [{ word: 'studies', type: 'correct' }, { word: 'study', type: 'semantic' }, { word: 'studying', type: 'syntactic' }] },
-                        " rare insects in the jungle. She carefully ", { options: [{ word: 'documents', type: 'correct' }, { word: 'document', type: 'semantic' }, { word: 'documenting', type: 'syntactic' }] },
-                        " each new species. The jungle is ", { options: [{ word: 'teeming', type: 'correct' }, { word: 'team', type: 'semantic' }, { word: 'teem', type: 'syntactic' }] },
-                        " with life, but it can also be dangerous. She always carries a compass to avoid getting ", { options: [{ word: 'lost', type: 'correct' }, { word: 'losing', type: 'semantic' }, { word: 'loss', type: 'syntactic' }] },
-                        ". Her research will help us ", { options: [{ word: 'understand', type: 'correct' }, { word: 'understanding', type: 'semantic' }, { word: 'understood', type: 'syntactic' }] }, " this ecosystem better."
-                    ]
-                ],
-                'Vocabulary Volcano': [
-                    [
-                        "The ancient civilization ", { options: [{ word: 'believed', type: 'correct' }, { word: 'believe', type: 'semantic' }, { word: 'believing', type: 'syntactic' }] },
-                        " the volcano was a powerful deity. They would make ", { options: [{ word: 'offerings', type: 'correct' }, { word: 'offering', type: 'semantic' }, { word: 'offered', type: 'syntactic' }] },
-                        " to appease it. The volcano's eruptions were both destructive and ", { options: [{ word: 'creative', type: 'correct' }, { word: 'creating', type: 'semantic' }, { word: 'creation', type: 'syntactic' }] },
-                        ", forming new land. Geologists are fascinated by its unique ", { options: [{ word: 'geological', type: 'correct' }, { word: 'geology', type: 'semantic' }, { word: 'geologist', type: 'syntactic' }] },
-                        " features. They hope to ", { options: [{ word: 'predict', type: 'correct' }, { word: 'predicting', type: 'semantic' }, { word: 'prediction', type: 'syntactic' }] }, " future eruptions more accurately."
-                    ]
-                ],
-                'Caverns of Cohesion': [
-                    [
-                       "The cave divers prepared their ", { options: [{ word: 'equipment', type: 'correct' }, { word: 'equipping', type: 'semantic' }, { word: 'equipped', type: 'syntactic' }] },
-                        " meticulously. They were exploring a newly discovered underwater ", { options: [{ word: 'cavern', type: 'correct' }, { word: 'caverns', type: 'semantic' }, { word: 'cavernous', type: 'syntactic' }] },
-                        ". The water was crystal clear but incredibly ", { options: [{ word: 'cold', type: 'correct' }, { word: 'coldly', type: 'semantic' }, { word: 'coldness', type: 'syntactic' }] },
-                        ". They had to navigate a series of ", { options: [{ word: 'narrow', type: 'correct' }, { word: 'narrowly', type: 'semantic' }, { word: 'narrower', type: 'syntactic' }] },
-                        " tunnels. Their goal was to ", { options: [{ word: 'map', type: 'correct' }, { word: 'mapping', type: 'semantic' }, { word: 'mapped', type: 'syntactic' }] }, " the system for the first time."
-                    ]
-                ]
-            },
-            '6-8': {
-                 'Jungle of Syntax': [
-                    [
-                        "The biologist's expedition into the Amazon was ", { options: [{ word: 'fraught', type: 'correct' }, { word: 'freight', type: 'semantic' }, { word: 'fought', type: 'syntactic' }] },
-                        " with peril. Her primary objective was to ", { options: [{ word: 'catalogue', type: 'correct' }, { word: 'cataloguing', type: 'semantic' }, { word: 'catalogued', type: 'syntactic' }] },
-                        " undiscovered species of flora and fauna. The sheer ", { options: [{ word: 'biodiversity', type: 'correct' }, { word: 'biodiverse', type: 'semantic' }, { word: 'biodiversify', type: 'syntactic' }] },
-                        " of the region was staggering. Navigating the dense undergrowth required both skill and ", { options: [{ word: 'perseverance', type: 'correct' }, { word: 'persevere', type: 'semantic' }, { word: 'persevering', type: 'syntactic' }] },
-                        ". Ultimately, her findings would contribute significantly to our ", { options: [{ word: 'comprehension', type: 'correct' }, { word: 'comprehensive', type: 'semantic' }, { word: 'comprehend', type: 'syntactic' }] }, " of the rainforest's complex web of life."
-                    ]
-                ],
-                'Vocabulary Volcano': [
-                    [
-                        "The vulcanologist approached the caldera with a mixture of ", { options: [{ word: 'trepidation', type: 'correct' }, { word: 'trepidatious', type: 'semantic' }, { word: 'trepidating', type: 'syntactic' }] },
-                        " and excitement. The volcano had been dormant for decades, but recent seismic activity indicated an ", { options: [{ word: 'imminent', type: 'correct' }, { word: 'eminent', type: 'semantic' }, { word: 'immanent', type: 'syntactic' }] },
-                        " eruption. His task was to deploy sensors that would transmit ", { options: [{ word: 'critical', type: 'correct' }, { word: 'critically', type: 'semantic' }, { word: 'criticize', type: 'syntactic' }] },
-                        " data back to the lab. The noxious fumes made it difficult to breathe, necessitating the use of a ", { options: [{ word: 'specialized', type: 'correct' }, { word: 'specialize', type: 'semantic' }, { word: 'specializing', type: 'syntactic' }] },
-                        " respirator. This dangerous work was essential for warning the ", { options: [{ word: 'populace', type: 'correct' }, { word: 'popular', type: 'semantic' }, { word: 'populate', type: 'syntactic' }] }, " of the surrounding villages."
-                    ]
-                ],
-                'Caverns of Cohesion': [
-                    [
-                        "The spelunkers descended into the subterranean abyss, their headlamps ", { options: [{ word: 'illuminating', type: 'correct' }, { word: 'illuminate', type: 'semantic' }, { word: 'illumination', type: 'syntactic' }] },
-                        " vast, cathedral-like chambers. They were searching for a legendary underground river, a geographical ", { options: [{ word: 'enigma', type: 'correct' }, { word: 'enigmatic', type: 'semantic' }, { word: 'enigmatically', type: 'syntactic' }] },
-                        " that had baffled explorers for generations. The journey required them to ", { options: [{ word: 'traverse', type: 'correct' }, { word: 'traversing', type: 'semantic' }, { word: 'traversed', type: 'syntactic' }] },
-                        " treacherous ledges and rappel down sheer cliffs. They relied on their collective expertise and ", { options: [{ word: 'unwavering', type: 'correct' }, { word: 'wavering', type: 'semantic' }, { word: 'waver', type: 'syntactic' }] },
-                        " trust in one another. Discovering the river would be a monumental achievement in the field of ", { options: [{ word: 'speleology', type: 'correct' }, { word: 'speleological', type: 'semantic' }, { word: 'speleologist', type: 'syntactic' }] }, "."
-                    ]
-                ]
+        // --- Live API Call ---
+        // This function now makes a real network request to the Flask backend.
+        const fetchPassage = async (level, usedPassageIds) => {
+            const excludeQuery = usedPassageIds.join(',');
+            try {
+                const response = await fetch(`/api/literacy-launchpad/passage?level=${level}&exclude=${excludeQuery}`);
+                if (!response.ok) {
+                    if (response.status === 404) {
+                        console.warn("No more passages available.");
+                        return null;
+                    }
+                    throw new Error(`Server responded with status: ${response.status}`);
+                }
+                return await response.json();
+            } catch (error) {
+                console.error("Failed to fetch passage:", error);
+                // Return a structured error or null to be handled by the caller
+                return null;
             }
         };
 
         const characterClasses = {
-            adventurer: { name: 'Adventurer', bonus: '+1 starting heart', penalty: 'Slightly lower score multiplier', heartMod: 1, scoreMod: 0.9, variants: [{gender: 'Female', image50: 'adventurer-50-female_presenting.png', image100: 'adventurer-100_female_presenting.png'}, {gender: 'Male', image50: 'adventurer-50-male_presenting.png', image100: 'adventurer-100_male_presenting.png'}]},
+            adventurer: { name: 'Adventurer', bonus: '+1 starting heart', penalty: 'Slightly lower score multiplier', heartMod: 1, scoreMod: 0.9, variants: [{gender: 'Female', image50: 'adventurer-50-female_presenting.png', image100: 'adventurer-100_female_presenting.png'}, {gender: 'Male', image50: 'adventurer-50-male_presenting.png', image100: 'adventurer-100-male_presenting.png'}]},
             alchemist: { name: 'Alchemist', bonus: 'Heart rewards restore +2', penalty: 'Score rewards are smaller', scoreMod: 0.8, variants: [{gender: 'Neutral', image50: 'alchemist-50.png', image100: 'alchemist-100.png'}]},
             archer: { name: 'Archer', bonus: 'Higher streak bonus', penalty: 'Streaks require +1 correct answer', streakMod: 1, scoreMod: 1.2, variants: [{gender: 'Female', image50: 'archer-50-female_presenting.png', image100: 'archer-100-female_presenting.png'}, {gender: 'Male', image50: 'archer-50-male_presenting.png', image100: 'archer-100-male_presenting.png'}]},
             assassin: { name: 'Assassin', bonus: 'Massive score multiplier', penalty: 'Start with -3 hearts', heartMod: -3, scoreMod: 1.5, variants: [{gender: 'Female', image50: 'assassin-50-female_presenting.png', image100: 'assassin-100-female_presenting.png'}, {gender: 'Male', image50: 'assassin-50-male_presenting.png', image100: 'assassin-100-male_presenting.png'}]},
@@ -164,7 +96,7 @@
             wizard: { name: 'Wizard', bonus: 'Streak score rewards are massively increased', penalty: 'Fewer starting hearts', heartMod: -2, streakBonusMultiplier: 2.5, variants: [{gender: 'Female', image50: 'wizard-50-female_presenting.png', image100: 'wizard-100-female_presenting.png'}, {gender: 'Male', image50: 'wizard-50-male_presenting.png', image100: 'wizard-100-male_presenting.png'}]},
         };
 
-        const classImageBaseUrl = "https://raw.githubusercontent.com/navasdo/navacite/refs/heads/main/templates/language-tools/literacy-launchpad/static/images/character-avatars/";
+        const classImageBaseUrl = "{{ url_for('static', filename='images/character-avatars/') }}";
 
         // --- Helper function to shuffle array ---
         const shuffleArray = (array) => {
@@ -233,7 +165,6 @@
                     })
                     .catch(err => {
                         console.error("Failed to fetch leaderboard:", err)
-                        // Fallback for local testing
                         setLeaderboard({
                              entries: [
                                 { pseudonym: 'DragonSlayer', score: 2450 }, { pseudonym: 'SyntaxWizard', score: 2100 },
@@ -268,7 +199,7 @@
             const renderScreen = () => {
                 switch(screen) {
                     case 'game':
-                        return <GameScreen settings={gameSettings} onEndGame={handleEndGame} />;
+                        return <GameScreen settings={gameSettings} onEndGame={handleEndGame} leaderboard={leaderboard.entries} />;
                     case 'results':
                         return <ResultsScreen results={gameResults} onRestart={handleRestart} leaderboard={leaderboard.entries} onUpdateLeaderboard={fetchLeaderboard} />;
                     case 'setup':
@@ -280,7 +211,7 @@
             return (
                 <div className="w-full max-w-7xl mx-auto py-8">
                      <header className="text-center mb-12">
-                        <img src="https://raw.githubusercontent.com/navasdo/navacite/refs/heads/main/templates/static/navacite-images/literacy-launchpad.png" alt="Literacy Launchpad Logo" className="w-48 mx-auto mb-4" style={{filter: 'drop-shadow(0 0 15px rgba(167, 139, 250, 0.4))'}} />
+                        <img src="{{ url_for('static', filename='navacite-images/literacy-launchpad.png') }}" alt="Literacy Launchpad Logo" className="w-48 mx-auto mb-4" style={{filter: 'drop-shadow(0 0 15px rgba(167, 139, 250, 0.4))'}} />
                         <h1 className="text-5xl md:text-6xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-violet-400 to-fuchsia-500">
                             Literacy Launchpad
                         </h1>
@@ -298,8 +229,7 @@
         // --- Setup Screen Component ---
         function SetupScreen({ onStartGame, leaderboard }) {
             const [studentName, setStudentName] = useState('');
-            const [level, setLevel] = useState('2-3');
-            const [map, setMap] = useState('Jungle of Syntax');
+            const [level, setLevel] = useState(3);
             const [isPractice, setIsPractice] = useState(false);
             const [showPrivacyModal, setShowPrivacyModal] = useState(false);
             const [selectedClass, setSelectedClass] = useState('knight');
@@ -310,7 +240,7 @@
                 const variant = charClass.variants[selectedVariant];
                 const characterImage = `${classImageBaseUrl}${variant.image50}`;
 
-                onStartGame({ studentName, level, map, isPractice, characterClass: charClass, characterImage });
+                onStartGame({ studentName, level: parseInt(level), isPractice, characterClass: charClass, characterImage });
             };
             
             const currentClass = characterClasses[selectedClass];
@@ -321,7 +251,6 @@
                 if (!leaderboard.nextReset) return null;
                 const today = new Date();
                 const resetDate = new Date(leaderboard.nextReset);
-                // Set time to 0 to compare dates only
                 today.setHours(0,0,0,0);
                 resetDate.setHours(0,0,0,0);
                 const diffTime = resetDate - today;
@@ -334,26 +263,17 @@
                     <h3 className="text-2xl font-bold text-violet-400 text-center mb-8">Prepare for Launch</h3>
                     <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                         <div className="lg:col-span-2 space-y-8">
-                            {/* Top part: Student, Level, Map */}
                              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                 <div>
                                     <label htmlFor="student" className="text-slate-400 flex items-center gap-2">Student Name <button onClick={() => setShowPrivacyModal(true)} title="Privacy Information" className="text-slate-500 hover:text-violet-400 transition-colors"><IconInfo /></button></label>
                                     <input id="student" type="text" value={studentName} onChange={(e) => setStudentName(e.target.value)} className="w-full mt-2 p-3 rounded-md bg-slate-800/60 text-slate-300 border border-slate-700 focus:outline-none focus:ring-2 focus:ring-violet-500" placeholder="For printable report only" />
                                 </div>
-                                <div>
-                                    <label htmlFor="level-select" className="text-slate-400">Passage Level</label>
-                                    <select id="level-select" value={level} onChange={e => setLevel(e.target.value)} className="w-full mt-2 p-3 rounded-md bg-slate-800/60 text-slate-300 border border-slate-700">
-                                        <option value="2-3">Grades 2-3</option>
-                                        <option value="4-5">Grades 4-5</option>
-                                        <option value="6-8">Grades 6-8</option>
-                                    </select>
-                                </div>
                                 <div className="md:col-span-2">
-                                    <label htmlFor="map-select" className="text-slate-400">Select a Map</label>
-                                    <select id="map-select" value={map} onChange={e => setMap(e.target.value)} className="w-full mt-2 p-3 rounded-md bg-slate-800/60 text-slate-300 border border-slate-700">
-                                        <option>Jungle of Syntax</option>
-                                        <option>Vocabulary Volcano</option>
-                                        <option>Caverns of Cohesion</option>
+                                    <label htmlFor="level-select" className="text-slate-400">Starting Level</label>
+                                    <select id="level-select" value={level} onChange={e => setLevel(e.target.value)} className="w-full mt-2 p-3 rounded-md bg-slate-800/60 text-slate-300 border border-slate-700">
+                                        {[...Array(10)].map((_, i) => (
+                                            <option key={i+1} value={i+1}>Level {i+1}</option>
+                                        ))}
                                     </select>
                                 </div>
                                 <div className="flex items-center justify-center md:col-span-2">
@@ -363,7 +283,6 @@
                                     </label>
                                 </div>
                              </div>
-                             {/* Character Selection */}
                             <div>
                                 <h4 className="text-xl font-bold text-violet-400 text-center mb-4">Choose Your Class</h4>
                                 <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
@@ -378,7 +297,6 @@
                                     })}
                                 </div>
                             </div>
-                            {/* Class Details & Start Button */}
                             <div className="flex flex-col md:flex-row items-center gap-6 p-4 bg-slate-800/50 rounded-lg">
                                <img src={largeImageUrl} alt={currentClass.name} className="w-24 h-24 rounded-full border-2 border-violet-500"/>
                                <div className="flex-1 text-center md:text-left text-slate-300">
@@ -395,7 +313,6 @@
                                <button onClick={handleStart} className="bg-violet-600 hover:bg-violet-700 text-white font-bold py-3 px-8 rounded-lg transition whitespace-nowrap">Begin Literacy Launch</button>
                             </div>
                         </div>
-                        {/* Leaderboard */}
                         <div className="p-4 bg-slate-800/50 rounded-lg">
                             <h3 className="text-xl font-bold text-yellow-400 text-center mb-4">Top Scores</h3>
                             {daysUntilReset !== null && <p className="text-center text-sm text-cyan-400 mb-3 italic">{daysUntilReset} days until monthly reset!</p>}
@@ -416,39 +333,72 @@
         }
         
         // --- Game Screen Component ---
-        function GameScreen({ settings, onEndGame }) {
-            const { studentName, level, map, isPractice, characterClass, characterImage } = settings;
+        function GameScreen({ settings, onEndGame, leaderboard }) {
+            const { studentName, level: startingLevel, isPractice, characterClass, characterImage } = settings;
+            
+            const [currentLevel, setCurrentLevel] = useState(startingLevel);
+            const [highestLevelReached, setHighestLevelReached] = useState(startingLevel);
             const [passage, setPassage] = useState([]);
-            const [passageIndex, setPassageIndex] = useState(0);
-            const [currentItemIndex, setCurrentItemIndex] = useState(0);
+            const [usedPassageIds, setUsedPassageIds] = useState([]);
+            const [currentItemIndex, setCurrentItemIndex] = useState(-1);
+            
             const [hearts, setHearts] = useState(10 + (characterClass.heartMod || 0));
             const [score, setScore] = useState(0);
             const [streak, setStreak] = useState(0);
+            
+            const [correctInPassage, setCorrectInPassage] = useState(0);
+            const [questionsInPassage, setQuestionsInPassage] = useState(0);
+            
             const [notifications, setNotifications] = useState([]);
             const [showStreakChoice, setShowStreakChoice] = useState(false);
-            const [mapPosition, setMapPosition] = useState(0);
+            
             const [immuneCharges, setImmuneCharges] = useState(characterClass.immune || 0);
             const [hasUsedFreebie, setHasUsedFreebie] = useState(false);
+            
             const [gameLog, setGameLog] = useState([]);
             const [questionTimestamp, setQuestionTimestamp] = useState(0);
+            
+            const [mapPosition, setMapPosition] = useState(0);
             const mapRef = useRef(null);
             const currentMapNodeRef = useRef(null);
+            const [highScoreNotified, setHighScoreNotified] = useState(false);
            
-            const loadPassage = useCallback(() => {
-                const passageData = passages[level][map][passageIndex % passages[level][map].length];
-                const processedPassage = passageData.map((part, index) => {
+            const loadNextPassage = useCallback(async () => {
+                const rawPassage = await fetchPassage(currentLevel, usedPassageIds);
+                if (!rawPassage) {
+                    endGame(false); // No more passages left
+                    return;
+                }
+                
+                setUsedPassageIds(prev => [...prev, rawPassage.passage_id]);
+
+                const processedPassage = rawPassage.content_json.map((part, index) => {
                     if (typeof part === 'string') {
-                        return { type: 'text', content: part, id: `p${passageIndex}-t${index}` };
+                        return { type: 'text', content: part, id: `p${rawPassage.passage_id}-t${index}` };
                     }
-                    return { ...part, type: 'choice', id: `p${passageIndex}-q${index}`, shuffledOptions: shuffleArray(part.options) };
+                    const options = [
+                        { word: part.correct, type: 'correct' },
+                        { word: part.semantic_distractor, type: 'semantic' },
+                        { word: part.syntactic_distractor, type: 'syntactic' }
+                    ].filter(opt => opt.word && opt.word.trim() !== '---');
+
+                    return {
+                        type: 'choice',
+                        id: `p${rawPassage.passage_id}-q${index}`,
+                        options: options,
+                        shuffledOptions: shuffleArray(options)
+                    };
                 });
+
                 setPassage(processedPassage);
+                setQuestionsInPassage(processedPassage.filter(p => p.type === 'choice').length);
+                setCorrectInPassage(0);
                 setCurrentItemIndex(processedPassage.findIndex(p => p.type === 'choice'));
-            }, [level, map, passageIndex]);
+            }, [currentLevel, usedPassageIds]);
 
             useEffect(() => {
-                loadPassage();
-            }, [loadPassage]);
+                loadNextPassage();
+            }, [currentLevel]); // Now only depends on currentLevel
 
             useEffect(() => {
                 if(passage.length > 0 && currentItemIndex !== -1) {
@@ -457,20 +407,51 @@
             }, [currentItemIndex, passage]);
 
              const addNotification = (text, type) => {
-                const id = Date.now();
+                const id = Date.now() + Math.random();
                 setNotifications(n => [{ id, text, type }, ...n]);
                 setTimeout(() => {
                     setNotifications(n => n.filter(item => item.id !== id));
                 }, 2500);
             };
 
-            const advanceToNext = () => {
-                 setTimeout(() => {
+            const advanceToNext = async () => {
+                 setTimeout(async () => {
                     const nextChoiceIndex = passage.findIndex((p, index) => index > currentItemIndex && p.type === 'choice');
                     if (nextChoiceIndex !== -1) {
                         setCurrentItemIndex(nextChoiceIndex);
                     } else {
-                        setPassageIndex(p => p + 1); // Load next passage
+                        // --- ADAPTIVE LOGIC TRIGGER ---
+                        const accuracy = (correctInPassage / questionsInPassage) * 100;
+                        try {
+                            const response = await fetch('/api/literacy-launchpad/next-level', {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({ currentLevel: currentLevel, accuracy: accuracy })
+                            });
+                            if (!response.ok) throw new Error('Failed to get next level');
+                            
+                            const data = await response.json();
+                            const nextLevel = data.nextLevel;
+                            
+                            if (nextLevel > highestLevelReached) {
+                                setHighestLevelReached(nextLevel);
+                            }
+                            // This change will trigger the useEffect to load the next passage
+                            setCurrentLevel(nextLevel);
+                        } catch (error) {
+                             console.error("Adaptive learning API failed, using fallback:", error);
+                             // Fallback logic if API fails
+                            let nextLevel = currentLevel;
+                            if (accuracy >= 80) {
+                                nextLevel = Math.min(10, currentLevel + 1);
+                                if (nextLevel > highestLevelReached) {
+                                    setHighestLevelReached(nextLevel);
+                                }
+                            } else if (accuracy < 50) {
+                                nextLevel = Math.max(1, currentLevel - 1);
+                            }
+                            setCurrentLevel(nextLevel);
+                        }
                     }
                 }, 500); 
             };
@@ -479,18 +460,31 @@
                 if (showStreakChoice || passage.find(p => p.id === choiceId)?.answered) return;
 
                 const latency = Date.now() - questionTimestamp;
-                const questionText = passage.slice(0, passage.findIndex(p => p.id === choiceId)).filter(p => p.type === 'text').map(p => p.content).join('').trim().split(' ').slice(-10).join(' ') + '...';
-                setGameLog(prev => [...prev, { question: questionText, selection: selectedOption.word, type: selectedOption.type, latency }]);
+                const questionIndex = passage.findIndex(p => p.id === choiceId);
+                const questionText = passage.slice(0, questionIndex).map(p => typeof p.content === 'string' ? p.content : p.selection).join('').trim().split(' ').slice(-10).join(' ') + '...';
+                
+                const questionData = passage[questionIndex];
+                const correctAnswer = questionData.options.find(o => o.type === 'correct').word;
+
+                setGameLog(prev => [...prev, { question: questionText, selection: selectedOption.word, correctAnswer, type: selectedOption.type, latency, level: currentLevel }]);
 
                 setPassage(p => p.map(part => part.id === choiceId ? {...part, answered: true, selection: selectedOption.word} : part));
 
                 if (selectedOption.type === 'correct') {
                     correctSound.play();
+                    setCorrectInPassage(c => c + 1);
                     const points = Math.round(10 * (characterClass.scoreMod || 1));
-                    setScore(s => s + points);
+                    const newScore = score + points;
+                    setScore(newScore);
                     addNotification(`+${points}`, 'score');
                     setMapPosition(p => p + 1);
                     
+                    if (!highScoreNotified && leaderboard.length > 0 && newScore > leaderboard[leaderboard.length - 1].score) {
+                        addNotification('HIGH SCORE!', 'info');
+                        highScoreSound.play();
+                        setHighScoreNotified(true);
+                    }
+
                     const newStreak = streak + 1;
                     setStreak(newStreak);
 
@@ -552,12 +546,12 @@
                     hearts,
                     gameLog,
                     studentName,
-                    level,
-                    map,
+                    startingLevel,
+                    highestLevelReached,
                     characterClass,
                     outOfHearts
                 });
-            }, [score, hearts, gameLog, onEndGame, studentName, level, map, characterClass]);
+            }, [score, hearts, gameLog, onEndGame, studentName, startingLevel, highestLevelReached, characterClass]);
 
             useEffect(() => {
                 if (currentMapNodeRef.current) {
@@ -586,11 +580,12 @@
                                <div className="flex items-center gap-2 text-yellow-400 font-bold text-2xl"><IconTrophy /><span>{score}</span></div>
                                <div className="flex items-center gap-1">
                                     {[...Array(hearts)].map((_, i) => <IconHeart key={i} className="w-8 h-8 animate-pulse-heart" />)}
-                                    {[...Array(10 - hearts > 0 ? 10 - hearts : 0)].map((_, i) => <IconHeart key={i} className="w-8 h-8 text-slate-700" />)}
+                                    {[...Array(10 - hearts > 0 ? 10 - hearts : 0)].map((_, i) => <IconHeart key={i+hearts} className="w-8 h-8 text-slate-700" />)}
                                 </div>
                             </div>
                         </div>
-                        <div className="p-6 bg-slate-800/50 rounded-lg text-xl md:text-2xl leading-loose text-slate-300">
+                        <div className="p-6 bg-slate-800/50 rounded-lg text-xl md:text-2xl leading-loose text-slate-300 min-h-[200px]">
+                            {passage.length === 0 && <p>Loading next passage...</p>}
                             {passage.map((part, index) => {
                                 if (part.type === 'text') {
                                     return <span key={part.id}>{part.content}</span>;
@@ -613,7 +608,7 @@
                                 return <span key={part.id} className="font-bold text-slate-500 mx-1">[ ... ]</span>;
                             })}
                         </div>
-                        {isPractice && passage.length > 0 && passage[currentItemIndex] && (
+                        {isPractice && passage.length > 0 && currentItemIndex > -1 && passage[currentItemIndex] && (
                             <div className="mt-4 p-3 bg-yellow-900/30 border border-yellow-600 rounded-lg text-yellow-300 animate-fade-in-up">
                                <strong className="font-bold">Hint:</strong> The correct answer is <em className="italic">{passage[currentItemIndex].options.find(o=>o.type==='correct').word}</em>.
                             </div>
@@ -648,46 +643,48 @@
 
         // --- Results Screen Component ---
         function ResultsScreen({ results, onRestart, leaderboard, onUpdateLeaderboard }) {
-            const { studentName, score, hearts, gameLog = [], outOfHearts } = results;
-            const [clinicianUser, setClinicianUser] = useState('');
+            const { studentName, score, gameLog = [], outOfHearts, startingLevel, highestLevelReached } = results;
+            const [pseudonym, setPseudonym] = useState('');
             const [clinicianPass, setClinicianPass] = useState('');
             const [submitStatus, setSubmitStatus] = useState('idle'); // idle, submitting, success, error
 
             const semanticErrors = gameLog.filter(log => log.type === 'semantic').length;
             const syntacticErrors = gameLog.filter(log => log.type === 'syntactic').length;
             const totalCorrect = gameLog.filter(log => log.type === 'correct').length;
-            const totalErrors = semanticErrors + syntacticErrors;
-            const accuracy = gameLog.length > 0 ? (totalCorrect / gameLog.length * 100).toFixed(1) : 0;
-            const avgLatency = gameLog.length > 0 ? (gameLog.reduce((acc, log) => acc + log.latency, 0) / gameLog.length).toFixed(0) : 0;
-
+            const totalQuestions = gameLog.length;
+            const accuracy = totalQuestions > 0 ? (totalCorrect / totalQuestions * 100).toFixed(1) : 0;
+            const avgLatency = totalQuestions > 0 ? (gameLog.reduce((acc, log) => acc + log.latency, 0) / totalQuestions).toFixed(0) : 0;
+            
             const isHighScore = useMemo(() => {
-                if (!leaderboard || leaderboard.length < 5) return true;
+                if (!leaderboard || leaderboard.length < 10) return true;
                 return score > leaderboard[leaderboard.length - 1].score;
             }, [score, leaderboard]);
 
             const handleLeaderboardSubmit = (e) => {
                 e.preventDefault();
+                if (!pseudonym.trim()) {
+                    // Using a simple browser alert here, but a modal would be better in a full app
+                    alert("Please enter a pseudonym for the leaderboard.");
+                    return;
+                }
                 setSubmitStatus('submitting');
                 
-                // Real API Call
                 fetch('/api/literacy-launchpad/leaderboard', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
-                        pseudonym: studentName, // Using student name for the leaderboard
+                        pseudonym: pseudonym,
                         score: score,
                         password: clinicianPass
                     })
                 })
                 .then(res => {
-                    if (!res.ok) {
-                        throw new Error('Submission failed');
-                    }
+                    if (!res.ok) { throw new Error('Submission failed'); }
                     return res.json();
                 })
                 .then(() => {
                     setSubmitStatus('success');
-                    onUpdateLeaderboard(); // Refresh leaderboard data
+                    onUpdateLeaderboard();
                 })
                 .catch(err => {
                     console.error("Failed to submit score:", err);
@@ -709,30 +706,30 @@
                                 <h1 class="text-3xl font-bold text-violet-700 mb-2">Literacy Launchpad Report</h1>
                                 <p class="text-lg text-slate-600 mb-6">For: <strong class="text-slate-800">${studentName}</strong></p>
                                 
-                                <div class="grid grid-cols-2 gap-6 text-center mb-8">
-                                    <div class="bg-slate-200 p-4 rounded-lg">
-                                        <p class="text-sm text-slate-500">Final Score</p><p class="text-3xl font-bold text-yellow-600">${score}</p>
-                                    </div>
-                                    <div class="bg-slate-200 p-4 rounded-lg">
-                                        <p class="text-sm text-slate-500">Accuracy</p><p class="text-3xl font-bold text-green-600">${accuracy}%</p>
-                                    </div>
-                                    <div class="bg-slate-200 p-4 rounded-lg">
-                                        <p class="text-sm text-slate-500">Avg. Response Time</p><p class="text-3xl font-bold text-cyan-600">${avgLatency} ms</p>
-                                    </div>
-                                    <div class="bg-slate-200 p-4 rounded-lg">
-                                        <p class="text-sm text-slate-500">Errors</p><p class="text-3xl font-bold text-red-600">${totalErrors}</p>
-                                    </div>
+                                <div class="grid grid-cols-2 md:grid-cols-4 gap-6 text-center mb-8">
+                                    <div class="bg-slate-200 p-4 rounded-lg"><p class="text-sm text-slate-500">Final Score</p><p class="text-3xl font-bold text-yellow-600">${score}</p></div>
+                                    <div class="bg-slate-200 p-4 rounded-lg"><p class="text-sm text-slate-500">Accuracy</p><p class="text-3xl font-bold text-green-600">${accuracy}%</p></div>
+                                    <div class="bg-slate-200 p-4 rounded-lg"><p class="text-sm text-slate-500">Starting Level</p><p class="text-3xl font-bold text-cyan-600">${startingLevel}</p></div>
+                                    <div class="bg-slate-200 p-4 rounded-lg"><p class="text-sm text-slate-500">Highest Level</p><p class="text-3xl font-bold text-violet-600">${highestLevelReached}</p></div>
                                 </div>
+
+                                <h2 class="text-2xl font-bold text-slate-800 mb-4">Error Analysis</h2>
+                                <div class="grid grid-cols-2 gap-6 text-center mb-8">
+                                    <div class="bg-red-100 p-4 rounded-lg"><p class="text-sm text-slate-500">Semantic Errors</p><p class="text-3xl font-bold text-red-600">${semanticErrors}</p></div>
+                                    <div class="bg-red-100 p-4 rounded-lg"><p class="text-sm text-slate-500">Syntactic Errors</p><p class="text-3xl font-bold text-red-600">${syntacticErrors}</p></div>
+                                </div>
+
 
                                 <h2 class="text-2xl font-bold text-slate-800 mb-4">Detailed Log</h2>
                                 <div class="overflow-x-auto">
                                 <table class="w-full text-left border-collapse">
                                     <thead>
                                         <tr>
-                                            <th class="border-b-2 p-2 bg-slate-200">Question Context</th>
-                                            <th class="border-b-2 p-2 bg-slate-200">Your Answer</th>
-                                            <th class="border-b-2 p-2 bg-slate-200">Result</th>
-                                            <th class="border-b-2 p-2 bg-slate-200">Time (ms)</th>
+                                            <th class="border-b-2 p-2 bg-slate-200">Context</th>
+                                            <th class="border-b-2 p-2 bg-slate-200">Selection</th>
+                                            <th class="border-b-2 p-2 bg-slate-200">Correct Answer</th>
+                                            <th class="border-b-2 p-2 bg-slate-200">Error Type</th>
+                                            <th class="border-b-2 p-2 bg-slate-200">Level</th>
                                         </tr>
                                     </thead>
                                     <tbody>`;
@@ -741,20 +738,14 @@
                     reportHTML += `
                         <tr class="border-b">
                             <td class="p-2 italic text-slate-600">"${log.question}"</td>
-                            <td class="p-2 font-mono">${log.selection}</td>
-                            <td class="p-2 font-semibold ${resultClass}">${log.type.charAt(0).toUpperCase() + log.type.slice(1)}</td>
-                            <td class="p-2">${log.latency}</td>
+                            <td class="p-2 font-mono ${resultClass}">${log.selection}</td>
+                            <td class="p-2 font-mono text-green-600">${log.correctAnswer}</td>
+                            <td class="p-2 font-semibold ${resultClass}">${log.type === 'correct' ? '--' : log.type.charAt(0).toUpperCase() + log.type.slice(1)}</td>
+                            <td class="p-2">${log.level}</td>
                         </tr>
                     `;
                 });
-                reportHTML += `
-                                    </tbody>
-                                </table>
-                                </div>
-                            </div>
-                        </body>
-                    </html>
-                `;
+                reportHTML += `</tbody></table></div></div></body></html>`;
                 printWindow.document.write(reportHTML);
                 printWindow.document.close();
                 printWindow.print();
@@ -765,11 +756,12 @@
                     <h2 className="text-4xl font-bold text-violet-400 mb-2">{outOfHearts ? "You Ran Out of Hearts!" : "Adventure Complete!"}</h2>
                     <p className="text-lg text-slate-300 mb-8">Here's how you did, {studentName || 'adventurer'}.</p>
                     
-                     <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 max-w-4xl mx-auto mb-8">
-                        <div className="bg-slate-800/70 p-4 rounded-lg flex flex-col items-center justify-center"><p className="text-slate-400">Score</p><p className="text-3xl font-bold text-yellow-400">{score}</p></div>
-                        <div className="bg-slate-800/70 p-4 rounded-lg flex flex-col items-center justify-center"><p className="text-slate-400">Accuracy</p><p className="text-3xl font-bold text-green-400">{accuracy}%</p></div>
-                        <div className="bg-slate-800/70 p-4 rounded-lg flex flex-col items-center justify-center"><p className="text-slate-400">Semantic Errors</p><p className="text-3xl font-bold text-red-400">{semanticErrors}</p></div>
-                        <div className="bg-slate-800/70 p-4 rounded-lg flex flex-col items-center justify-center"><p className="text-slate-400">Syntactic Errors</p><p className="text-3xl font-bold text-red-400">{syntacticErrors}</p></div>
+                     <div className="grid grid-cols-2 lg:grid-cols-5 gap-4 max-w-5xl mx-auto mb-8">
+                        <div className="bg-slate-800/70 p-4 rounded-lg"><p className="text-slate-400">Score</p><p className="text-3xl font-bold text-yellow-400">{score}</p></div>
+                        <div className="bg-slate-800/70 p-4 rounded-lg"><p className="text-slate-400">Accuracy</p><p className="text-3xl font-bold text-green-400">{accuracy}%</p></div>
+                        <div className="bg-slate-800/70 p-4 rounded-lg"><p className="text-slate-400">Starting Level</p><p className="text-3xl font-bold text-cyan-400">{startingLevel}</p></div>
+                        <div className="bg-slate-800/70 p-4 rounded-lg"><p className="text-slate-400">Highest Level</p><p className="text-3xl font-bold text-violet-400">{highestLevelReached}</p></div>
+                         <div className="bg-slate-800/70 p-4 rounded-lg col-span-2 lg:col-span-1"><p className="text-slate-400">Errors</p><p className="text-lg font-bold text-red-400">Semantic: {semanticErrors}<br/>Syntactic: {syntacticErrors}</p></div>
                     </div>
 
                     {isHighScore && submitStatus !== 'success' && (
@@ -777,6 +769,10 @@
                             <h3 className="text-xl font-bold text-yellow-400">New High Score!</h3>
                             <p className="text-sm text-slate-400 mb-4">Submit to the leaderboard with clinician credentials.</p>
                             <form onSubmit={handleLeaderboardSubmit} className="space-y-4">
+                                <div>
+                                    <label className="block text-sm font-medium text-slate-300 text-left mb-1">Leaderboard Pseudonym</label>
+                                    <input type="text" value={pseudonym} onChange={e => setPseudonym(e.target.value)} className="w-full p-2 rounded-md bg-slate-700 text-slate-200 border border-slate-600" required placeholder="Enter a cool name" />
+                                </div>
                                 <div>
                                     <label className="block text-sm font-medium text-slate-300 text-left mb-1">Clinician Password</label>
                                     <input type="password" value={clinicianPass} onChange={e => setClinicianPass(e.target.value)} className="w-full p-2 rounded-md bg-slate-700 text-slate-200 border border-slate-600" required />
@@ -801,9 +797,9 @@
         const Notification = ({ text, type }) => {
             const colorClass = type === 'score' ? 'text-green-400' : type === 'heart' ? 'text-red-400' : 'text-yellow-400';
             return (
-                <div className="notification-item absolute top-0 left-0">
+                <div className="notification-item absolute top-0 left-0 right-0 flex justify-center">
                     <div className="p-4 rounded-lg bg-slate-900/80 shadow-2xl border-2 border-violet-500/50">
-                        <p className={`font-extrabold text-5xl drop-shadow-lg ${colorClass}`}>{text}</p>
+                        <p className={`font-extrabold text-3xl sm:text-5xl drop-shadow-lg ${colorClass} whitespace-nowrap`}>{text}</p>
                     </div>
                 </div>
             );
@@ -816,7 +812,7 @@
                         <div className="flex items-center gap-2 text-yellow-400 font-bold text-2xl"><IconTrophy /><span>{score}</span></div>
                         <div className="flex items-center gap-1">
                             {[...Array(hearts)].map((_, i) => <IconHeart key={i} className="w-7 h-7" />)}
-                            {[...Array(10 - hearts > 0 ? 10 - hearts : 0)].map((_, i) => <IconHeart key={i} className="w-7 h-7 text-slate-700" />)}
+                            {[...Array(10 - hearts > 0 ? 10 - hearts : 0)].map((_, i) => <IconHeart key={i+hearts} className="w-7 h-7 text-slate-700" />)}
                         </div>
                     </div>
                     <h3 className="text-3xl font-bold text-yellow-400">{streak} in a row!</h3>
@@ -834,7 +830,7 @@
              if (isCompleted) {
                 content = <IconCheckCircle className="w-8 h-8 text-green-500" />;
             } else if (isCurrent) {
-                content = <img src="https://raw.githubusercontent.com/navasdo/navacite/refs/heads/main/templates/language-tools/literacy-launchpad/static/images/battle.png" className="w-12 h-12 animate-pulse" />;
+                content = <img src="{{ url_for('static', filename='images/battle.png') }}" className="w-12 h-12 animate-pulse" />;
             } else {
                 content = <span className="font-bold text-lg text-slate-400">{number}</span>;
             }
@@ -850,5 +846,4 @@
     </script>
 {% endraw %}
 {% endblock %}
-    
 
