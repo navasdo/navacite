@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full bg-slate-900">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>{% block title %}Navacite{% endblock %}</title>
+  {% block head %}
+    <link rel="icon" type="image/x-icon" href="https://raw.githubusercontent.com/navasdo/navacite/refs/heads/main/templates/static/ico/navacite.ico">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+      :root { color-scheme: dark; }
+      body { font-family: 'Inter', system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, 'Helvetica Neue', Arial, "Noto Sans", "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji", sans-serif; }
+      [data-scrollbar-hide]::-webkit-scrollbar{ display:none }
+      [data-scrollbar-hide]{ -ms-overflow-style:none; scrollbar-width:none }
+      @media (prefers-reduced-motion: no-preference){ .animate-fade { animation: fade .2s ease-out } @keyframes fade { from{opacity:0} to{opacity:1} } }
+      .backdrop-open { overflow: hidden; }
+      .inert { pointer-events: none; user-select: none; }
+    </style>
+  {% endblock %}
+</head>
+<body class="h-full flex flex-col">
+  <!-- Site Nav -->
+  <nav class="bg-slate-800/50 backdrop-blur-lg border-b border-violet-900/80 sticky top-0 z-50" role="navigation" aria-label="Main">
+    <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+      <div class="flex h-16 items-center justify-between">
+        <div class="flex items-center">
+          <div class="flex-shrink-0">
+            <a href="{{ url_for('library_page') if current_user else url_for('landing_page') }}" class="text-2xl font-bold text-white tracking-tight">Navacite</a>
+          </div>
+        </div>
+        <div class="flex items-center space-x-4">
+          {% if current_user %}
+            <a href="{{ url_for('library_page') }}" class="text-slate-300 hover:text-violet-400 px-3 py-2 rounded-md text-sm font-medium transition-colors">Library</a>
+            <a href="{{ url_for('profile_page', username=current_user.username) }}" class="text-slate-300 hover:text-violet-400 px-3 py-2 rounded-md text-sm font-medium transition-colors">Profile</a>
+            <div class="relative">
+              <button id="notifications-btn" class="relative text-slate-300 hover:text-violet-400 p-2 rounded-full focus:outline-none focus-visible:ring-2 focus-visible:ring-violet-500" aria-expanded="false" aria-controls="notifications-panel" aria-haspopup="dialog">
+                <span class="sr-only">Open notifications</span>
+                <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6 6 0 10-12 0v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+                </svg>
+                {% if notification_count > 0 %}
+                <span id="notifications-bubble" class="absolute top-0 right-0 block h-4 w-4 transform -translate-y-1/2 translate-x-1/2" aria-hidden="true">
+                  <span class="absolute inline-flex h-full w-full rounded-full bg-red-500 opacity-75 animate-ping"></span>
+                  <span class="relative inline-flex rounded-full h-4 w-4 bg-red-600 items-center justify-center text-xs font-bold text-white">{{ notification_count }}</span>
+                </span>
+                {% endif %}
+              </button>
+              <div id="notifications-panel" class="hidden absolute right-0 mt-2 w-80 max-h-96 overflow-y-auto bg-slate-800 border border-violet-700 rounded-lg shadow-xl animate-fade" role="dialog" aria-modal="true" aria-labelledby="notif-title" data-scrollbar-hide>
+                <div class="p-3 border-b border-violet-700/50">
+                  <h3 id="notif-title" class="text-lg font-semibold text-white">Notifications</h3>
+                </div>
+                <div id="notifications-list" class="p-2">
+                  <p class="text-slate-400 text-center p-4">Loading...</p>
+                </div>
+              </div>
+            </div>
+            <a href="{{ url_for('logout') }}" class="text-slate-300 hover:text-violet-400 px-3 py-2 rounded-md text-sm font-medium transition-colors">Logout</a>
+          {% else %}
+            <a href="{{ url_for('login_page') }}" class="text-slate-300 hover:text-violet-400 px-3 py-2 rounded-md text-sm font-medium transition-colors">Login</a>
+            <a href="{{ url_for('register_page') }}" class="bg-violet-600 hover:bg-violet-700 text-white font-bold py-2 px-4 rounded-lg text-sm transition-colors">Register</a>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Main Content -->
+  <main id="page-main" class="flex-grow">
+    {% block content %}{% endblock %}
+  </main>
+
+  <!-- Footer -->
+  <footer class="bg-slate-900/60 text-center py-4 mt-12 border-t border-violet-900/80">
+    <div class="mb-2">
+      <a href="#" id="terms-link" class="text-xs text-violet-400 hover:text-violet-300 px-2">Terms &amp; Disclaimer</a>
+      <span class="text-slate-600">|</span>
+      <a href="#" id="privacy-link" class="text-xs text-violet-400 hover:text-violet-300 px-2">Privacy Policy</a>
+    </div>
+    <p class="text-xs text-slate-500">&copy; 2025 Navacite | All Rights Reserved</p>
+    <p class="text-xs text-slate-600 mt-1">Navacite tools are provided 'as is' and are not intended to diagnose. Use requires professional judgment.</p>
+  </footer>
+
+  <!-- PRIVACY POLICY MODAL -->
+<!-- PRIVACY POLICY MODAL from your original base.html (verbatim) -->
+<div id="privacy-modal" class="hidden fixed inset-0 bg-black/75 flex items-center justify-center z-50 p-4" role="dialog" aria-modal="true" aria-labelledby="privacy-title">
+    <div class="bg-slate-800 border border-violet-700 rounded-lg shadow-xl w-full max-w-3xl flex flex-col max-h-[90vh]" role="document">
+      <div class="flex justify-between items-center p-4 border-b border-violet-700/50 sticky top-0 bg-slate-800">
+        <h2 id="privacy-title" class="text-xl font-bold text-violet-400">Privacy Policy</h2>
+        <button id="close-privacy-modal-btn" class="text-2xl text-slate-400 hover:text-white" aria-label="Close Privacy Policy">&times;</button>
+      </div>
+      <div id="modal-content" class="p-6 overflow-y-auto text-slate-300 space-y-4 text-sm" data-scrollbar-hide>
+        <!-- BEGIN VERBATIM FROM YOUR ORIGINAL -->
+" + priv_escaped + "
+        <!-- END VERBATIM -->
+      </div>
+    </div>
+  </div>
+<!-- TERMS & DISCLAIMER MODAL -->
+<!-- TERMS & DISCLAIMER MODAL from your original base.html (verbatim) -->
+" + terms_escaped + "
+  <div id="live-region" class="sr-only" role="status" aria-live="polite"></div>
+
+  <script>
+    // Accessibility helpers: focus trap + inert background for modals
+    (function(){
+      const body = document.body;
+      const main = document.getElementById('page-main');
+      const modals = ['privacy-modal','terms-modal','notifications-panel'];
+      function setInert(isOpen){
+        main && main.classList.toggle('inert', isOpen);
+        isOpen ? body.classList.add('backdrop-open') : body.classList.remove('backdrop-open');
+      }
+      function trap(modal){
+        const focusables = modal.querySelectorAll('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])');
+        const first = focusables[0]; const last = focusables[focusables.length-1];
+        function loop(e){
+          if(e.key !== 'Tab') return;
+          if(e.shiftKey && document.activeElement === first){ last.focus(); e.preventDefault(); }
+          else if(!e.shiftKey && document.activeElement === last){ first.focus(); e.preventDefault(); }
+        }
+        modal.addEventListener('keydown', loop);
+        setTimeout(()=> first?.focus(), 0);
+      }
+      function open(modal){ modal.classList.remove('hidden'); setInert(true); trap(modal); }
+      function close(modal){ modal.classList.add('hidden'); setInert(false); }
+
+      document.addEventListener('DOMContentLoaded', () => {
+        const privacyModal = document.getElementById('privacy-modal');
+        const termsModal = document.getElementById('terms-modal');
+        const privacyLink = document.getElementById('privacy-link');
+        const termsLink = document.getElementById('terms-link');
+        const closePrivacy = document.getElementById('close-privacy-modal-btn');
+        const closeTerms = document.getElementById('close-terms-modal-btn');
+
+        privacyLink?.addEventListener('click', e=>{ e.preventDefault(); open(privacyModal); });
+        termsLink?.addEventListener('click', e=>{ e.preventDefault(); open(termsModal); });
+        closePrivacy?.addEventListener('click', ()=> close(privacyModal));
+        closeTerms?.addEventListener('click', ()=> close(termsModal));
+        [privacyModal, termsModal].forEach(m => m?.addEventListener('click', e=>{ if(e.target === m) close(m); }));
+        document.addEventListener('keydown', e=>{ if(e.key === 'Escape'){ [privacyModal, termsModal].forEach(m=> !m.classList.contains('hidden') && close(m)); } });
+
+        // Notifications panel
+        const btn = document.getElementById('notifications-btn');
+        const panel = document.getElementById('notifications-panel');
+        const list = document.getElementById('notifications-list');
+        const bubble = document.getElementById('notifications-bubble');
+        btn?.addEventListener('click', async ()=>{
+          const expanded = btn.getAttribute('aria-expanded') === 'true';
+          btn.setAttribute('aria-expanded', String(!expanded));
+          panel?.classList.toggle('hidden');
+          if(!panel?.classList.contains('hidden')){
+            open(panel);
+            try{
+              const res = await fetch('/api/notifications');
+              if(!res.ok) throw new Error('Fetch failed');
+              const items = await res.json();
+              list.innerHTML = '';
+              if(items.length === 0){ list.innerHTML = '<p class="text-slate-400 text-center p-4">No new notifications.</p>'; }
+              items.forEach(n=>{
+                const el = document.createElement('div');
+                el.className = `p-3 flex items-start gap-3 border-b border-violet-900/50 ${n.is_read ? '' : 'bg-violet-900/20'}`;
+                const msg = n.type === 'collaboration_request' ? `<span class="font-bold text-slate-100">${n.sender_username}</span> wants to collaborate.` : 'You have a new notification.';
+                el.innerHTML = `<img src="${n.sender_photo}" alt="${n.sender_username}" class="w-10 h-10 rounded-full object-cover"/>\n<div class="flex-1"><p class="text-slate-300 text-sm">${msg}</p><div class="text-xs text-slate-500 mt-1">${new Date(n.timestamp).toLocaleString()}</div></div>`;
+                list.appendChild(el);
+              });
+              if(bubble){ try { await fetch('/api/notifications/mark-read', { method:'POST' }); bubble.style.display = 'none'; } catch(e){} }
+            }catch(err){ list.innerHTML = '<p class="text-red-400 text-center p-4">Could not load notifications.</p>'; }
+          } else {
+            close(panel);
+          }
+        });
+        document.addEventListener('click', e=>{ if(btn && panel && !btn.contains(e.target) && !panel.contains(e.target) && !panel.classList.contains('hidden')){ btn.setAttribute('aria-expanded','false'); close(panel); } });
+      });
+    })();
+  </script>
+
+  {% if current_user %}{% endif %}
+  {% block scripts %}{% endblock %}
+</body>
+</html>
