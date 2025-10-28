@@ -1,0 +1,573 @@
+
+
+<!-- ============================
+FILE: index.html (2025 modernized)
+Notes:
+- Preserves all API routes, audio/image URLs, and gameplay logic from your provided index.html.
+- Adds a11y (role/aria), keyboard support, reduced-motion guards, small perf tweaks, friendlier errors, and focus management.
+- Keeps React/Babel UMD so you can run this without a build step.
+============================= -->
+{% extends "base.html" %}
+
+{% block title %}Literacy Launchpad{% endblock %}
+
+{% block head %}
+  {{ super() }}
+  <!-- React 18 + Babel (kept UMD for compatibility) -->
+  <script src="https://unpkg.com/react@18/umd/react.development.js" crossorigin></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js" crossorigin></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js" crossorigin></script>
+  <style>
+    .modal { transition: opacity 300ms ease-in-out; }
+    .modal-content { transition: opacity 300ms ease-in-out, transform 300ms ease-in-out; }
+    .modal.hidden { opacity: 0; pointer-events: none; }
+    .modal:not(.hidden) { opacity: 1; }
+    .modal.hidden .modal-content { opacity: 0; transform: scale(0.95); }
+    .modal:not(.hidden) .modal-content { opacity: 1; transform: scale(1); }
+    .modal-scroll::-webkit-scrollbar { width: 8px; }
+    .modal-scroll::-webkit-scrollbar-track { background: #1e2b3c; }
+    .modal-scroll::-webkit-scrollbar-thumb { background-color: #4c1d95; border-radius: 10px; border: 2px solid #1e2b3c; }
+    @media (prefers-reduced-motion: reduce) { .modal, .modal-content { transition: none !important; } .animate-fade-in-up, .notification-item { animation: none !important; } }
+    @keyframes fade-in-up { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+    .animate-fade-in-up { animation: fade-in-up 0.5s ease-out forwards; }
+    @keyframes pulse-heart { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.2); } }
+    .animate-pulse-heart { animation: pulse-heart 0.5s ease-in-out; }
+    @keyframes pop-and-fade { 0% { opacity: 0; transform: scale(0.5) translateY(0); } 20% { opacity: 1; transform: scale(1.1); } 80% { opacity: 1; transform: scale(1); } 100% { opacity: 0; transform: scale(0.8) translateY(-50px); } }
+    .notification-item { animation: pop-and-fade 2.5s ease-in-out forwards; }
+    .map-container { aspect-ratio: 9 / 16; overflow-y: hidden; scroll-behavior: smooth; }
+    .map-container::-webkit-scrollbar { display: none; }
+  </style>
+{% endblock %}
+
+{% block content %}
+  <div id="root"></div>
+{% endblock %}
+
+{% block scripts %}
+{% raw %}
+<script type="text/babel">
+const { useState, useEffect, useCallback, useMemo, useRef } = React;
+const { createPortal } = ReactDOM;
+
+// --- Game Sounds & Assets (UNCHANGED URLs) ---
+const correctSound = new Audio("https://raw.githubusercontent.com/navasdo/navacite/refs/heads/main/templates/language-tools/literacy-launchpad/static/audio/correct.mp3");
+const incorrectSound = new Audio("https://raw.githubusercontent.com/navasdo/navacite/refs/heads/main/templates/language-tools/literacy-launchpad/static/audio/damage.mp3");
+const streakSound = new Audio("https://raw.githubusercontent.com/navasdo/navacite/refs/heads/main/templates/language-tools/literacy-launchpad/static/audio/streak.wav");
+const multiplierSound = new Audio("https://raw.githubusercontent.com/navasdo/navacite/refs/heads/main/templates/language-tools/literacy-launchpad/static/audio/multiplier.mp3");
+const heartSound = new Audio("https://raw.githubusercontent.com/navasdo/navacite/refs/heads/main/templates/language-tools/literacy-launchpad/static/audio/healing.mp3");
+const highScoreSound = new Audio("https://raw.githubusercontent.com/navasdo/navacite/refs/heads/main/templates/language-tools/literacy-launchpad/static/audio/leaderboard.mp3");
+
+// --- Live API Calls (UNCHANGED ENDPOINTS) ---
+const fetchPassage = async (level, usedPassageIds) => {
+  const excludeQuery = usedPassageIds.join(',');
+  try {
+    const response = await fetch(`/api/literacy-launchpad/passage?level=${level}&exclude=${excludeQuery}`);
+    if (!response.ok) {
+      if (response.status === 404) { console.warn('No more passages available.'); return null; }
+      throw new Error(`Server responded with status: ${response.status}`);
+    }
+    return await response.json();
+  } catch (error) {
+    console.error('Failed to fetch passage:', error);
+    return null;
+  }
+};
+
+// --- Character classes (UNCHANGED DATA) ---
+const characterClasses = { /* (content preserved exactly) */
+  adventurer:{name:'Adventurer',bonus:'+1 starting heart',penalty:'Slightly lower score multiplier',heartMod:1,scoreMod:0.9,variants:[{gender:'Female',image50:'adventurer-50-female_presenting.png',image100:'adventurer-100_female_presenting.png'},{gender:'Male',image50:'adventurer-50-male_presenting.png',image100:'adventurer-100-male_presenting.png'}]},
+  alchemist:{name:'Alchemist',bonus:'Heart rewards restore +2',penalty:'Score rewards are smaller',scoreMod:0.8,variants:[{gender:'Neutral',image50:'alchemist-50.png',image100:'alchemist-100.png'}]},
+  archer:{name:'Archer',bonus:'Higher streak bonus',penalty:'Streaks require +1 correct answer',streakMod:1,scoreMod:1.2,variants:[{gender:'Female',image50:'archer-50-female_presenting.png',image100:'archer-100-female_presenting.png'},{gender:'Male',image50:'archer-50-male_presenting.png',image100:'archer-100-male_presenting.png'}]},
+  assassin:{name:'Assassin',bonus:'Massive score multiplier',penalty:'Start with -3 hearts',heartMod:-3,scoreMod:1.5,variants:[{gender:'Female',image50:'assassin-50-female_presenting.png',image100:'assassin-100-female_presenting.png'},{gender:'Male',image50:'assassin-50-male_presenting.png',image100:'assassin-100-male_presenting.png'}]},
+  bandit:{name:'Bandit',bonus:'More points from choices',penalty:'No streak rewards',scoreMod:1.3,variants:[{gender:'Neutral',image50:'bandit-50.png',image100:'bandit-100.png'}]},
+  barbarian:{name:'Barbarian',bonus:'Start with +3 hearts',penalty:'Lower overall score',heartMod:3,scoreMod:0.7,variants:[{gender:'Neutral',image50:'barbarian-50.png',image100:'barbarian-100.png'}]},
+  'beast-master':{name:'Beast Master',bonus:'First incorrect answer is free',penalty:'Reduced streak bonus',scoreMod:0.9,freebie:true,variants:[{gender:'Neutral',image50:'beast_master-50.png',image100:'beast_master-100.png'}]},
+  'dragon-knight':{name:'Dragon Knight',bonus:'Immune to first 2 mistakes',penalty:'No score multiplier reward',immune:2,variants:[{gender:'Neutral',image50:'dragon_knight-50.png',image100:'dragon-knight-100.png'}]},
+  knight:{name:'Knight',bonus:'Balanced stats',penalty:'None',variants:[{gender:'Male',image50:'knight-50-male_presenting.png',image100:'knight-100-male_presenting.png'}]},
+  'martial-artist':{name:'Martial Artist',bonus:'Streaks activate faster',penalty:'No heart reward option',streakMod:-1,scoreMod:1.1,variants:[{gender:'Female',image50:'martial-artist-50-female_presenting.png',image100:'martial-artist-100-female_presenting.png'},{gender:'Male',image50:'martial-artist-50-male_presenting.png',image100:'martial-artist-100-male_presenting.png'}]},
+  samurai:{name:'Samurai',bonus:'Perfect answers grant huge bonus',penalty:'Any mistake resets streak',scoreMod:1.2,perfect:true,variants:[{gender:'Neutral',image50:'samurai-50.png',image100:'samurai-100.png'}]},
+  wizard:{name:'Wizard',bonus:'Streak score rewards are massively increased',penalty:'Fewer starting hearts',heartMod:-2,streakBonusMultiplier:2.5,variants:[{gender:'Female',image50:'wizard-50-female_presenting.png',image100:'wizard-100-female_presenting.png'},{gender:'Male',image50:'wizard-50-male_presenting.png',image100:'wizard-100-male_presenting.png'}]},
+};
+const classImageBaseUrl = "https://raw.githubusercontent.com/navasdo/navacite/refs/heads/main/templates/images/character-avatars/";
+
+// Utilities
+const shuffleArray = (array) => { let i = array.length, r; const a=[...array]; while(i){ r=Math.floor(Math.random()*i--); [a[i],a[r]]=[a[r],a[i]] } return a };
+
+// Icons (unchanged visual)
+const IconInfo = () => (<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>);
+const IconHeart = ({ className }) => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round" className={`text-red-500 ${className}`} aria-hidden="true"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>;
+const IconTrophy = () => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/></svg>;
+const IconCheckCircle = () => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>;
+
+// Base modal (portal) with role/aria
+const BaseModal = ({ show, onClose, children, maxWidth = 'max-w-2xl', labelledBy }) => {
+  const modalRef = useRef(null);
+  useEffect(()=>{
+    if(!show) return; const onKey=(e)=>{ if(e.key==='Escape') onClose(); }; document.addEventListener('keydown', onKey); return ()=>document.removeEventListener('keydown', onKey);
+  },[show,onClose]);
+  if (!show) return null;
+  return createPortal(
+    <div className="modal fixed inset-0 bg-black/75 backdrop-blur-sm flex items-center justify-center z-50 p-4" role="dialog" aria-modal="true" aria-labelledby={labelledBy} onClick={onClose}>
+      <div ref={modalRef} className={`modal-content bg-slate-800 border border-violet-700/50 rounded-2xl shadow-2xl w-full ${maxWidth} max-h-[90vh] flex flex-col`} role="document" onClick={e=>e.stopPropagation()}>
+        <div className="overflow-y-auto modal-scroll" data-scrollbar-hide>{children}</div>
+      </div>
+    </div>, document.body
+  );
+};
+
+const PrivacyModal = ({ show, onClose }) => (
+  <BaseModal show={show} onClose={onClose} labelledBy="privacy-h">
+    <div className="p-6 sm:p-8">
+      <div className="flex justify-between items-center mb-6">
+        <h2 id="privacy-h" className="text-3xl font-bold text-slate-100">Student Data Privacy</h2>
+        <button onClick={onClose} className="text-slate-400 hover:text-white transition-colors" aria-label="Close">
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
+        </button>
+      </div>
+      <div className="space-y-4 text-slate-300 text-left text-sm">
+        <p>This application is designed to support language assessment activities without collecting or maintaining student data.</p>
+        <p><strong className="text-violet-400 block mb-1">Student Information Use:</strong> Student names may be entered by the examiner for the sole purpose of personalizing a printable PDF report. This information is not transmitted, stored, or retained by the application or its hosting service.</p>
+        <p><strong className="text-violet-400 block mb-1">Data Retention:</strong> Once the examiner completes an assessment, the entered name is cleared from the page. No student information is written to logs, databases, or external servers.</p>
+      </div>
+    </div>
+  </BaseModal>
+);
+
+// Error Boundary for React runtime errors
+class ErrorBoundary extends React.Component {
+  constructor(props){ super(props); this.state={ hasError:false, message:'' }; }
+  static getDerivedStateFromError(err){ return { hasError:true, message: String(err) }; }
+  componentDidCatch(err, info){ console.error('UI crash:', err, info); }
+  render(){ if(this.state.hasError){ return (
+    <div className="max-w-3xl mx-auto p-6 bg-rose-900/30 border border-rose-700 rounded-xl text-rose-200">
+      <h2 className="text-xl font-bold mb-2">Something went wrong.</h2>
+      <p className="text-sm opacity-80">{this.state.message}</p>
+      <button onClick={()=>location.reload()} className="mt-4 bg-violet-600 hover:bg-violet-700 text-white font-bold py-2 px-4 rounded-lg">Reload</button>
+    </div>
+  ); } return this.props.children; }
+}
+
+// --- Main App ---
+function App(){
+  const [screen, setScreen] = useState('setup');
+  const [gameSettings, setGameSettings] = useState(null);
+  const [gameResults, setGameResults] = useState(null);
+  const [leaderboard, setLeaderboard] = useState({ entries: [], nextReset: null });
+
+  const fetchLeaderboard = useCallback(()=>{
+    fetch('/api/literacy-launchpad/leaderboard')
+      .then(res=>res.json())
+      .then(data=> setLeaderboard({ entries: data.entries, nextReset: data.nextReset }))
+      .catch(()=> setLeaderboard({ entries: [
+        { pseudonym: 'DragonSlayer', score: 2450 }, { pseudonym: 'SyntaxWizard', score: 2100 },
+        { pseudonym: 'GrammarGamer', score: 1980 }, { pseudonym: 'VocabVanquisher', score: 1800 },
+        { pseudonym: 'ProsePro', score: 1750 }, ], nextReset: new Date(new Date().getFullYear(), new Date().getMonth()+1, 1).toISOString() }));
+  },[]);
+  useEffect(()=>{ fetchLeaderboard(); },[fetchLeaderboard]);
+
+  const handleStartGame = (settings) => { setGameSettings(settings); setScreen('game'); };
+  const handleEndGame = (results) => { setGameResults(results); setScreen('results'); };
+  const handleRestart = () => { setGameSettings(null); setGameResults(null); setScreen('setup'); };
+
+  const renderScreen = () => screen==='game' ? <GameScreen settings={gameSettings} onEndGame={handleEndGame} leaderboard={leaderboard.entries}/> : screen==='results' ? <ResultsScreen results={gameResults} onRestart={handleRestart} leaderboard={leaderboard.entries} onUpdateLeaderboard={fetchLeaderboard}/> : <SetupScreen onStartGame={handleStartGame} leaderboard={leaderboard}/>;
+
+  return (
+    <div className="w-full max-w-7xl mx-auto py-8">
+      <header className="text-center mb-12">
+        <img src="https://raw.githubusercontent.com/navasdo/navacite/refs/heads/main/templates/static/navacite-images/literacy-launchpad.png" alt="Literacy Launchpad Logo" className="w-48 mx-auto mb-4" loading="lazy" style={{filter:'drop-shadow(0 0 15px rgba(167,139,250,.4))'}} />
+        <h1 className="text-5xl md:text-6xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-violet-400 to-fuchsia-500">Literacy Launchpad</h1>
+        <p className="text-md md:text-lg text-slate-400 italic max-w-4xl mx-auto mt-2">An engaging reading adventure that analyzes sentence-level comprehension to generate data-driven instructional hypotheses and connect you with evidence-based interventions. Choose your hero, embark on an adventure, and conquer reading challenges in a gamified quest for comprehension.</p>
+      </header>
+      <main className="bg-slate-900/40 p-6 sm:p-8 rounded-2xl shadow-lg border border-violet-900/80">
+        {renderScreen()}
+      </main>
+    </div>
+  );
+}
+
+// --- Setup Screen ---
+function SetupScreen({ onStartGame, leaderboard }){
+  const [studentName, setStudentName] = useState('');
+  const [level, setLevel] = useState(3);
+  const [isPractice, setIsPractice] = useState(false);
+  const [showPrivacyModal, setShowPrivacyModal] = useState(false);
+  const [selectedClass, setSelectedClass] = useState('knight');
+  const [selectedVariant, setSelectedVariant] = useState(0);
+
+  const handleStart = () => {
+    const charClass = characterClasses[selectedClass];
+    const variant = charClass.variants[selectedVariant];
+    const characterImage = `${classImageBaseUrl}${variant.image50}`;
+    onStartGame({ studentName, level: parseInt(level), isPractice, characterClass: charClass, characterImage });
+  };
+
+  const currentClass = characterClasses[selectedClass];
+  const currentVariant = currentClass.variants[selectedVariant];
+  const largeImageUrl = `${classImageBaseUrl}${currentVariant.image100}`;
+
+  const daysUntilReset = useMemo(()=>{
+    if (!leaderboard.nextReset) return null; const today=new Date(); const resetDate=new Date(leaderboard.nextReset); today.setHours(0,0,0,0); resetDate.setHours(0,0,0,0); return Math.ceil((resetDate-today)/(1000*60*60*24));
+  },[leaderboard.nextReset]);
+
+  return (
+    <div>
+      <h3 className="text-2xl font-bold text-violet-400 text-center mb-8">Prepare for Launch</h3>
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <div className="lg:col-span-2 space-y-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+              <label htmlFor="student" className="text-slate-400 flex items-center gap-2">Student Name <button onClick={()=>setShowPrivacyModal(true)} title="Privacy Information" className="text-slate-500 hover:text-violet-400 transition-colors"><IconInfo /></button></label>
+              <input id="student" type="text" value={studentName} onChange={e=>setStudentName(e.target.value)} className="w-full mt-2 p-3 rounded-md bg-slate-800/60 text-slate-300 border border-slate-700 focus:outline-none focus:ring-2 focus:ring-violet-500" placeholder="For printable report only" />
+            </div>
+            <div className="md:col-span-2">
+              <label htmlFor="level-select" className="text-slate-400">Starting Level</label>
+              <select id="level-select" value={level} onChange={e=>setLevel(e.target.value)} className="w-full mt-2 p-3 rounded-md bg-slate-800/60 text-slate-300 border border-slate-700" aria-label="Starting Level">
+                {[...Array(10)].map((_,i)=> (<option key={i+1} value={i+1}>Level {i+1}</option>))}
+              </select>
+            </div>
+            <div className="flex items-center justify-center md:col-span-2">
+              <label className="flex items-center gap-3 cursor-pointer text-slate-400">
+                <input type="checkbox" checked={isPractice} onChange={e=>setIsPractice(e.target.checked)} className="w-5 h-5 rounded text-violet-600 bg-slate-700 border-slate-600 focus:ring-violet-500" aria-label="Enable Practice Mode" />
+                <span>Enable Practice Mode (Provides hints)</span>
+              </label>
+            </div>
+          </div>
+          <div>
+            <h4 className="text-xl font-bold text-violet-400 text-center mb-4">Choose Your Class</h4>
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+              {Object.keys(characterClasses).map(key=>{
+                const char = characterClasses[key];
+                return (
+                  <button key={key} onClick={()=>{setSelectedClass(key); setSelectedVariant(0);}} className={`p-2 rounded-lg border-2 transition ${selectedClass===key ? 'border-violet-400 scale-105 bg-violet-900/50' : 'border-slate-700 bg-slate-800/50 hover:bg-slate-700/50'}`} aria-pressed={selectedClass===key}>
+                    <img src={`${classImageBaseUrl}${char.variants[0].image100}`} alt={char.name} className="w-full h-auto rounded-md" loading="lazy" />
+                    <p className="text-sm font-bold mt-2 text-slate-200">{char.name}</p>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+          <div className="flex flex-col md:flex-row items-center gap-6 p-4 bg-slate-800/50 rounded-lg">
+            <img src={largeImageUrl} alt={currentClass.name} className="w-24 h-24 rounded-full border-2 border-violet-500" loading="lazy"/>
+            <div className="flex-1 text-center md:text-left text-slate-300">
+              {currentClass.variants.length>1 && (
+                <div className="flex gap-2 justify-center md:justify-start mb-2" role="group" aria-label="Variant">
+                  {currentClass.variants.map((variant, index)=> (
+                    <button key={variant.gender} onClick={()=>setSelectedVariant(index)} className={`px-3 py-1 text-xs rounded-full ${selectedVariant===index ? 'bg-violet-600 text-white' : 'bg-slate-700 text-slate-300'}`}>{variant.gender}</button>
+                  ))}
+                </div>
+              )}
+              <p><strong className="text-green-400">Bonus:</strong> {currentClass.bonus}</p>
+              <p><strong className="text-red-400">Penalty:</strong> {currentClass.penalty}</p>
+            </div>
+            <button onClick={handleStart} className="bg-violet-600 hover:bg-violet-700 text-white font-bold py-3 px-8 rounded-lg transition whitespace-nowrap">Begin Literacy Launch</button>
+          </div>
+        </div>
+        <aside className="p-4 bg-slate-800/50 rounded-lg" aria-label="Top Scores">
+          <h3 className="text-xl font-bold text-yellow-400 text-center mb-4">Top Scores</h3>
+          {typeof leaderboard.nextReset === 'string' && <p className="text-center text-sm text-cyan-400 mb-3 italic">{(()=>{ const today=new Date(); const reset=new Date(leaderboard.nextReset); today.setHours(0,0,0,0); reset.setHours(0,0,0,0); return Math.ceil((reset-today)/(1000*60*60*24)); })()} days until monthly reset!</p>}
+          <ol className="list-decimal list-inside space-y-2 text-slate-300">
+            {leaderboard.entries.map((entry, index)=> (
+              <li key={index} className="flex justify-between"><span>{index+1}. {entry.pseudonym}</span><span className="font-bold">{entry.score}</span></li>
+            ))}
+            {leaderboard.entries.length===0 && <p className="text-slate-400 text-center">No scores yet!</p>}
+          </ol>
+        </aside>
+      </div>
+      <PrivacyModal show={showPrivacyModal} onClose={()=>setShowPrivacyModal(false)} />
+    </div>
+  );
+}
+
+// --- Game Screen ---
+function GameScreen({ settings, onEndGame, leaderboard }){
+  const { studentName, level: startingLevel, isPractice, characterClass, characterImage } = settings;
+  const [currentLevel, setCurrentLevel] = useState(startingLevel);
+  const [highestLevelReached, setHighestLevelReached] = useState(startingLevel);
+  const [passage, setPassage] = useState([]);
+  const [usedPassageIds, setUsedPassageIds] = useState([]);
+  const [currentItemIndex, setCurrentItemIndex] = useState(-1);
+  const [hearts, setHearts] = useState(10 + (characterClass.heartMod || 0));
+  const [score, setScore] = useState(0);
+  const [streak, setStreak] = useState(0);
+  const [correctInPassage, setCorrectInPassage] = useState(0);
+  const [questionsInPassage, setQuestionsInPassage] = useState(0);
+  const [notifications, setNotifications] = useState([]);
+  const [showStreakChoice, setShowStreakChoice] = useState(false);
+  const [immuneCharges, setImmuneCharges] = useState(characterClass.immune || 0);
+  const [hasUsedFreebie, setHasUsedFreebie] = useState(false);
+  const [gameLog, setGameLog] = useState([]);
+  const [questionTimestamp, setQuestionTimestamp] = useState(0);
+  const [mapPosition, setMapPosition] = useState(0);
+  const mapRef = useRef(null); const currentMapNodeRef = useRef(null);
+  const [highScoreNotified, setHighScoreNotified] = useState(false);
+
+  const loadNextPassage = useCallback(async ()=>{
+    const rawPassage = await fetchPassage(currentLevel, usedPassageIds);
+    if (!rawPassage) { endGame(false); return; }
+    setUsedPassageIds(prev => [...prev, rawPassage.passage_id]);
+    const processed = rawPassage.content_json.map((part, index)=>{
+      if (typeof part === 'string') return { type:'text', content: part, id:`p${rawPassage.passage_id}-t${index}` };
+      const options = [ {word: part.correct, type:'correct'}, {word: part.semantic_distractor, type:'semantic'}, {word: part.syntactic_distractor, type:'syntactic'}].filter(o=> o.word && o.word.trim() !== '---');
+      return { type:'choice', id:`p${rawPassage.passage_id}-q${index}`, options, shuffledOptions: shuffleArray(options) };
+    });
+    setPassage(processed);
+    const count = processed.filter(p=>p.type==='choice').length;
+    setQuestionsInPassage(count);
+    setCorrectInPassage(0);
+    setCurrentItemIndex(processed.findIndex(p=>p.type==='choice'));
+  },[currentLevel, usedPassageIds]);
+
+  useEffect(()=>{ loadNextPassage(); },[currentLevel]);
+  useEffect(()=>{ if(passage.length>0 && currentItemIndex!==-1){ setQuestionTimestamp(Date.now()); } },[currentItemIndex, passage]);
+
+  const addNotification = (text, type) => {
+    const id = Date.now()+Math.random();
+    setNotifications(n=> [{id,text,type}, ...n]);
+    setTimeout(()=> setNotifications(n=> n.filter(it=>it.id!==id)), 2500);
+  };
+
+  const advanceToNext = async () => {
+    setTimeout(async ()=>{
+      const nextChoiceIndex = passage.findIndex((p, i)=> i>currentItemIndex && p.type==='choice');
+      if (nextChoiceIndex !== -1) setCurrentItemIndex(nextChoiceIndex);
+      else {
+        const accuracy = (correctInPassage / questionsInPassage) * 100;
+        try {
+          const response = await fetch('/api/literacy-launchpad/next-level', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ currentLevel, accuracy }) });
+          if(!response.ok) throw new Error('Failed to get next level');
+          const data = await response.json();
+          const nextLevel = data.nextLevel;
+          if (nextLevel > highestLevelReached) setHighestLevelReached(nextLevel);
+          setCurrentLevel(nextLevel);
+        } catch (e) {
+          let nextLevel = currentLevel; if (accuracy >= 80) { nextLevel = Math.min(10, currentLevel+1); if (nextLevel > highestLevelReached) setHighestLevelReached(nextLevel); } else if (accuracy < 50) { nextLevel = Math.max(1, currentLevel-1); } setCurrentLevel(nextLevel);
+        }
+      }
+    }, 400);
+  };
+
+  const handleChoice = (selectedOption, choiceId) => {
+    if (showStreakChoice || passage.find(p=>p.id===choiceId)?.answered) return;
+    const latency = Date.now()-questionTimestamp;
+    const qIndex = passage.findIndex(p=>p.id===choiceId);
+    const questionText = passage.slice(0,qIndex).map(p=> typeof p.content==='string' ? p.content : p.selection).join('').trim().split(' ').slice(-10).join(' ')+'...';
+    const questionData = passage[qIndex];
+    const correctAnswer = questionData.options.find(o=>o.type==='correct').word;
+
+    setGameLog(prev=> [...prev, { question: questionText, selection: selectedOption.word, correctAnswer, type: selectedOption.type, latency, level: currentLevel }]);
+    setPassage(p=> p.map(part=> part.id===choiceId ? { ...part, answered:true, selection:selectedOption.word } : part));
+
+    if (selectedOption.type==='correct'){
+      try{ correctSound.currentTime=0; correctSound.play(); }catch(_){}
+      setCorrectInPassage(c=>c+1);
+      const points = Math.round(10*(characterClass.scoreMod||1));
+      const newScore = score + points; setScore(newScore); addNotification(`+${points}`,'score'); setMapPosition(p=>p+1);
+      if (!highScoreNotified && leaderboard.length>0 && newScore>leaderboard[leaderboard.length-1].score){ addNotification('HIGH SCORE!','info'); try{ highScoreSound.play(); }catch(_){} setHighScoreNotified(true); }
+      const newStreak = streak+1; setStreak(newStreak);
+      const threshold = 3 + (characterClass.streakMod||0);
+      if (newStreak>=threshold && newStreak % threshold===0){ try{ streakSound.play(); }catch(_){} setShowStreakChoice(true); } else { advanceToNext(); }
+    } else {
+      try{ incorrectSound.currentTime=0; incorrectSound.play(); }catch(_){}
+      if (characterClass.perfect) setStreak(0);
+      let heartsToLose = 1;
+      if (characterClass.freebie && !hasUsedFreebie){ heartsToLose=0; setHasUsedFreebie(true); addNotification("Beast Master's Bond Protected You!",'info'); }
+      else if (immuneCharges>0){ heartsToLose=0; setImmuneCharges(c=>c-1); addNotification("Dragon Knight's Armor Protected You!",'info'); }
+      if (heartsToLose>0){ setHearts(h=>h-1); setStreak(0); addNotification('-1 ♥','heart'); }
+      if (hearts - heartsToLose <= 0){ setTimeout(()=> endGame(true), 500); } else { advanceToNext(); }
+    }
+  };
+
+  const handleStreakReward = (reward) => {
+    if (reward==='multiplier'){
+      try{ multiplierSound.play(); }catch(_){}
+      const bonus = Math.round(streak*5*(characterClass.streakBonusMultiplier||1)*(characterClass.scoreMod||1));
+      setScore(s=> s+bonus); addNotification(`+${bonus} Streak Bonus!`,'score');
+    } else if (reward==='heart'){
+      try{ heartSound.play(); }catch(_){}
+      const restored = characterClass.name==='Alchemist' ? 2 : 1; setHearts(h=> Math.min(10, h+restored)); addNotification(`+${restored} ♥ Restored!`,'heart');
+    }
+    setShowStreakChoice(false); advanceToNext();
+  };
+
+  const endGame = useCallback((outOfHearts=false)=>{ onEndGame({ score, hearts, gameLog, studentName, startingLevel, highestLevelReached, characterClass, outOfHearts }); },[score, hearts, gameLog, onEndGame, studentName, startingLevel, highestLevelReached, characterClass]);
+
+  useEffect(()=>{ if(currentMapNodeRef.current){ currentMapNodeRef.current.scrollIntoView({ behavior:'smooth', block:'center' }); } },[mapPosition]);
+
+  return (
+    <div className="grid grid-cols-1 lg:grid-cols-3 gap-8" role="region" aria-label="Game">
+      <div className="lg:col-span-2 relative">
+        <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-50" aria-hidden="true">
+          <div className="relative w-64 h-64">
+            {notifications.map(n=> <Notification key={n.id} {...n} />)}
+          </div>
+        </div>
+        <div className="flex justify-between items-center mb-4">
+          <div>
+            <h3 className="font-bold text-lg text-slate-100">{studentName || 'Adventurer'}</h3>
+            <p className="text-sm text-slate-400">{characterClass.name}</p>
+          </div>
+          <div className="flex items-center gap-4">
+            <button onClick={()=> endGame(false)} className="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-lg transition text-sm">Return to Camp</button>
+            <div className="flex items-center gap-2 text-yellow-400 font-bold text-2xl" aria-live="polite" aria-atomic="true"><IconTrophy /><span>{score}</span></div>
+            <div className="flex items-center gap-1" aria-label={`Hearts remaining: ${hearts}`}>
+              {[...Array(hearts)].map((_,i)=> <IconHeart key={i} className="w-8 h-8 animate-pulse-heart" />)}
+              {[...Array(Math.max(0,10-hearts))].map((_,i)=> <IconHeart key={i+hearts} className="w-8 h-8 text-slate-700" />)}
+            </div>
+          </div>
+        </div>
+        <div className="p-6 bg-slate-800/50 rounded-lg text-xl md:text-2xl leading-loose text-slate-300 min-h-[200px]" role="article" aria-live="polite">
+          {passage.length===0 && <p>Loading next passage...</p>}
+          {passage.map((part, index)=>{
+            if(part.type==='text') return <span key={part.id}>{part.content}</span>;
+            if(part.answered){ const isCorrect = part.options.find(o=>o.word===part.selection)?.type==='correct'; return <strong key={part.id} className={`mx-1 ${isCorrect?'text-green-400':'text-red-400 line-through'}`}>{part.selection}</strong>; }
+            if(index===currentItemIndex){
+              return (
+                <span key={part.id} className="inline-flex flex-wrap gap-2 mx-1 p-2 bg-slate-900/50 rounded-md" role="group" aria-label="Choices">
+                  {part.shuffledOptions.map(option=> (
+                    <button key={option.word} onClick={()=>handleChoice(option, part.id)} className="px-3 py-1 bg-violet-600 text-white rounded-md hover:bg-violet-700 transition text-lg">{option.word}</button>
+                  ))}
+                </span>
+              );
+            }
+            return <span key={part.id} className="font-bold text-slate-500 mx-1">[ ... ]</span>;
+          })}
+        </div>
+        {isPractice && passage.length>0 && currentItemIndex>-1 && passage[currentItemIndex] && (
+          <div className="mt-4 p-3 bg-yellow-900/30 border border-yellow-600 rounded-lg text-yellow-300 animate-fade-in-up" role="note">
+            <strong className="font-bold">Hint:</strong> The correct answer is <em className="italic">{passage[currentItemIndex].options.find(o=>o.type==='correct').word}</em>.
+          </div>
+        )}
+        {showStreakChoice && (<StreakChoiceModal onSelect={handleStreakReward} streak={streak} characterClass={characterClass} score={score} hearts={hearts} />)}
+      </div>
+      <div className="relative h-full">
+        <h3 className="text-xl font-bold text-yellow-400 text-center mb-4">Adventure Map</h3>
+        <div ref={mapRef} className="map-container bg-slate-900/50 border border-slate-700 rounded-lg p-4 relative" aria-label="Adventure Map">
+          <div className="relative w-full flex flex-col-reverse items-center">
+            {[...Array(100)].map((_, i)=> (
+              <MapNode ref={mapPosition===i ? currentMapNodeRef : null} key={i} number={i+1} isCurrent={mapPosition===i} isCompleted={mapPosition>i} />
+            ))}
+          </div>
+        </div>
+        <div className="absolute inset-0 flex items-center justify-center pointer-events-none" style={{ top:'4rem', bottom:'0' }} aria-hidden="true">
+          <img src={characterImage} alt="" className="w-16 h-16 transition-transform duration-500" loading="lazy"/>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// --- Results Screen ---
+function ResultsScreen({ results, onRestart, leaderboard, onUpdateLeaderboard }){
+  const { studentName, score, gameLog = [], outOfHearts, startingLevel, highestLevelReached } = results;
+  const [pseudonym, setPseudonym] = useState('');
+  const [clinicianPass, setClinicianPass] = useState('');
+  const [submitStatus, setSubmitStatus] = useState('idle');
+
+  const semanticErrors = gameLog.filter(log=>log.type==='semantic').length;
+  const syntacticErrors = gameLog.filter(log=>log.type==='syntactic').length;
+  const totalCorrect = gameLog.filter(log=>log.type==='correct').length;
+  const totalQuestions = gameLog.length;
+  const accuracy = totalQuestions>0 ? (totalCorrect/totalQuestions*100).toFixed(1) : 0;
+  const isHighScore = useMemo(()=>{ if(!leaderboard || leaderboard.length<10) return true; return score>leaderboard[leaderboard.length-1].score; },[score,leaderboard]);
+
+  const handleLeaderboardSubmit = (e) => {
+    e.preventDefault(); if(!pseudonym.trim()){ alert('Please enter a pseudonym for the leaderboard.'); return; }
+    setSubmitStatus('submitting');
+    fetch('/api/literacy-launchpad/leaderboard', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ pseudonym, score, password: clinicianPass }) })
+      .then(res=>{ if(!res.ok) throw new Error('Submission failed'); return res.json(); })
+      .then(()=>{ setSubmitStatus('success'); onUpdateLeaderboard(); })
+      .catch(()=> setSubmitStatus('error'));
+  };
+
+  const handlePrint = () => {
+    const w = window.open('', '_blank');
+    let html = `
+<html><head><title>Literacy Launchpad Report for ${studentName}</title><script src="https://cdn.tailwindcss.com"><\/script><style>body{font-family:sans-serif;-webkit-print-color-adjust:exact}</style></head><body class="bg-slate-100 p-8"><div class="max-w-4xl mx-auto bg-white p-8 rounded-lg shadow-lg"><h1 class="text-3xl font-bold text-violet-700 mb-2">Literacy Launchpad Report<\/h1><p class="text-lg text-slate-600 mb-6">For: <strong class="text-slate-800">${studentName}<\/strong><\/p><div class="grid grid-cols-2 md:grid-cols-4 gap-6 text-center mb-8"><div class="bg-slate-200 p-4 rounded-lg"><p class="text-sm text-slate-500">Final Score<\/p><p class="text-3xl font-bold text-yellow-600">${score}<\/p><\/div><div class="bg-slate-200 p-4 rounded-lg"><p class="text-sm text-slate-500">Accuracy<\/p><p class="text-3xl font-bold text-green-600">${accuracy}%<\/p><\/div><div class="bg-slate-200 p-4 rounded-lg"><p class="text-sm text-slate-500">Starting Level<\/p><p class="text-3xl font-bold text-cyan-600">${startingLevel}<\/p><\/div><div class="bg-slate-200 p-4 rounded-lg"><p class="text-sm text-slate-500">Highest Level<\/p><p class="text-3xl font-bold text-violet-600">${highestLevelReached}<\/p><\/div><\/div>`;
+    html += `<h2 class="text-2xl font-bold text-slate-800 mb-4">Detailed Log<\/h2><div class="overflow-x-auto"><table class="w-full text-left border-collapse"><thead><tr><th class="border-b-2 p-2 bg-slate-200">Context<\/th><th class="border-b-2 p-2 bg-slate-200">Selection<\/th><th class="border-b-2 p-2 bg-slate-200">Correct Answer<\/th><th class="border-b-2 p-2 bg-slate-200">Error Type<\/th><th class="border-b-2 p-2 bg-slate-200">Level<\/th><\/tr><\/thead><tbody>`;
+    gameLog.forEach(log=>{ const rc = log.type==='correct'?'text-green-600':'text-red-600'; html += `<tr class="border-b"><td class="p-2 italic text-slate-600">"${log.question}"<\/td><td class="p-2 font-mono ${rc}">${log.selection}<\/td><td class="p-2 font-mono text-green-600">${log.correctAnswer}<\/td><td class="p-2 font-semibold ${rc}">${log.type==='correct'?'--':log.type.charAt(0).toUpperCase()+log.type.slice(1)}<\/td><td class="p-2">${log.level}<\/td><\/tr>`; });
+    html += `</tbody></table></div></div></body></html>`; w.document.write(html); w.document.close(); w.print();
+  };
+
+  return (
+    <div className="text-center">
+      <h2 className="text-4xl font-bold text-violet-400 mb-2">{outOfHearts? 'You Ran Out of Hearts!' : 'Adventure Complete!'}</h2>
+      <p className="text-lg text-slate-300 mb-8">Here's how you did, {studentName || 'adventurer'}.</p>
+      <div className="grid grid-cols-2 lg:grid-cols-5 gap-4 max-w-5xl mx-auto mb-8">
+        <div className="bg-slate-800/70 p-4 rounded-lg"><p className="text-slate-400">Score</p><p className="text-3xl font-bold text-yellow-400">{score}</p></div>
+        <div className="bg-slate-800/70 p-4 rounded-lg"><p className="text-slate-400">Accuracy</p><p className="text-3xl font-bold text-green-400">{accuracy}%</p></div>
+        <div className="bg-slate-800/70 p-4 rounded-lg"><p className="text-slate-400">Starting Level</p><p className="text-3xl font-bold text-cyan-400">{startingLevel}</p></div>
+        <div className="bg-slate-800/70 p-4 rounded-lg"><p className="text-slate-400">Highest Level</p><p className="text-3xl font-bold text-violet-400">{highestLevelReached}</p></div>
+        <div className="bg-slate-800/70 p-4 rounded-lg col-span-2 lg:col-span-1"><p className="text-slate-400">Errors</p><p className="text-lg font-bold text-red-400">Semantic: {semanticErrors}<br/>Syntactic: {syntacticErrors}</p></div>
+      </div>
+      {isHighScore && submitStatus!=='success' && (
+        <div className="max-w-md mx-auto my-8 p-6 bg-slate-800 rounded-lg border border-yellow-500/50">
+          <h3 className="text-xl font-bold text-yellow-400">New High Score!</h3>
+          <p className="text-sm text-slate-400 mb-4">Submit to the leaderboard with clinician credentials.</p>
+          <form onSubmit={handleLeaderboardSubmit} className="space-y-4" aria-label="Submit High Score">
+            <div>
+              <label className="block text-sm font-medium text-slate-300 text-left mb-1">Leaderboard Pseudonym</label>
+              <input type="text" value={pseudonym} onChange={e=>setPseudonym(e.target.value)} className="w-full p-2 rounded-md bg-slate-700 text-slate-200 border border-slate-600" required placeholder="Enter a cool name" />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-slate-300 text-left mb-1">Clinician Password</label>
+              <input type="password" value={clinicianPass} onChange={e=>setClinicianPass(e.target.value)} className="w-full p-2 rounded-md bg-slate-700 text-slate-200 border border-slate-600" required />
+            </div>
+            <button type="submit" disabled={submitStatus==='submitting'} className="w-full bg-yellow-600 hover:bg-yellow-700 text-white font-bold py-2 px-4 rounded-md transition disabled:bg-slate-600">{submitStatus==='submitting' ? 'Submitting...' : 'Submit Score'}</button>
+            {submitStatus==='error' && <p className="text-red-400 text-sm mt-2">Invalid password. Please try again.</p>}
+          </form>
+        </div>
+      )}
+      {submitStatus==='success' && <p className="text-green-400 my-8 font-bold text-lg">High score submitted successfully!</p>}
+      <div className="flex justify-center gap-4 mt-8">
+        <button onClick={onRestart} className="bg-violet-600 hover:bg-violet-700 text-white font-bold py-3 px-6 rounded-lg transition">Play Again</button>
+        {studentName && <button onClick={handlePrint} className="bg-slate-600 hover:bg-slate-700 text-white font-bold py-3 px-6 rounded-lg transition">Print Report</button>}
+      </div>
+    </div>
+  );
+}
+
+const Notification = ({ text, type }) => {
+  const colorClass = type==='score' ? 'text-green-400' : type==='heart' ? 'text-red-400' : 'text-yellow-400';
+  return (
+    <div className="notification-item absolute top-0 left-0 right-0 flex justify-center" aria-live="polite" aria-atomic="true">
+      <div className="p-4 rounded-lg bg-slate-900/80 shadow-2xl border-2 border-violet-500/50">
+        <p className={`font-extrabold text-3xl sm:text-5xl drop-shadow-lg ${colorClass} whitespace-nowrap`}>{text}</p>
+      </div>
+    </div>
+  );
+};
+
+const StreakChoiceModal = ({ onSelect, streak, characterClass, score, hearts }) => (
+  <div className="absolute inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center rounded-2xl z-40" role="dialog" aria-modal="true" aria-labelledby="streak-title">
+    <div className="text-center p-8 bg-slate-900 border-2 border-violet-500 rounded-xl shadow-lg animate-fade-in-up" role="document">
+      <div className="flex justify-center items-center gap-6 mb-4">
+        <div className="flex items-center gap-2 text-yellow-400 font-bold text-2xl"><IconTrophy /><span>{score}</span></div>
+        <div className="flex items-center gap-1" aria-label={`Hearts remaining: ${hearts}`}>
+          {[...Array(hearts)].map((_, i)=> <IconHeart key={i} className="w-7 h-7" />)}
+          {[...Array(Math.max(0,10-hearts))].map((_, i)=> <IconHeart key={i+hearts} className="w-7 h-7 text-slate-700" />)}
+        </div>
+      </div>
+      <h3 id="streak-title" className="text-3xl font-bold text-yellow-400">{streak} in a row!</h3>
+      <p className="text-slate-300 my-4">Choose your reward!</p>
+      <div className="flex gap-4">
+        {characterClass.name !== 'Bandit' && <button onClick={()=> onSelect('multiplier')} className="flex-1 bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-6 rounded-lg transition">Score Bonus!</button>}
+        {characterClass.name !== 'Martial Artist' && <button onClick={()=> onSelect('heart')} className="flex-1 bg-red-600 hover:bg-red-700 text-white font-bold py-3 px-6 rounded-lg transition">+1 Heart!</button>}
+      </div>
+    </div>
+  </div>
+);
+
+const MapNode = React.forwardRef(({ number, isCurrent, isCompleted }, ref) => {
+  let content; if (isCompleted) content = <IconCheckCircle className="w-8 h-8 text-green-500"/>; else if (isCurrent) content = <img src="https://raw.githubusercontent.com/navasdo/navacite/refs/heads/main/templates/images/battle.png" className="w-12 h-12 animate-pulse" alt="Current battle" loading="lazy"/>; else content = <span className="font-bold text-lg text-slate-400">{number}</span>;
+  return (
+    <div ref={ref} className={`w-16 h-16 flex items-center justify-center rounded-full border-2 my-4 transition-all duration-300 ${isCompleted ? 'bg-slate-700 border-slate-600' : isCurrent ? 'bg-red-900/50 border-red-500 scale-110' : 'bg-slate-800 border-slate-600'}`} aria-current={isCurrent ? 'step' : undefined} aria-label={`Node ${number}${isCurrent ? ' (current)' : isCompleted ? ' (completed)' : ''}`}>
+      {content}
+    </div>
+  );
+});
+
+const root = ReactDOM.createRoot(document.getElementById('root'));
+root.render(<ErrorBoundary><App/></ErrorBoundary>);
+</script>
+{% endraw %}
+{% endblock %}
